@@ -1,0 +1,67 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 9acaa30f52e7291096d917bea9960a390c00d9ed0cd8623e8853c42ab61c8507
+
+name:           spicy
+version:        0.0.1.0
+description:    Please see the README on Github at <https://github.com/githubuser/simple#readme>
+homepage:       https://github.com/sheepforce/hONIOM
+bug-reports:    https://github.com/sheepforce/hONIOM/issues
+author:         Phillip Seeber
+maintainer:     phillip.seeber@uni-jena.de
+copyright:      Phillip Seeber
+license:        GPL-3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/sheepforce/hONIOM
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , hmatrix >= 0.18.0.0
+    , containers >= 0.5.7.1
+    , microlens-platform >= 0.3.9.0
+    , attoparsec >=0.13.1.0
+    , text >=1.2.2.0
+  exposed-modules:
+      Spicy.MolecularSystem
+    , Spicy.Types
+    , Spicy.Math
+    , Spicy.Parser
+    , Spicy.MolWriter
+  default-language: Haskell2010
+
+executable simple-exe
+  main-is: spicy.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , spicy
+  default-language: Haskell2010
+
+-- test-suite simple-test
+--   type: exitcode-stdio-1.0
+--   main-is: Spec.hs
+--   hs-source-dirs:
+--       test
+--   ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--   build-depends:
+--       base >=4.7 && <5
+--     , simple
+--   other-modules:
+--       Paths_simple
+--   default-language: Haskell2010
