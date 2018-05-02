@@ -4,30 +4,22 @@ assignment of substructeres to layers and creation of ghost atoms.
 Following conventions shall apply:
   - highest level region has index 0
   - lowest level region has highest index
-  - set of added atoms for a layer i to saturate its cut bonds gets alphabetic
-    index added so 0A for the atoms added to cut bonds of layer 0
 -}
 module Spicy.MolecularSystem
 ( guessBonds
 , insertPseudoBond
 , isolateLayer
 ) where
+import           Control.Applicative
 import           Data.List
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
+import           Data.Maybe
 import           Lens.Micro.Platform
 import qualified Numeric.LinearAlgebra as Algebra
 import qualified Numeric.LinearAlgebra (C, Matrix, R, Vector)
 import           Spicy.Math
 import           Spicy.Types
-import Control.Applicative
-import Data.Maybe
-
-
--- | replace the Nth element from a list with a new element
-replaceNth :: Int -> a -> [a] -> [a]
-replaceNth n newElement oldList =
-  take n oldList ++ [newElement] ++ drop (n + 1) oldList
 
 
 --------------------------------------------------------------------------------
@@ -177,7 +169,7 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
         ]
       | nA <- nlInd
       ] :: [Maybe Atom]
-    -- old layer with pseudo atoms added -- WORKS UP TO THIS POINT --
+    -- old layer with pseudo atoms added
     pseudoMolAtoms = olAtoms ++ map fromJust pseudoAtomsToOl
     -- now start removing the old layer and get informations how the index remapping is
     replacementList =
@@ -234,6 +226,10 @@ remapIndices ind origList
       | nI <- newIndList
       ]
 
+-- | replace the Nth element from a list with a new element
+replaceNth :: Int -> a -> [a] -> [a]
+replaceNth n newElement oldList =
+  take n oldList ++ [newElement] ++ drop (n + 1) oldList
 
 
 --------------------------------------------------------------------------------
