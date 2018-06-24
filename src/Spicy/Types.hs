@@ -83,6 +83,8 @@ data Atom = Atom
   , _atom_Coordinates  :: R3Vec        -- coordinates of the atom, cartesian in R³
   , _atom_Connectivity :: [Int]        -- a list of other atoms this one binds to (in the sense of force fields)
                                        --   absolutely meaningless for a single atom, but set on atom level in molecules
+                                       --   this is here and not in the molecule layer, because this makes handling with
+                                       --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
   } deriving (Show, Eq)
 makeLenses ''Atom
 
