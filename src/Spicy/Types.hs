@@ -304,7 +304,9 @@ instance Show Methods where
     "  │ \n" ++
     "  ├── Moller-Plesset \n" ++ concatMap (\x ->
     "  │     ├── Order " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
-    "  │     │     ├── Flavour " ++ show (y ^. qc_mpn_Flavour) ++ "\n") (x ^. qc_mpn_Flavour') ++
+    "  │     │     ├── Flavour " ++ show (y ^. qc_mpn_Flavour) ++ "\n" ++ concatMap (\z ->
+    "  │     │     │     ├── Approximation " ++ show z ++ "\n") (y ^. qc_mpn_Approx) ++
+    "  │     │     │ \n") (x ^. qc_mpn_Flavour') ++
     "  │     │ \n"
     ) (a ^. methods_qc_MPN)
 
