@@ -174,7 +174,7 @@ data SE_Method =
   | SE_PM7
   | SE_AM1
   | SE_RM1
-  deriving Eq
+  deriving (Show, Eq)
 
 -- | Hartree Fock
 -- |   -> Approximations
@@ -182,7 +182,8 @@ data HF_Approx =
     HF_None
   | HF_RIJK
   | HF_RIJONX
-  | HF_RIJCOSX deriving Eq
+  | HF_RIJCOSX
+  deriving (Show, Eq)
 
 -- | Møller-Plesset pertubation theory
 -- |  -> Order of pertubation theory
@@ -195,16 +196,17 @@ data MP_Order =
   | MP_N3
   | MP_N4
   | MP_N5
-  deriving Eq
+  deriving (Show, Eq)
 data MP_Flavour =
     MP_Conv
   | MP_OO
-  | MP_F12 deriving Eq
+  | MP_F12
+  deriving (Show, Eq)
 data MP_Approx =
     MP_None
   | MP_RI
   | MP_DLPNO
-  deriving Eq
+  deriving (Show, Eq)
 
 -- | Coupled Cluster
 -- |  -> Coupled Cluster truncation level
@@ -219,26 +221,30 @@ data CC_Order =
   | CC_SDTQ
   | CC_SDt
   | CC_SDtq
-  deriving Eq
+  deriving (Show, Eq)
 data CC_Flavour =
     CC_Conv
   | CC_OO
   | CC_LR
   | CC_CR
   | CC_F12
-  deriving Eq
+  deriving (Show, Eq)
 data CC_Approx =
     CC_None
   | CC_RI
   | CC_DLPNO
-  deriving Eq
+  deriving (Show, Eq)
 
 -- | CAS
 -- |   -> Size of the active space. Number of Electrons and List of Orbitals
 -- |   -> For state averaging the number of roots
 -- |   -> A list of weights of the roots
 -- |   -> Approximations applied to the CAS
-type CAS_Space = (Int, [Int])
+data CAS_Space = CAS_Space
+  { _cas_Space_nElec :: Int
+  , _cas_Space_Orbs :: [Int]
+  } deriving (Show, Eq)
+makeLenses ''CAS_Space
 type CAS_Roots = Int
 type CAS_Weights = [Double]
 data CAS_Approx =
@@ -247,4 +253,117 @@ data CAS_Approx =
   | CAS_RIJONX
   | CAS_RIJCOSX
   | CAS_DMRG
-  deriving Eq
+  deriving (Show, Eq)
+
+
+-- | A data type, which is designed only for holding quantum chemical
+-- | capabilities. It is a highly linked data type containing hierarchical list
+-- | of possible QC combination
+data QC_SE_Method = QC_SE_Method
+  { _qc_se_Method :: SE_Method
+  } -- deriving (Eq, Show)
+makeLenses ''QC_SE_Method
+
+newtype QC_HF_Approx = QC_HF_Approx
+  { _qc_hf_Approx :: HF_Approx
+  } -- deriving (Eq, Show)
+makeLenses ''QC_HF_Approx
+
+data QC_MPN_Flavour = QC_MPN_Flavour
+  { _qc_mpn_Flavour :: MP_Flavour
+  , _qc_mpn_Approx :: [MP_Approx]
+  } -- deriving (Eq, Show)
+makeLenses ''QC_MPN_Flavour
+data QC_MPN_Order = QC_MPN_Order
+  { _qc_mpn_Order :: MP_Order
+  , _qc_mpn_Flavour' :: [QC_MPN_Flavour]
+  } -- deriving (Eq, Show)
+makeLenses ''QC_MPN_Order
+
+newtype QC_CAS_Approx = QC_CAS_Approx
+  { _qc_cas_Approx :: CAS_Approx
+  } -- deriving (Eq, Show)
+makeLenses ''QC_CAS_Approx
+
+data Methods = Methods
+  { _methods_qc_SE :: [QC_SE_Method]
+  , _methods_qc_HF :: [QC_HF_Approx]
+  , _methods_qc_MPN :: [QC_MPN_Order]
+  , _methods_qc_CAS :: [QC_CAS_Approx]
+  }
+makeLenses ''Methods
+
+instance Show Methods where
+  show a =
+    "Methods \n" ++
+    "  ├── Semiempiricism \n" ++ concatMap (\x ->
+    "  │     ├── Hamiltonian " ++ show (x ^. qc_se_Method) ++ "\n") (a ^. methods_qc_SE) ++
+    "  │ \n" ++
+    "  ├── Hartree-Fock \n" ++ concatMap (\x ->
+    "  │     ├── Approximation " ++ show (x ^. qc_hf_Approx) ++ "\n") (a ^. methods_qc_HF) ++
+    "  │ \n" ++
+    "  ├── Moller-Plesset \n" ++ concatMap (\x ->
+    "  │     ├── Order " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
+    "  │     │     ├── Flavour " ++ show (y ^. qc_mpn_Flavour) ++ "\n") (x ^. qc_mpn_Flavour') ++
+    "  │     │ \n"
+    ) (a ^. methods_qc_MPN)
+
+testSE =
+  [ QC_SE_Method SE_PM6
+  , QC_SE_Method SE_XTB1
+  ] :: [QC_SE_Method]
+
+testHF =
+  [ QC_HF_Approx HF_RIJK
+  , QC_HF_Approx HF_RIJCOSX
+  ] :: [QC_HF_Approx]
+
+testMPN =
+  [ QC_MPN_Order
+      { _qc_mpn_Order = MP_N2
+      , _qc_mpn_Flavour' =
+          [ QC_MPN_Flavour
+              { _qc_mpn_Flavour = MP_OO
+              , _qc_mpn_Approx =
+                  [ MP_None
+                  , MP_RI
+                  , MP_DLPNO
+                  ]
+              }
+          , QC_MPN_Flavour
+              { _qc_mpn_Flavour = MP_Conv
+              , _qc_mpn_Approx =
+                  [ MP_RI
+                  , MP_DLPNO
+                  ]
+              }
+          ]
+      }
+  , QC_MPN_Order
+      { _qc_mpn_Order = MP_N2_5
+      , _qc_mpn_Flavour' =
+          [ QC_MPN_Flavour
+              { _qc_mpn_Flavour = MP_OO
+              , _qc_mpn_Approx =
+                  [ MP_RI
+                  , MP_DLPNO
+                  ]
+              }
+          , QC_MPN_Flavour
+              { _qc_mpn_Flavour = MP_Conv
+              , _qc_mpn_Approx =
+                  [ MP_None
+                  ]
+              }
+          ]
+      }
+  ]
+
+testCAS = []
+
+testMethods = Methods
+  { _methods_qc_SE = testSE
+  , _methods_qc_HF = testHF
+  , _methods_qc_MPN = testMPN
+  , _methods_qc_CAS = testCAS
+  }
