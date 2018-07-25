@@ -28,6 +28,7 @@ module Spicy.Types
 , Basis(..)
 , Charge(..)
 , Multiplicity(..)
+, Shell(..)
 , SE_Method(..)
 , HF_Approx(..)
 , DFT_Functional(..)
@@ -49,17 +50,25 @@ module Spicy.Types
 , qc_se_Method
 , qc_se_Shell
 , QC_HF_Shell(..)
-, qc_hf_Approx
 , qc_hf_Shell
+, qc_hf_Approx
 , QC_DFT_Functional(..)
 , qc_dft_Functional
+, qc_dft_Shell
 , qc_dft_Approx
 , QC_MPN_Flavour(..)
 , qc_mpn_Flavour
+, qc_mpn_Shell
 , qc_mpn_Approx
 , QC_MPN_Order(..)
 , qc_mpn_Order
 , qc_mpn_Flavour'
+, qc_cc_Flavour
+, qc_cc_Shell
+, qc_cc_Approx
+, QC_CC_Order(..)
+, qc_cc_Order
+, qc_cc_Flavour'
 , QC_CAS_Approx(..)
 , qc_cas_Approx
 , Methods(..)
@@ -67,7 +76,9 @@ module Spicy.Types
 , methods_qc_HF
 , methods_qc_DFT
 , methods_qc_MPN
+, methods_qc_CC
 , methods_qc_CAS
+, dummyMethods
 ) where
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
@@ -500,11 +511,6 @@ instance Show Methods where
     "  ├── Semiempiricism \n" ++ concatMap (\x ->
     "  │     ├── Hamiltonian: " ++ (s $ x ^. qc_se_Shell) ++ show (x ^. qc_se_Method) ++ "\n") (a ^. methods_qc_SE) ++
     "  │ \n" ++
-    {-
-    "  ├── Hartree-Fock \n" ++ concatMap (\x ->
-    "  │     ├── Approximation: " ++ (s $ x ^. qc_hf_Shell) ++ show (x ^. qc_hf_Approx) ++ "\n") (a ^. methods_qc_HF) ++
-    "  │ \n" ++
-    -}
     "  ├── Hartree-Fock\n" ++ concatMap (\x ->
     "  │     ├── Shell: " ++ (hfShell $ x ^. qc_hf_Shell) ++ "\n" ++ concatMap (\y ->
     "  │     │     ├── Approx: " ++ show y ++ "\n") (x ^. qc_hf_Approx)) (a ^. methods_qc_HF) ++
@@ -518,18 +524,22 @@ instance Show Methods where
     "  │     │     ├── Flavour: " ++ (s $ y ^. qc_mpn_Shell) ++ show (y ^. qc_mpn_Flavour) ++ "\n" ++ concatMap (\z ->
     "  │     │     │     ├── Approximation: " ++ show z ++ "\n") (y ^. qc_mpn_Approx)) (x ^. qc_mpn_Flavour')) (a ^. methods_qc_MPN) ++
     "  │ \n" ++
-
     "  ├── Coupled Cluster \n" ++ concatMap (\x ->
     "  │     ├── Order: " ++ show (x ^. qc_cc_Order) ++ "\n" ++ concatMap (\y ->
     "  │     │     ├── Flavour: " ++ (s $ y ^. qc_cc_Shell) ++ (show $ y ^. qc_cc_Flavour) ++ "\n" ++ concatMap (\z ->
-    "  │     │     │     ├── Approximation: " ++ show z ++ "\n")
-    (y ^. qc_cc_Approx)
-    ) (x ^. qc_cc_Flavour')
-    ) (a ^. methods_qc_CC) ++
+    "  │     │     │     ├── Approximation: " ++ show z ++ "\n") (y ^. qc_cc_Approx)) (x ^. qc_cc_Flavour')) (a ^. methods_qc_CC) ++
     "  │\n" ++
     "  ├── CASSCF \n" ++ concatMap (\x ->
     "        ├── Approximation: " ++ show (x ^. qc_cas_Approx) ++ "\n") (a ^. methods_qc_CAS)
 
+dummyMethods = Methods
+  { _methods_qc_SE  = []
+  , _methods_qc_HF  = []
+  , _methods_qc_DFT = []
+  , _methods_qc_MPN = []
+  , _methods_qc_CC  = []
+  , _methods_qc_CAS = []
+  }
 
 --------------------------------------------------------------------------------
 -- test Types for priting. To be removed later

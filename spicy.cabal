@@ -44,6 +44,7 @@ library
     , Spicy.MolWriter
     , Spicy.Wrapper
     , Spicy.Wrapper.ORCA
+    , Spicy.Wrapper.ORCA.Methods
   default-language: Haskell2010
 
 executable simple-exe
