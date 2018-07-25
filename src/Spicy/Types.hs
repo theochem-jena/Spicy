@@ -30,6 +30,8 @@ module Spicy.Types
 , Multiplicity
 , SE_Method
 , HF_Approx
+, DFT_Functional
+, DFT_Approx
 , MP_Order
 , MP_Flavour
 , MP_Approx
@@ -45,6 +47,7 @@ import           Data.Map              (Map)
 import qualified Data.Map              as Map
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra hiding (Element)
+import           Text.Printf
 
 --------------------------------------------------------------------------------
 -- Representation of a molecule and its parts
@@ -174,7 +177,18 @@ data SE_Method =
   | SE_PM7
   | SE_AM1
   | SE_RM1
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show SE_Method where
+  show SE_XTB1 = "GFN-XTB - version 1"
+  show SE_XTB2 = "GFN-XTB - version 2"
+  show SE_OM1  = "OM(1)"
+  show SE_OM2  = "OM(2)"
+  show SE_OM3  = "OM(3)"
+  show SE_PM3  = "PM3"
+  show SE_PM6  = "PM6"
+  show SE_PM7  = "PM7"
+  show SE_AM1  = "AM1"
+  show SE_RM1  = "RM1"
 
 -- | Hartree Fock
 -- |   -> Approximations
@@ -183,7 +197,49 @@ data HF_Approx =
   | HF_RIJK
   | HF_RIJONX
   | HF_RIJCOSX
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show HF_Approx where
+  show HF_None    = "None"
+  show HF_RIJK    = "RI-JK"
+  show HF_RIJONX  = "RI-JONX"
+  show HF_RIJCOSX = "RI-JCOSX"
+
+-- | DFT
+-- |   -> Functional
+-- |   -> Approximations
+data DFT_Functional =
+  -- LDA
+    LDA
+  -- GGA
+  | BP86
+  | PBE
+  | BLYP
+  -- metaGGA
+  | M06_L
+  | M11_L
+  | TPSS
+  -- Hybrid
+  | B3LYP
+  | PBE0
+  -- metaHybrid
+  | TPSSh
+  | M06
+  | M06_2X
+  | M11
+  -- doubleHybrid
+  | B2PYL
+  deriving (Eq, Show)
+data DFT_Approx =
+    RIJ
+  | RIJK
+  | RICOSX
+  | RIJONX
+  deriving (Eq)
+instance Show DFT_Approx where
+  show RIJ = "RI-J"
+  show RIJK = "RI-JK"
+  show RICOSX = "RI-JCOSX"
+  show RIJONX = "RI-JONX"
 
 -- | Møller-Plesset pertubation theory
 -- |  -> Order of pertubation theory
@@ -196,17 +252,33 @@ data MP_Order =
   | MP_N3
   | MP_N4
   | MP_N5
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show MP_Order where
+  show MP_N2   = "2"
+  show MP_N2_5 = "2.5"
+  show MP_N3   = "3"
+  show MP_N4   = "4"
+  show MP_N5   = "6"
+
 data MP_Flavour =
     MP_Conv
   | MP_OO
   | MP_F12
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show MP_Flavour where
+  show MP_Conv = "conventional"
+  show MP_OO   = "orbital optimised"
+  show MP_F12  = "explicitly correlated"
+
 data MP_Approx =
     MP_None
   | MP_RI
   | MP_DLPNO
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show MP_Approx where
+  show MP_None  = "none"
+  show MP_RI    = "RI"
+  show MP_DLPNO = "DLPNO"
 
 -- | Coupled Cluster
 -- |  -> Coupled Cluster truncation level
@@ -221,19 +293,38 @@ data CC_Order =
   | CC_SDTQ
   | CC_SDt
   | CC_SDtq
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show CC_Order where
+  show CC_D    = "CCD"
+  show CC_SD   = "CCSD"
+  show CC_SDT  = "CCSDT"
+  show CC_SDTQ = "CCSDTQ"
+  show CC_SDt  = "CCSD(T)"
+  show CC_SDtq = "CCSD(TQ)"
+
 data CC_Flavour =
     CC_Conv
   | CC_OO
   | CC_LR
   | CC_CR
   | CC_F12
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show CC_Flavour where
+  show CC_Conv = "conventional"
+  show CC_OO   = "orbital optimised"
+  show CC_LR   = "locally renormalised"
+  show CC_CR   = "completely renormalised"
+  show CC_F12  = "explicitly correlated"
+
 data CC_Approx =
     CC_None
   | CC_RI
   | CC_DLPNO
-  deriving (Show, Eq)
+  deriving (Eq)
+instance Show CC_Approx where
+  show CC_None  = "none"
+  show CC_RI    = "RI"
+  show CC_DLPNO = "DLPNO"
 
 -- | CAS
 -- |   -> Size of the active space. Number of Electrons and List of Orbitals
@@ -242,9 +333,12 @@ data CC_Approx =
 -- |   -> Approximations applied to the CAS
 data CAS_Space = CAS_Space
   { _cas_Space_nElec :: Int
-  , _cas_Space_Orbs :: [Int]
-  } deriving (Show, Eq)
+  , _cas_Space_Orbs  :: [Int]
+  } deriving (Eq)
 makeLenses ''CAS_Space
+instance Show CAS_Space where
+  show a =
+    ""
 type CAS_Roots = Int
 type CAS_Weights = [Double]
 data CAS_Approx =
@@ -271,11 +365,11 @@ makeLenses ''QC_HF_Approx
 
 data QC_MPN_Flavour = QC_MPN_Flavour
   { _qc_mpn_Flavour :: MP_Flavour
-  , _qc_mpn_Approx :: [MP_Approx]
+  , _qc_mpn_Approx  :: [MP_Approx]
   } -- deriving (Eq, Show)
 makeLenses ''QC_MPN_Flavour
 data QC_MPN_Order = QC_MPN_Order
-  { _qc_mpn_Order :: MP_Order
+  { _qc_mpn_Order    :: MP_Order
   , _qc_mpn_Flavour' :: [QC_MPN_Flavour]
   } -- deriving (Eq, Show)
 makeLenses ''QC_MPN_Order
@@ -286,29 +380,28 @@ newtype QC_CAS_Approx = QC_CAS_Approx
 makeLenses ''QC_CAS_Approx
 
 data Methods = Methods
-  { _methods_qc_SE :: [QC_SE_Method]
-  , _methods_qc_HF :: [QC_HF_Approx]
+  { _methods_qc_SE  :: [QC_SE_Method]
+  , _methods_qc_HF  :: [QC_HF_Approx]
   , _methods_qc_MPN :: [QC_MPN_Order]
   , _methods_qc_CAS :: [QC_CAS_Approx]
   }
 makeLenses ''Methods
-
 instance Show Methods where
   show a =
     "Methods \n" ++
     "  ├── Semiempiricism \n" ++ concatMap (\x ->
-    "  │     ├── Hamiltonian " ++ show (x ^. qc_se_Method) ++ "\n") (a ^. methods_qc_SE) ++
+    "  │     ├── Hamiltonian: " ++ show (x ^. qc_se_Method) ++ "\n") (a ^. methods_qc_SE) ++
     "  │ \n" ++
     "  ├── Hartree-Fock \n" ++ concatMap (\x ->
     "  │     ├── Approximation " ++ show (x ^. qc_hf_Approx) ++ "\n") (a ^. methods_qc_HF) ++
     "  │ \n" ++
     "  ├── Moller-Plesset \n" ++ concatMap (\x ->
-    "  │     ├── Order " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
-    "  │     │     ├── Flavour " ++ show (y ^. qc_mpn_Flavour) ++ "\n" ++ concatMap (\z ->
-    "  │     │     │     ├── Approximation " ++ show z ++ "\n") (y ^. qc_mpn_Approx)) (x ^. qc_mpn_Flavour')) (a ^. methods_qc_MPN) ++
+    "  │     ├── Order: " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
+    "  │     │     ├── Flavour: " ++ show (y ^. qc_mpn_Flavour) ++ "\n" ++ concatMap (\z ->
+    "  │     │     │     ├── Approximation: " ++ show z ++ "\n") (y ^. qc_mpn_Approx)) (x ^. qc_mpn_Flavour')) (a ^. methods_qc_MPN) ++
     "  │ \n" ++
     "  ├── CASSCF \n" ++ concatMap (\x ->
-    "        ├── " ++ show (x ^. qc_cas_Approx) ++ "\n") (a ^. methods_qc_CAS)
+    "        ├── Approximation: " ++ show (x ^. qc_cas_Approx) ++ "\n") (a ^. methods_qc_CAS)
 
 testSE =
   [ QC_SE_Method SE_PM6
