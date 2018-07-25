@@ -305,10 +305,10 @@ instance Show Methods where
     "  ├── Moller-Plesset \n" ++ concatMap (\x ->
     "  │     ├── Order " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
     "  │     │     ├── Flavour " ++ show (y ^. qc_mpn_Flavour) ++ "\n" ++ concatMap (\z ->
-    "  │     │     │     ├── Approximation " ++ show z ++ "\n") (y ^. qc_mpn_Approx) ++
-    "  │     │     │ \n") (x ^. qc_mpn_Flavour') ++
-    "  │     │ \n"
-    ) (a ^. methods_qc_MPN)
+    "  │     │     │     ├── Approximation " ++ show z ++ "\n") (y ^. qc_mpn_Approx)) (x ^. qc_mpn_Flavour')) (a ^. methods_qc_MPN) ++
+    "  │ \n" ++
+    "  ├── CASSCF \n" ++ concatMap (\x ->
+    "        ├── " ++ show (x ^. qc_cas_Approx) ++ "\n") (a ^. methods_qc_CAS)
 
 testSE =
   [ QC_SE_Method SE_PM6
@@ -361,7 +361,10 @@ testMPN =
       }
   ]
 
-testCAS = []
+testCAS =
+  [ QC_CAS_Approx
+      { _qc_cas_Approx = CAS_RIJK }
+  ]
 
 testMethods = Methods
   { _methods_qc_SE = testSE
