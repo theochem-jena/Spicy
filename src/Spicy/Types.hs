@@ -209,37 +209,37 @@ instance Show HF_Approx where
 -- |   -> Approximations
 data DFT_Functional =
   -- LDA
-    LDA
+    DFT_LDA
   -- GGA
-  | BP86
-  | PBE
-  | BLYP
+  | DFT_BP86
+  | DFT_PBE
+  | DFT_BLYP
   -- metaGGA
-  | M06_L
-  | M11_L
-  | TPSS
+  | DFT_M06_L
+  | DFT_M11_L
+  | DFT_TPSS
   -- Hybrid
-  | B3LYP
-  | PBE0
+  | DFT_B3LYP
+  | DFT_PBE0
   -- metaHybrid
-  | TPSSh
-  | M06
-  | M06_2X
-  | M11
+  | DFT_TPSSh
+  | DFT_M06
+  | DFT_M06_2X
+  | DFT_M11
   -- doubleHybrid
-  | B2PYL
+  | DFT_B2PYL
   deriving (Eq, Show)
 data DFT_Approx =
-    RIJ
-  | RIJK
-  | RICOSX
-  | RIJONX
+    DFT_RIJ
+  | DFT_RIJK
+  | DFT_RIJCOSX
+  | DFT_RIJONX
   deriving (Eq)
 instance Show DFT_Approx where
-  show RIJ = "RI-J"
-  show RIJK = "RI-JK"
-  show RICOSX = "RI-JCOSX"
-  show RIJONX = "RI-JONX"
+  show DFT_RIJ = "RI-J"
+  show DFT_RIJK = "RI-JK"
+  show DFT_RIJCOSX = "RI-JCOSX"
+  show DFT_RIJONX = "RI-JONX"
 
 -- | Møller-Plesset pertubation theory
 -- |  -> Order of pertubation theory
@@ -349,7 +349,6 @@ data CAS_Approx =
   | CAS_DMRG
   deriving (Show, Eq)
 
-
 -- | A data type, which is designed only for holding quantum chemical
 -- | capabilities. It is a highly linked data type containing hierarchical list
 -- | of possible QC combination
@@ -362,6 +361,12 @@ newtype QC_HF_Approx = QC_HF_Approx
   { _qc_hf_Approx :: HF_Approx
   } -- deriving (Eq, Show)
 makeLenses ''QC_HF_Approx
+
+data QC_DFT_Functional = QC_DFT_Functional
+  { _qc_dft_Functional :: DFT_Functional
+  , _qc_dft_Approx :: [DFT_Approx]
+  }
+makeLenses ''QC_DFT_Functional
 
 data QC_MPN_Flavour = QC_MPN_Flavour
   { _qc_mpn_Flavour :: MP_Flavour
@@ -382,6 +387,7 @@ makeLenses ''QC_CAS_Approx
 data Methods = Methods
   { _methods_qc_SE  :: [QC_SE_Method]
   , _methods_qc_HF  :: [QC_HF_Approx]
+  , _methods_qc_DFT :: [QC_DFT_Functional]
   , _methods_qc_MPN :: [QC_MPN_Order]
   , _methods_qc_CAS :: [QC_CAS_Approx]
   }
@@ -393,7 +399,11 @@ instance Show Methods where
     "  │     ├── Hamiltonian: " ++ show (x ^. qc_se_Method) ++ "\n") (a ^. methods_qc_SE) ++
     "  │ \n" ++
     "  ├── Hartree-Fock \n" ++ concatMap (\x ->
-    "  │     ├── Approximation " ++ show (x ^. qc_hf_Approx) ++ "\n") (a ^. methods_qc_HF) ++
+    "  │     ├── Approximation: " ++ show (x ^. qc_hf_Approx) ++ "\n") (a ^. methods_qc_HF) ++
+    "  │ \n" ++
+    "  ├── DFT \n" ++ concatMap (\x ->
+    "  │     ├── Functional: " ++ show (x ^. qc_dft_Functional) ++ "\n" ++ concatMap (\y ->
+    "  │     │     ├── Approximation: " ++ show y ++ "\n") (x ^. qc_dft_Approx)) (a ^. methods_qc_DFT) ++
     "  │ \n" ++
     "  ├── Moller-Plesset \n" ++ concatMap (\x ->
     "  │     ├── Order: " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
@@ -402,6 +412,10 @@ instance Show Methods where
     "  │ \n" ++
     "  ├── CASSCF \n" ++ concatMap (\x ->
     "        ├── Approximation: " ++ show (x ^. qc_cas_Approx) ++ "\n") (a ^. methods_qc_CAS)
+
+--------------------------------------------------------------------------------
+-- test Types for priting. To be removed later
+--------------------------------------------------------------------------------
 
 testSE =
   [ QC_SE_Method SE_PM6
@@ -412,6 +426,24 @@ testHF =
   [ QC_HF_Approx HF_RIJK
   , QC_HF_Approx HF_RIJCOSX
   ] :: [QC_HF_Approx]
+
+testDFT =
+  [ QC_DFT_Functional
+      { _qc_dft_Functional = DFT_TPSS
+      , _qc_dft_Approx =
+          [ DFT_RIJ
+          , DFT_RIJCOSX
+          ]
+      }
+  , QC_DFT_Functional
+      { _qc_dft_Functional = DFT_M06
+      , _qc_dft_Approx =
+          [ DFT_RIJONX
+          , DFT_RIJK
+          , DFT_RIJCOSX
+          ]
+      }
+  ] :: [QC_DFT_Functional]
 
 testMPN =
   [ QC_MPN_Order
@@ -462,6 +494,7 @@ testCAS =
 testMethods = Methods
   { _methods_qc_SE = testSE
   , _methods_qc_HF = testHF
+  , _methods_qc_DFT = testDFT
   , _methods_qc_MPN = testMPN
   , _methods_qc_CAS = testCAS
   }
