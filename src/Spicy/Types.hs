@@ -29,6 +29,12 @@ module Spicy.Types
 , Charge(..)
 , Multiplicity(..)
 , Shell(..)
+, DType(..)
+, Efficiency(..)
+, has_Gradient
+, has_SolventGradient
+, has_Hessian
+, has_SolventHessian
 , SE_Method(..)
 , HF_Approx(..)
 , DFT_Functional(..)
@@ -82,9 +88,18 @@ module Spicy.Types
 ) where
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
+import           Data.Maybe
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
+
+
+-- | Have a class for the printing of the calculation niveau, which allows to
+-- | produce a very readable output
+class NiceShow a where
+  niceShow :: a -> String    -- printing the isolated object
+  niceComplex :: a -> String -- printing the object in the complex form,
+                             --   where everything is meant to be printed at once
 
 --------------------------------------------------------------------------------
 -- Representation of a molecule and its parts
@@ -125,7 +140,7 @@ data Atom = Atom
                                        --   absolutely meaningless for a single atom, but set on atom level in molecules
                                        --   this is here and not in the molecule layer, because this makes handling with
                                        --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
-  } deriving (Show, Eq)
+  } deriving (Eq)
 makeLenses ''Atom
 
 -- | A molecule (might be the whole system or a layer, doesnt matter) and all
@@ -136,7 +151,7 @@ data Molecule = Molecule
   , _molecule_Energy   :: Maybe Double          -- an energy might have been calculated
   , _molecule_Gradient :: Maybe (Vector Double) -- a gradient might have been calculated
   , _molecule_Hessian  :: Maybe (Matrix Double) -- a hessian might have been calculated
-  } deriving Show
+  } deriving (Eq)
 makeLenses ''Molecule
 
 -- | A ONIOM layer with "pseudoatoms" (set 2 atoms in https://doi.org/10.1016/S0166-1280(98)00475-8)
@@ -146,24 +161,41 @@ type LayerMolecule = (Int, Molecule)
 
 
 --------------------------------------------------------------------------------
--- Available calulations implemented in the wrapped software
+-- Everything that is necessary to describe the calculation niveau
 --------------------------------------------------------------------------------
+-- | Define commonon tasks we ask the software to perform
 data Task =
     Energy
   | Gradient
   | Hessian
   | PartialCharge
   deriving (Show, Eq)
+instance NiceShow Task where
+  niceShow = show
+  niceComplex = show
 
+-- | Software we could talk to
 data Software =
     ORCA
   | Psi4
   | NWChem
-  | Tinker
   | CP2K
-  | GAMMES
+  | GAMMES_US
+  | Tinker
   deriving (Show, Eq)
+instance NiceShow Software where
+  niceShow ORCA      = "ORCA"
+  niceShow Psi4      = "Psi4"
+  niceShow NWChem    = "NWChem"
+  niceShow CP2K      = "CP2K"
+  niceShow GAMMES_US = "GAMESS US"
+  niceShow Tinker    = "Tinker"
+  niceComplex = niceShow
 
+-- | Definition of basis sets. Prefer to have a prebuilt list, but allow for the
+-- | option to use one, that is not known here by the program specific (!)
+-- | keyword (CustomSimple) or by giving the program specific (!) inline notation
+-- | of the basis
 data Basis =
   -- Ahlrich
     Def2_mSVP
@@ -196,6 +228,34 @@ data Basis =
   | CustomSimple String
   | CustomComplex String
   deriving (Show, Eq)
+instance NiceShow Basis where
+  niceShow Def2_mSVP         = "def2-mSVP"
+  niceShow Def2_mTZVP        = "def2-mTZVP"
+  niceShow Def2_SV_P         = "def2-SV(P)"
+  niceShow Def2_SVP          = "def2-SVP"
+  niceShow Def2_TZVP_f       = "def-TZVP(-f)"
+  niceShow Def2_TZVP         = "def2-TZVP"
+  niceShow Def2_TZVPP        = "def2-TZVPP"
+  niceShow Def2_QZVP         = "def2-QZVP"
+  niceShow Def2_QZVPP        = "def2-QZVPP"
+  niceShow Def2_SVPD         = "def2-SVPD"
+  niceShow Def2_TZVPD        = "def2-TZVPD"
+  niceShow Def2_TZVPPD       = "def2-TZVPPD"
+  niceShow Def2_QZVPD        = "def2-QZVPD"
+  niceShow Def2_QZVPPD       = "def2-QZVPPD"
+  niceShow Cc_pVDZ           = "cc-pVDZ"
+  niceShow Cc_pVTZ           = "cc-pVTZ"
+  niceShow Cc_pVQZ           = "cc-pVQZ"
+  niceShow Cc_pV5Z           = "cc-pV5Z"
+  niceShow Cc_pV6Z           = "cc-pV6Z"
+  niceShow Aug_cc_pVDZ       = "aug-cc-pVDZ"
+  niceShow Aug_cc_pVTZ       = "aug-cc-pVTZ"
+  niceShow Aug_cc_pVQZ       = "aug-cc-pVQZ"
+  niceShow Aug_cc_pV5Z       = "aug-cc-pV5Z"
+  niceShow Aug_cc_pV6Z       = "aug-cc-pV6Z"
+  niceShow (CustomSimple a)  = a
+  niceShow (CustomComplex a) = a
+  niceComplex = niceShow
 
 -- | Charge and multiplicity of a molecule
 type Charge = Int
@@ -207,6 +267,78 @@ data Shell =
   | Unrestricted
   | RestrictedOpen
   deriving (Show, Eq)
+instance NiceShow Shell where
+  niceShow Restricted     = "restricted"
+  niceShow Unrestricted   = "unrestricted"
+  niceShow RestrictedOpen = "restricted open shell"
+  niceComplex Restricted     = "r"
+  niceComplex Unrestricted   = "u"
+  niceComplex RestrictedOpen = "o"
+
+-- | The way a derivative will be calculated
+data DType =
+    Analytical
+  | Numerical
+  | NotAvail
+  deriving Eq
+instance NiceShow DType where
+  niceShow Analytical = "analytical"
+  niceShow Numerical  = "numerical"
+  niceShow NotAvail   = "not available"
+  niceComplex Analytical = "a"
+  niceComplex Numerical  = "n"
+  niceComplex NotAvail   = "x"
+
+-- | For a given method; how efficient is the calulation of derivatives (beyond
+-- | energy)
+data Efficiency = Efficiency
+  { _has_Gradient          :: [DType]
+  , _has_SolventGradient   :: Maybe [DType]
+  , _has_Hessian           :: [DType]
+  , _has_SolventHessian    :: Maybe [DType]
+  , _has_higherDerivatives :: [DType]
+  }
+makeLenses ''Efficiency
+instance NiceShow Efficiency where
+  niceShow a =
+    "       Gradient        |        Hessian        |     Higher Deriv.     " ++ "\n" ++
+    "  GasPhase |  Solvent  |  GasPhase |  Solvent  |                       " ++ "\n" ++
+    "-----------+-----------+-----------+-----------+-----------------------" ++ "\n" ++
+    printf "  %7s  |  %7s  |  %7s  |  %7s  |  %7s  \n"
+      (concatMap niceComplex $ a ^. has_Gradient)
+      (case a ^. has_SolventGradient of
+        Nothing -> "/"
+        Just x -> concatMap niceComplex x
+      )
+      (concatMap niceComplex $ a ^. has_Hessian)
+      (case a ^. has_SolventHessian of
+        Nothing -> "/"
+        Just x -> concatMap niceComplex x
+      )
+      (concatMap niceComplex $ a ^. has_higherDerivatives)
+  niceComplex a =
+    "G-" ++
+    (concatMap niceComplex $ a ^. has_Gradient) ++
+    "(" ++
+    (case a ^. has_SolventGradient of
+      Nothing -> "/"
+      Just x -> concatMap niceComplex x
+    ) ++ ")  " ++
+    "H-" ++
+    (concatMap niceComplex $ a ^. has_Hessian) ++
+    "(" ++
+    (case a ^. has_SolventHessian of
+      Nothing -> "/"
+      Just x -> concatMap niceComplex x
+    ) ++ ")  " ++
+    "\n"
+
+
+  --gradGasPh = a ^. has_Gradient
+  --gradSolv = a ^. has_SolventGradient
+  --hessGasPh = a ^. has_Hessian
+  --hessSolv = a ^. has_SolventHessian
+
 
 -- | Semiempiricism
 -- |   -> Available semiempirical hamiltonians
@@ -233,6 +365,9 @@ instance Show SE_Method where
   show SE_PM7  = "PM7"
   show SE_AM1  = "AM1"
   show SE_RM1  = "RM1"
+instance NiceShow SE_Method where
+  niceShow = show
+  --niceComplex = show
 
 -- | Hartree Fock
 -- |   -> Approximations
@@ -312,11 +447,11 @@ data DFT_Approx =
   | DFT_RIJONX
   deriving (Eq)
 instance Show DFT_Approx where
-  show DFT_None = "none"
-  show DFT_RIJ = "RI-J"
-  show DFT_RIJK = "RI-JK"
+  show DFT_None    = "none"
+  show DFT_RIJ     = "RI-J"
+  show DFT_RIJK    = "RI-JK"
   show DFT_RIJCOSX = "RI-JCOSX"
-  show DFT_RIJONX = "RI-JONX"
+  show DFT_RIJONX  = "RI-JONX"
 
 -- | Møller-Plesset pertubation theory
 -- |  -> Order of pertubation theory
@@ -430,53 +565,75 @@ data CAS_Approx =
 -- | A data type, which is designed only for holding quantum chemical
 -- | capabilities. It is a highly linked data type containing hierarchical list
 -- | of possible QC combination
+data QC_SE_Shell = QC_SE_Shell
+  { _qc_se_Shell      :: Shell
+  , _qc_se_Efficiency :: Efficiency
+  }
+makeLenses ''QC_SE_Shell
 data QC_SE_Method = QC_SE_Method
   { _qc_se_Method :: SE_Method
-  , _qc_se_Shell :: [Shell]
-  } -- deriving (Eq, Show)
+  , _qc_se_Shell' :: [QC_SE_Shell]
+  }
 makeLenses ''QC_SE_Method
-
+--------------------------------------------------------------------------------
+data QC_HF_Approx = QC_HF_Approx
+  { _qc_hf_Approx     :: HF_Approx
+  , _qc_hf_Efficiency :: Efficiency
+  }
+makeLenses ''QC_HF_Approx
 data QC_HF_Shell = QC_HF_Shell
-  { _qc_hf_Shell :: Shell
-  , _qc_hf_Approx :: [HF_Approx]
+  { _qc_hf_Shell   :: Shell
+  , _qc_hf_Approx' :: [QC_HF_Approx]
   }
 makeLenses ''QC_HF_Shell
-
+--------------------------------------------------------------------------------
+data QC_DFT_Approx = QC_DFT_Approx
+  { _qc_dft_Approx     :: DFT_Approx
+  , _qc_dft_Efficiency :: Efficiency
+  }
+makeLenses ''QC_DFT_Approx
 data QC_DFT_Functional = QC_DFT_Functional
   { _qc_dft_Functional :: DFT_Functional
-  , _qc_dft_Shell :: [Shell]
-  , _qc_dft_Approx :: [DFT_Approx]
+  , _qc_dft_Shell      :: [Shell]
+  , _qc_dft_Approx'    :: [QC_DFT_Approx]
   }
 makeLenses ''QC_DFT_Functional
-
+--------------------------------------------------------------------------------
 data QC_MPN_Flavour = QC_MPN_Flavour
   { _qc_mpn_Flavour :: MP_Flavour
   , _qc_mpn_Shell   :: [Shell]
   , _qc_mpn_Approx  :: [MP_Approx]
-  } -- deriving (Eq, Show)
+  }
 makeLenses ''QC_MPN_Flavour
 data QC_MPN_Order = QC_MPN_Order
   { _qc_mpn_Order    :: MP_Order
   , _qc_mpn_Flavour' :: [QC_MPN_Flavour]
-  } -- deriving (Eq, Show)
+  }
 makeLenses ''QC_MPN_Order
-
+--------------------------------------------------------------------------------
+data QC_CC_Approx = QC_CC_Approx
+  { _qc_cc_Approx     :: CC_Approx
+  , _qc_cc_Efficiency :: Efficiency
+  }
+makeLenses ''QC_CC_Approx
 data QC_CC_Flavour = QC_CC_Flavour
   { _qc_cc_Flavour :: CC_Flavour
-  , _qc_cc_Shell :: [Shell]
-  , _qc_cc_Approx :: [CC_Approx]
+  , _qc_cc_Shell   :: [Shell]
+  , _qc_cc_Approx' :: [QC_CC_Approx]
   }
 makeLenses ''QC_CC_Flavour
 data QC_CC_Order = QC_CC_Order
-  { _qc_cc_Order :: CC_Order
+  { _qc_cc_Order    :: CC_Order
   , _qc_cc_Flavour' :: [QC_CC_Flavour]
   }
 makeLenses ''QC_CC_Order
-
-newtype QC_CAS_Approx = QC_CAS_Approx
-  { _qc_cas_Approx :: CAS_Approx
-  } -- deriving (Eq, Show)
+--------------------------------------------------------------------------------
+data QC_CAS_Approx = QC_CAS_Approx
+  { _qc_cas_Approx     :: CAS_Approx
+  , _qc_cas_Efficiency :: Efficiency
+  }
 makeLenses ''QC_CAS_Approx
+--------------------------------------------------------------------------------
 
 data Methods = Methods
   { _methods_qc_SE  :: [QC_SE_Method]
@@ -498,39 +655,36 @@ s shell = "(" ++ concatMap shellString shell ++ ") "
       | Unrestricted == a = "u"
       | RestrictedOpen == a = "o"
       | otherwise = ""
-
 hfShell :: Shell -> String
 hfShell shell
   | shell == Restricted = "RHF"
   | shell == Unrestricted = "UHF"
   | shell == RestrictedOpen = "ROHF"
 
-instance Show Methods where
-  show a =
-    "Methods \n" ++
-    "  ├── Semiempiricism \n" ++ concatMap (\x ->
-    "  │     ├── Hamiltonian: " ++ (s $ x ^. qc_se_Shell) ++ show (x ^. qc_se_Method) ++ "\n") (a ^. methods_qc_SE) ++
-    "  │ \n" ++
-    "  ├── Hartree-Fock\n" ++ concatMap (\x ->
-    "  │     ├── Shell: " ++ (hfShell $ x ^. qc_hf_Shell) ++ "\n" ++ concatMap (\y ->
-    "  │     │     ├── Approx: " ++ show y ++ "\n") (x ^. qc_hf_Approx)) (a ^. methods_qc_HF) ++
-    "  │ \n" ++
-    "  ├── Density Functional Theory \n" ++ concatMap (\x ->
-    "  │     ├── Functional: " ++ (s $ x ^. qc_dft_Shell)++ show (x ^. qc_dft_Functional) ++ "\n" ++ concatMap (\y ->
-    "  │     │     ├── Approximation: " ++ show y ++ "\n") (x ^. qc_dft_Approx)) (a ^. methods_qc_DFT) ++
-    "  │ \n" ++
-    "  ├── Moller-Plesset \n" ++ concatMap (\x ->
-    "  │     ├── Order: " ++ show (x ^. qc_mpn_Order) ++ "\n" ++ concatMap (\y ->
-    "  │     │     ├── Flavour: " ++ (s $ y ^. qc_mpn_Shell) ++ show (y ^. qc_mpn_Flavour) ++ "\n" ++ concatMap (\z ->
-    "  │     │     │     ├── Approximation: " ++ show z ++ "\n") (y ^. qc_mpn_Approx)) (x ^. qc_mpn_Flavour')) (a ^. methods_qc_MPN) ++
-    "  │ \n" ++
-    "  ├── Coupled Cluster \n" ++ concatMap (\x ->
-    "  │     ├── Order: " ++ show (x ^. qc_cc_Order) ++ "\n" ++ concatMap (\y ->
-    "  │     │     ├── Flavour: " ++ (s $ y ^. qc_cc_Shell) ++ (show $ y ^. qc_cc_Flavour) ++ "\n" ++ concatMap (\z ->
-    "  │     │     │     ├── Approximation: " ++ show z ++ "\n") (y ^. qc_cc_Approx)) (x ^. qc_cc_Flavour')) (a ^. methods_qc_CC) ++
-    "  │\n" ++
-    "  ├── CASSCF \n" ++ concatMap (\x ->
-    "        ├── Approximation: " ++ show (x ^. qc_cas_Approx) ++ "\n") (a ^. methods_qc_CAS)
+-- | Generate short strings for ability to use derivatives
+d :: Efficiency -> String
+d e = gGP ++ gSolv ++ hGP ++ hSolv
+  where
+    gGP = "G" ++ concatMap dString (e ^. has_Gradient)
+    e_gSolv = e ^. has_SolventHessian
+    gSolv =
+      "(" ++
+      case e_gSolv of
+        Nothing -> ""
+        Just x  -> concatMap dString x
+      ++ ") "
+    hGP = "H" ++ concatMap dString (e ^. has_Hessian)
+    e_hSolv = e ^. has_SolventHessian
+    hSolv =
+      "(" ++
+      case e_hSolv of
+        Nothing -> ""
+        Just x  -> concatMap dString x
+      ++ ") "
+    dString a
+      | a == Analytical = "a"
+      | a == Numerical = "n"
+      | a == NotAvail = "/"
 
 dummyMethods = Methods
   { _methods_qc_SE  = []
@@ -544,23 +698,25 @@ dummyMethods = Methods
 --------------------------------------------------------------------------------
 -- test Types for priting. To be removed later
 --------------------------------------------------------------------------------
-
+{-
 testSE =
   [ QC_SE_Method
       { _qc_se_Method = SE_PM6
-      , _qc_se_Shell =
-          [ Restricted
-          , Unrestricted
-          ]
-      }
-  , QC_SE_Method
-      { _qc_se_Method = SE_XTB1
-      , _qc_se_Shell =
-          [ Restricted
-          , Unrestricted
+      , _qc_se_Shell' =
+          [ QC_SE_Shell
+              { _qc_se_Shell = Restricted
+              , _qc_se_Efficiency =
+                  Efficiency
+                    { _has_Gradient = [Analytical]
+                    , _has_SolventGradient = Nothing
+                    , _has_Hessian = [Numerical]
+                    , _has_SolventHessian = Nothing
+                    }
+              }
           ]
       }
   ] :: [QC_SE_Method]
+
 
 testHF =
   [ QC_HF_Shell
@@ -668,3 +824,4 @@ testMethods = Methods
   , _methods_qc_CC = testCC
   , _methods_qc_CAS = testCAS
   }
+-}

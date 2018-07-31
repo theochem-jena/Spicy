@@ -15,6 +15,6 @@ import qualified Data.Text.IO               as T
 import           Lens.Micro.Platform
 import           Spicy.Types
 import           Spicy.Wrapper
-import           Spicy.Wrapper.ORCA.Methods (methods)
+import           Spicy.Wrapper.ORCA.Methods
 import           System.IO
 import           System.Process
