@@ -8,10 +8,10 @@ module Spicy.Math
 , hmVec2r3Vec
 , hmVecLength
 ) where
+import           Data.List
 import           Numeric.LinearAlgebra
 import           Numeric.LinearAlgebra.Data
 import           Spicy.Types
-import Data.List
 
 -- | intersection (subset) of two lists a and b
 (∩) :: Eq a => [a] -> [a] -> [a]

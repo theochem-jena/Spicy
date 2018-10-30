@@ -154,7 +154,7 @@ parse_MOL2 = do
           skipSpace
           _ <- decimal
           skipSpace
-          label <- many1 letter
+          label <- manyTill anyChar (char ' ' <|> char '\t')
           skipSpace
           x <- double
           skipSpace
@@ -208,7 +208,7 @@ parse_MOL2 = do
           skipSpace
           targetAtom <- decimal
           skipSpace
-          _ <- decimal
+          _ <- (show <$> decimal) <|> many1 letter
           _ <- many' (char ' ' <|> char '\t')
           endOfLine
           return (originAtom - 1, targetAtom - 1)
