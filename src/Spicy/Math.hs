@@ -7,6 +7,9 @@ module Spicy.Math
 , r3Vec2hmVec
 , hmVec2r3Vec
 , hmVecLength
+, hmVecAngle
+, r3VecNormalVecOfPlane3Points
+, r3VecDihedral
 ) where
 import           Data.List
 import           Numeric.LinearAlgebra
@@ -32,5 +35,20 @@ hmVec2r3Vec a
     a_z = a `atIndex` 2
 
 -- | calculate the length of a vector
-hmVecLength :: Vector R -> Double
+hmVecLength :: Vector R -> R
 hmVecLength = sqrt . sum . map (^2) . toList
+
+-- | Angle between two vectors
+hmVecAngle :: (Vector R, Vector R) -> R
+hmVecAngle (a, b) = acos $ (a <.> b) / (hmVecLength a * hmVecLength b)
+
+-- | Defines the normal vector of a plane, defined by 3 points
+r3VecNormalVecOfPlane3Points :: (Vector R, Vector R, Vector R) -> Vector R
+r3VecNormalVecOfPlane3Points (a, b, c) = (b - a) `cross` (c - a)
+
+-- | Dihedral angle between 4 atoms
+r3VecDihedral :: (Vector R, Vector R, Vector R, Vector R) -> R
+r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
+  where
+    p1Normal = r3VecNormalVecOfPlane3Points (a, b, c)
+    p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
