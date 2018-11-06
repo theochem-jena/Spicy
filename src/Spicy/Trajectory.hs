@@ -1,5 +1,6 @@
 module Spicy.Trajectory
 ( filterByCriteria
+, criterionDistance
 ) where
 import           Control.Parallel.Strategies
 import           Data.List
