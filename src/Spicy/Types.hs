@@ -17,6 +17,7 @@ module Spicy.Types
 , atom_Coordinates
 , atom_Connectivity
 , Molecule(..)
+, Trajectory
 , molecule_Label
 , molecule_Atoms
 , molecule_Energy
@@ -158,6 +159,9 @@ makeLenses ''Molecule
 -- | While the molecule is ordinary for this program, pseudo atoms need to be
 -- | handled differently from program to program
 type LayerMolecule = (Int, Molecule)
+
+-- | Trajectories are simply a list of molecules
+type Trajectory = [Molecule]
 
 
 --------------------------------------------------------------------------------

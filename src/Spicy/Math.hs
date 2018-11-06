@@ -7,6 +7,7 @@ module Spicy.Math
 , r3Vec2hmVec
 , hmVec2r3Vec
 , hmVecLength
+, hmVecDistance
 , hmVecAngle
 , r3VecNormalVecOfPlane3Points
 , r3VecDihedral
@@ -37,6 +38,10 @@ hmVec2r3Vec a
 -- | calculate the length of a vector
 hmVecLength :: Vector R -> R
 hmVecLength = sqrt . sum . map (^2) . toList
+
+-- | Distance between 2 points
+hmVecDistance :: (Vector R, Vector R) -> R
+hmVecDistance (a, b) = hmVecLength $ b - a
 
 -- | Angle between two vectors
 hmVecAngle :: (Vector R, Vector R) -> R
