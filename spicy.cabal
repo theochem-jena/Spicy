@@ -36,6 +36,9 @@ library
     , attoparsec >=0.13.1.0
     , text >=1.2.2.0
     , process >= 1.4.3.0
+    , either-unwrap >= 1.1
+    , random >= 1.1
+    , parallel >= 3.2
   exposed-modules:
       Spicy.MolecularSystem
     , Spicy.Types
