@@ -1,14 +1,16 @@
 module Spicy.Trajectory
 ( filterByCriteria
 , criterionDistance
+, criterionAngle4Atoms
+, findNearestAtom
 ) where
 import           Control.Parallel.Strategies
 import           Data.List
 import           Data.Maybe
+import           Lens.Micro.Platform
+import           Spicy.Math
 import           Spicy.Types
 import           System.Random
-import Spicy.Math
-import           Lens.Micro.Platform
 
 -- | Filter a trajectory by multiple criteria
 filterByCriteria :: [Molecule -> Bool] -> Trajectory -> Trajectory
@@ -21,8 +23,8 @@ filterByCriteria cs t = resultTraj
 
     -- Filter lists are joined by logical AND
     joinBoolLists :: [[Bool]] -> [Bool]
-    joinBoolLists [] = []
-    joinBoolLists [l] = l
+    joinBoolLists []     = []
+    joinBoolLists [l]    = l
     joinBoolLists (l:ls) = zipWith (&&) l (joinBoolLists ls)
 
     -- Boolean lists of the frames by criteria
@@ -37,8 +39,48 @@ filterByCriteria cs t = resultTraj
 
 -- | Distance criterion (larger, smaller, equal, ...) of two atoms in a molecule
 -- | to be fullfilled
-criterionDistance :: (Int, Int) -> (Double -> Bool) -> Molecule -> Bool
-criterionDistance (a, b) c m = c $ hmVecDistance (coord_a, coord_b)
+criterionDistance :: (Int, Int) -> (Double -> Bool) -> Molecule -> Maybe Bool
+criterionDistance (a, b) c m
+  | a < nAtoms && b < nAtoms = Just $ c $ hmVecDistance (aCoord, bCoord)
+  | otherwise = Nothing
   where
-    coord_a = r3Vec2hmVec $ ((m ^. molecule_Atoms) !! a) ^. atom_Coordinates
-    coord_b = r3Vec2hmVec $ ((m ^. molecule_Atoms) !! b) ^. atom_Coordinates
+    atoms = m ^. molecule_Atoms
+    nAtoms = length atoms
+    aCoord = r3Vec2hmVec $ (atoms !! a) ^. atom_Coordinates
+    bCoord = r3Vec2hmVec $ (atoms !! b) ^. atom_Coordinates
+
+-- | Angle criterion, defined between 2x2 atoms. This is the general case, a2
+-- | and b1 can be the same to have a 3 atom angle
+criterionAngle4Atoms :: ((Int, Int), (Int, Int)) -> (Double -> Bool) -> Molecule -> Maybe Bool
+criterionAngle4Atoms ((a1, a2), (b1, b2)) c m
+  | a1 < nAtoms && a2 < nAtoms && b1 < nAtoms && b2 < nAtoms = Just $ c $ hmVecAngle (aVec, bVec)
+  | otherwise = Nothing
+  where
+    atoms = m ^. molecule_Atoms
+    nAtoms = length atoms
+    a1Coord = r3Vec2hmVec $ (atoms !! a1) ^. atom_Coordinates
+    a2Coord = r3Vec2hmVec $ (atoms !! a2) ^. atom_Coordinates
+    b1Coord = r3Vec2hmVec $ (atoms !! b1) ^. atom_Coordinates
+    b2Coord = r3Vec2hmVec $ (atoms !! b2) ^. atom_Coordinates
+    aVec = a2Coord - a1Coord
+    bVec = b2Coord - b1Coord
+
+-- | Give a point (might be coordinates of an atom) and find the closest atom to
+-- | it. Gives a tuple of the distance to the atom, the index of the atom in the
+-- | molecule and the atom itself
+findNearestAtom :: R3Vec -> Molecule -> Maybe (Double, Int, Atom)
+findNearestAtom pos m
+  | length (m ^. molecule_Atoms) < 1 = Nothing
+  | isNothing indexMaybe = Nothing
+  | otherwise = Just (distances !! index, index, atoms !! index)
+  where
+    atoms = m ^. molecule_Atoms
+    nAtoms = length atoms
+    posVec = r3Vec2hmVec pos
+    distances =
+      [ hmVecDistance (posVec, r3Vec2hmVec $ i ^. atom_Coordinates)
+      | i <- atoms
+      ]
+    smallestDistance = minimum distances
+    indexMaybe = findIndex (== smallestDistance) distances
+    index = fromJust indexMaybe
