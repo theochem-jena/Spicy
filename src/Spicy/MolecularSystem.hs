@@ -9,6 +9,10 @@ module Spicy.MolecularSystem
 ( guessBonds
 , insertPseudoBond
 , isolateLayer
+, filterByCriteria
+, criterionDistance
+, criterionAngle4Atoms
+, findNearestAtom
 ) where
 import           Control.Applicative
 import           Data.List
@@ -194,47 +198,6 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
 
 
 --------------------------------------------------------------------------------
--- Generic Helper Functions
---------------------------------------------------------------------------------
--- | given a list of substituions [(new, old)] replace all elements in a list
--- | with the new ones and remove them if there is no correponding new element
-substituteElemsInList :: Eq a => [(a, a)] -> [a] -> [a]
-substituteElemsInList substiList origList = substitutedList
-  where
-    new = map fst substiList
-    old = map snd substiList
-    intermediateSubstitutedList =
-      foldr (\x acc ->
-        if x `elem` old
-          then
-            (new !! fromJust (elemIndex x old), old !! fromJust (elemIndex x old)) : acc
-          else acc
-        )
-        [] origList
-    substitutedList = map fst intermediateSubstitutedList
-
--- | Give a list of interesting indices for a list which is meant to be a subset
--- | of the original list and return a list where old index, new index and the
--- | retained elements are stored
-remapIndices :: [Int] -> [a] -> Maybe [(Int, Int, a)]
-remapIndices ind origList
-  | maximum ind > (length origList - 1) || minimum ind < 0 = Nothing
-  | otherwise = Just newIndOrigIndNewElemList
-  where
-    origIndNewElemList = [ (i, origList !! i) | i <- ind ]
-    newIndList = [ 0 .. length origIndNewElemList - 1 ]
-    newIndOrigIndNewElemList =
-      [ (nI, fst (origIndNewElemList !! nI), snd (origIndNewElemList !! nI))
-      | nI <- newIndList
-      ]
-
--- | replace the Nth element from a list with a new element
-replaceNth :: Int -> a -> [a] -> [a]
-replaceNth n newElement oldList =
-  take n oldList ++ [newElement] ++ drop (n + 1) oldList
-
-
---------------------------------------------------------------------------------
 -- Analysis and filtering of molecules
 --------------------------------------------------------------------------------
 -- | Filter a trajectory by multiple criteria
@@ -309,6 +272,47 @@ findNearestAtom pos m
     smallestDistance = minimum distances
     indexMaybe = findIndex (== smallestDistance) distances
     index = fromJust indexMaybe
+
+
+--------------------------------------------------------------------------------
+-- Generic Helper Functions
+--------------------------------------------------------------------------------
+-- | given a list of substituions [(new, old)] replace all elements in a list
+-- | with the new ones and remove them if there is no correponding new element
+substituteElemsInList :: Eq a => [(a, a)] -> [a] -> [a]
+substituteElemsInList substiList origList = substitutedList
+  where
+    new = map fst substiList
+    old = map snd substiList
+    intermediateSubstitutedList =
+      foldr (\x acc ->
+        if x `elem` old
+          then
+            (new !! fromJust (elemIndex x old), old !! fromJust (elemIndex x old)) : acc
+          else acc
+        )
+        [] origList
+    substitutedList = map fst intermediateSubstitutedList
+
+-- | Give a list of interesting indices for a list which is meant to be a subset
+-- | of the original list and return a list where old index, new index and the
+-- | retained elements are stored
+remapIndices :: [Int] -> [a] -> Maybe [(Int, Int, a)]
+remapIndices ind origList
+  | maximum ind > (length origList - 1) || minimum ind < 0 = Nothing
+  | otherwise = Just newIndOrigIndNewElemList
+  where
+    origIndNewElemList = [ (i, origList !! i) | i <- ind ]
+    newIndList = [ 0 .. length origIndNewElemList - 1 ]
+    newIndOrigIndNewElemList =
+      [ (nI, fst (origIndNewElemList !! nI), snd (origIndNewElemList !! nI))
+      | nI <- newIndList
+      ]
+
+-- | replace the Nth element from a list with a new element
+replaceNth :: Int -> a -> [a] -> [a]
+replaceNth n newElement oldList =
+  take n oldList ++ [newElement] ++ drop (n + 1) oldList
 
 
 --------------------------------------------------------------------------------
