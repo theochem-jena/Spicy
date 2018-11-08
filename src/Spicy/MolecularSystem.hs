@@ -13,20 +13,22 @@ module Spicy.MolecularSystem
 , criterionDistance
 , criterionAngle4Atoms
 , findNearestAtom
+, fragmentMolecule
 ) where
 import           Control.Applicative
+import           Control.Parallel.Strategies
+import           Data.IntSet                 (IntSet)
+import qualified Data.IntSet                 as I
 import           Data.List
-import           Data.Map              (Map)
-import qualified Data.Map              as Map
+import           Data.Map                    (Map)
+import qualified Data.Map                    as Map
 import           Data.Maybe
 import           Lens.Micro.Platform
-import qualified Numeric.LinearAlgebra as Algebra
-import qualified Numeric.LinearAlgebra (C, Matrix, R, Vector)
+import qualified Numeric.LinearAlgebra       as Algebra
+import qualified Numeric.LinearAlgebra       (C, Matrix, R, Vector)
 import           Spicy.Math
 import           Spicy.Types
 import           System.Random
-import           Control.Parallel.Strategies
-import qualified Data.IntSet as I
 
 
 --------------------------------------------------------------------------------
@@ -283,14 +285,30 @@ findNearestAtom pos m
     indexMaybe = findIndex (== smallestDistance) distances
     index = fromJust indexMaybe
 
-{-
+-- | Detects fragment based on bond analysis
 fragmentMolecule :: Molecule -> SuperMolecule
-fragmentMolecule m =
+fragmentMolecule m = (Just m, fragments)
   where
     atoms = m ^. molecule_Atoms
+    nAtoms = length atoms
     atomsBonds = map (^. atom_Connectivity) atoms
     bondPartners =
--}
+      [ I.insert i (atomsBonds !! i)
+      | i <- [0 .. nAtoms - 1]
+      ]
+    fragmentsIndices = reduceToZeroOverlap bondPartners
+    fragments = -- the atoms are not correct yet, the bonds need to be updated for new indices
+      [ Molecule
+          { _molecule_Label    = "Fragment " ++ show i
+          , _molecule_Atoms    = [(m ^. molecule_Atoms) !! a | a <- I.toList (fragmentsIndices !! i)]
+          , _molecule_Energy   = Nothing
+          , _molecule_Gradient = Nothing
+          , _molecule_Hessian  = Nothing
+          }
+      | i <- [0 .. length fragmentsIndices - 1]
+      ]
+
+
 --------------------------------------------------------------------------------
 -- Generic Helper Functions
 --------------------------------------------------------------------------------
@@ -326,14 +344,43 @@ remapIndices ind origList
       | nI <- newIndList
       ]
 
--- | replace the Nth element from a list with a new element
+-- | Replace the Nth element from a list with a new element
 replaceNth :: Int -> a -> [a] -> [a]
 replaceNth n newElement oldList =
   take n oldList ++ [newElement] ++ drop (n + 1) oldList
 
--- | Check if two lists have some overlap
-hasOverlap :: (Eq a) => [a] -> [a] -> Bool
-hasOverlap a b = length (intersect a b) > 0
+-- | Delete the nth element of a list
+deleteNth :: Int -> [a] -> [a]
+deleteNth n l = (take n l) ++ (drop (n + 1) l)
+
+-- | This reduces a list of IntSets, that potentially has some overlap in the set elements, to a
+-- | list of sets, that has no elements in common, by recursively combining all sets, that have
+-- | overlap
+reduceToZeroOverlap :: [IntSet] -> [IntSet]
+reduceToZeroOverlap [] = []
+reduceToZeroOverlap [a] = [a]
+reduceToZeroOverlap (a:as) =
+  if (all (\a -> length a == 0) overlaps)
+    then (a:as)
+    else reduceToZeroOverlap reducedSet
+  where
+    -- From a list of possible sets, which with the first could have overlap, the results will be
+    -- all, that have an overlap
+    setsWithOverlap :: IntSet -> [IntSet] -> [IntSet]
+    setsWithOverlap b bl = [ i | i <- bl, not . I.null $ I.intersection b i, b /= i]
+
+    -- List of lists of sets with overlap to a fragment
+    -- (fragments -> other fragments that have overlap -> atoms in this fragment)
+    overlaps =
+      [ setsWithOverlap ((a:as) !! i) (deleteNth i (a:as))
+      | i <- [0 .. length (a:as) - 1]
+      ] :: [[IntSet]]
+
+    -- Join all sets with overlap at once
+    reducedSet =
+      [ I.unions (((a:as) !! i) : (overlaps !! i))
+      | i <- [0 .. length (a:as) - 1]
+      ]
 
 
 --------------------------------------------------------------------------------
