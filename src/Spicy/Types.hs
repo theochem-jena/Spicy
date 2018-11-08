@@ -89,9 +89,13 @@ module Spicy.Types
 , methods_qc_CAS
 , dummyMethods
 ) where
+import           Data.IntSet           (IntSet)
+import qualified Data.IntSet           as I
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 import           Data.Maybe
+import           Data.Set              (Set)
+import qualified Data.Set              as S
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
@@ -139,18 +143,18 @@ data Atom = Atom
   , _atom_FFType       :: FFType       -- label depending on the mm software used, identifying topological atom
   , _atom_PCharge      :: Maybe Double -- possibly a partial charge
   , _atom_Coordinates  :: R3Vec        -- coordinates of the atom, cartesian in R³
-  , _atom_Connectivity :: [Int]        -- a list of other atoms this one binds to (in the sense of force fields)
+  , _atom_Connectivity :: IntSet       -- a set of other atoms this one binds to (in the sense of force fields)
                                        --   absolutely meaningless for a single atom, but set on atom level in molecules
                                        --   this is here and not in the molecule layer, because this makes handling with
                                        --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
-  } deriving (Eq)
+  } deriving (Eq, Ord)
 makeLenses ''Atom
 
 -- | A molecule (might be the whole system or a layer, doesnt matter) and all
 -- | associated informations
 data Molecule = Molecule
   { _molecule_Label    :: String                -- give the molecule a name
-  , _molecule_Atoms    :: [Atom]                -- a set of Atoms
+  , _molecule_Atoms    :: [Atom]                -- a list of Atoms
   , _molecule_Energy   :: Maybe Double          -- an energy might have been calculated
   , _molecule_Gradient :: Maybe (Vector Double) -- a gradient might have been calculated
   , _molecule_Hessian  :: Maybe (Matrix Double) -- a hessian might have been calculated
@@ -320,12 +324,12 @@ instance NiceShow Efficiency where
       (concatMap niceComplex $ a ^. has_Gradient)
       (case a ^. has_SolventGradient of
         Nothing -> "/"
-        Just x -> concatMap niceComplex x
+        Just x  -> concatMap niceComplex x
       )
       (concatMap niceComplex $ a ^. has_Hessian)
       (case a ^. has_SolventHessian of
         Nothing -> "/"
-        Just x -> concatMap niceComplex x
+        Just x  -> concatMap niceComplex x
       )
       (concatMap niceComplex $ a ^. has_higherDerivatives)
   niceComplex a =
@@ -334,14 +338,14 @@ instance NiceShow Efficiency where
     "(" ++
     (case a ^. has_SolventGradient of
       Nothing -> "/"
-      Just x -> concatMap niceComplex x
+      Just x  -> concatMap niceComplex x
     ) ++ ")  " ++
     "H-" ++
     (concatMap niceComplex $ a ^. has_Hessian) ++
     "(" ++
     (case a ^. has_SolventHessian of
       Nothing -> "/"
-      Just x -> concatMap niceComplex x
+      Just x  -> concatMap niceComplex x
     ) ++ ")  " ++
     "\n"
 

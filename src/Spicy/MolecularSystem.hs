@@ -26,6 +26,7 @@ import           Spicy.Math
 import           Spicy.Types
 import           System.Random
 import           Control.Parallel.Strategies
+import qualified Data.IntSet as I
 
 
 --------------------------------------------------------------------------------
@@ -43,8 +44,8 @@ manipulateBondAtomic action (i_a, a) (i_b, b) = (atomNew_a, atomNew_b)
   where
     atom_a = a
     atom_b = b
-    connectivity_a = atom_a ^. atom_Connectivity
-    connectivity_b = atom_b ^. atom_Connectivity
+    connectivity_a = I.toList $ atom_a ^. atom_Connectivity
+    connectivity_b = I.toList $ atom_b ^. atom_Connectivity
     connectivityCleaned_a =
       if action == Create
         then i_b : connectivity_a
@@ -53,8 +54,8 @@ manipulateBondAtomic action (i_a, a) (i_b, b) = (atomNew_a, atomNew_b)
       if action == Create
         then i_a : connectivity_b
         else delete i_a connectivity_b
-    atomNew_a = atom_a & atom_Connectivity .~ connectivityCleaned_a
-    atomNew_b = atom_b & atom_Connectivity .~ connectivityCleaned_b
+    atomNew_a = atom_a & atom_Connectivity .~ I.fromList connectivityCleaned_a
+    atomNew_b = atom_b & atom_Connectivity .~ I.fromList connectivityCleaned_b
 
 -- | Create or delete bonds between pairs of atoms and give back a molecule
 manipulateBond :: BondManipulation -> Int -> Int -> Molecule -> Maybe Molecule
@@ -78,14 +79,14 @@ guessBonds scale mol = mol & molecule_Atoms .~ updatedAtoms
     atomIndRange = [ 0 .. length atoms - 1 ]
     updatedAtoms =
       [ (atoms !! a) & atom_Connectivity .~
-      ( nub . concat $
+      ( I.fromList . nub . concat $
         [ if isNothing $ cD (atoms !! a) (atoms !! b)
-            then (atoms !! a) ^. atom_Connectivity
+            then I.toList $ (atoms !! a) ^. atom_Connectivity
             else
               if  fromMaybe 1.4 scale * fromJust (cD (atoms !! a) (atoms !! b))
                   >= d (atoms !! a) (atoms !! b) && a/=b
-                then b : ((atoms !! a) ^. atom_Connectivity)
-                else (atoms !! a) ^. atom_Connectivity
+                then b : (I.toList $ (atoms !! a) ^. atom_Connectivity)
+                else I.toList $ (atoms !! a) ^. atom_Connectivity
         | b <- atomIndRange
         ]
       )
@@ -142,7 +143,7 @@ insertPseudoBond psElementTemplate psScalingTemplate i_a i_b mol
       , _atom_FFType = ""
       , _atom_PCharge = Nothing
       , _atom_Coordinates = fromJust $ hmVec2r3Vec r_p
-      , _atom_Connectivity = [i_a]
+      , _atom_Connectivity = I.fromList [i_a]
       }
 
 -- | Isolate parts of a molecule (defined by its indices) as a new ONIOM layer
@@ -161,8 +162,8 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
     olAtoms = mol ^. molecule_Atoms
     olIndRange = [0 .. length olAtoms - 1 ]
     nlAtoms = [ olAtoms !! i | i <- nlInd ] :: [Atom]
-    olAtomicBonds = map (^. atom_Connectivity) olAtoms                          -- atomwise list of bonds to other atoms of the old layer
-    nlAtomicBonds = map (^. atom_Connectivity) nlAtoms
+    olAtomicBonds = map (I.toList . (^. atom_Connectivity)) olAtoms             -- atomwise list of bonds to other atoms of the old layer
+    nlAtomicBonds = map (I.toList . (^. atom_Connectivity)) nlAtoms
     pseudoAtomsToOl =                                                           -- the set of pseudo atoms that are added to the outer layer when separating the inner layers
       concat
       [ [ last . _molecule_Atoms <$>                                            -- take the last atom added to the molecule
@@ -184,17 +185,26 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
       pseudoMolAtoms
     -- only the new set of atoms but without the updated connectivities
     newAtomsOldConnectivity = map (\(a, b, c) -> c) $ fromJust replacementList
-    newAtomsOldConnectivitiesOnly = map (^. atom_Connectivity) newAtomsOldConnectivity
+    newAtomsOldConnectivitiesOnly = map (I.toList . (^. atom_Connectivity)) newAtomsOldConnectivity
     -- the replacment list for updating connectivities
     indMappingList = map (\(a, b, c) -> (a, b)) $ fromJust replacementList
     newAtomsNewConnectivitiesOnly =
       map (substituteElemsInList indMappingList) newAtomsOldConnectivitiesOnly
     -- the new atoms with updated connectivities
     newAtoms =
-      [ (newAtomsOldConnectivity !! i) & atom_Connectivity .~ (newAtomsNewConnectivitiesOnly !! i)
+      [ (newAtomsOldConnectivity !! i) & atom_Connectivity .~ I.fromList (newAtomsNewConnectivitiesOnly !! i)
       | i <- [0 .. length newAtomsOldConnectivity - 1 ]
       ]
     nlMolecule = mol & molecule_Atoms .~ newAtoms
+
+{-
+-- | Splits a molecule with correct bonds in individual fragments
+fragmentMolecule :: Molecule -> SuperMolecule
+fragmentMolecule m =
+  where
+    atoms = m ^. molecule_Atoms
+    atomsBonds = map (^. atom_Connectivity) atoms
+-}
 
 
 --------------------------------------------------------------------------------
@@ -273,7 +283,14 @@ findNearestAtom pos m
     indexMaybe = findIndex (== smallestDistance) distances
     index = fromJust indexMaybe
 
-
+{-
+fragmentMolecule :: Molecule -> SuperMolecule
+fragmentMolecule m =
+  where
+    atoms = m ^. molecule_Atoms
+    atomsBonds = map (^. atom_Connectivity) atoms
+    bondPartners =
+-}
 --------------------------------------------------------------------------------
 -- Generic Helper Functions
 --------------------------------------------------------------------------------
@@ -313,6 +330,10 @@ remapIndices ind origList
 replaceNth :: Int -> a -> [a] -> [a]
 replaceNth n newElement oldList =
   take n oldList ++ [newElement] ++ drop (n + 1) oldList
+
+-- | Check if two lists have some overlap
+hasOverlap :: (Eq a) => [a] -> [a] -> Bool
+hasOverlap a b = length (intersect a b) > 0
 
 
 --------------------------------------------------------------------------------

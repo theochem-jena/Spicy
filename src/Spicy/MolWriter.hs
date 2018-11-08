@@ -15,6 +15,8 @@ import           Data.Tuple
 import           Lens.Micro.Platform
 import           Spicy.Types
 import           Text.Printf
+import qualified Data.Set as S
+import qualified Data.IntSet as I
 
 
 --------------------------------------------------------------------------------
@@ -30,7 +32,7 @@ write_XYZ mol =
                   printf "%12.8F    " (a ^. atom_Coordinates . _1) ++
                   printf "%12.8F    " (a ^. atom_Coordinates . _2) ++
                   printf "%12.8F\n"   (a ^. atom_Coordinates . _3)
-          ) (mol ^. molecule_Atoms)
+          ) (mol ^.  molecule_Atoms)
     )
   where
     nAtoms = length (mol ^. molecule_Atoms)
@@ -56,7 +58,7 @@ write_TXYZ mol =
                           else a ^. atom_FFType
                         ) ++
                       concat
-                        ( map (printf "%6d  " . (+ 1)) (a ^. atom_Connectivity)
+                        ( map (printf "%6d  " . (+ 1)) (I.toList $ a ^. atom_Connectivity)
                         ) ++ "\n"
           ) numberedAtoms
     )
@@ -93,7 +95,7 @@ write_MOL2 mol =
                         (if a ^. atom_FFType == ""
                            then show (a ^. atom_Element) ++
                                 "." ++
-                                show (length $ a ^. atom_Connectivity)
+                                show (length . I.toList $ a ^. atom_Connectivity)
                            else a ^. atom_FFType
                         ) ++
                       printf "%2d    " (1 :: Int) ++
@@ -114,7 +116,7 @@ write_MOL2 mol =
     atomIndexList = [ 1 .. nAtoms ]
     numberedAtoms = zip atomIndexList atoms
     nAtoms = length atoms
-    bonds = map (^. atom_Connectivity) atoms
+    bonds = map (I.toList . (^. atom_Connectivity)) atoms
     pairBondsRedundant =
       concat
       [ map (\a -> (i + 1, a + 1)) (bonds !! i)

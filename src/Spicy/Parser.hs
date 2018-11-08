@@ -5,7 +5,9 @@ module Spicy.Parser
 ) where
 import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
+import qualified Data.IntSet               as I
 import           Data.Maybe
+import qualified Data.Set                  as S
 import qualified Data.Text                 as T
 import           Data.Tuple
 import           Lens.Micro.Platform
@@ -56,7 +58,7 @@ parse_XYZ = do
         , _atom_FFType = ""
         , _atom_PCharge = Nothing
         , _atom_Coordinates = (x, y, z)
-        , _atom_Connectivity = []
+        , _atom_Connectivity = I.empty
         }
 
 -- | parse a .txyz file (Tinkers xyz format)
@@ -103,7 +105,7 @@ parse_TXYZ = do
             Just x  -> show x
         , _atom_PCharge = Nothing
         , _atom_Coordinates = (x, y, z)
-        , _atom_Connectivity = map (+ (-1)) connectivityRaw
+        , _atom_Connectivity = I.fromList $ map (+ (-1)) connectivityRaw
         }
     columnDecimal :: Parser Int
     columnDecimal = do
@@ -120,7 +122,7 @@ parse_MOL2 = do
   atoms <- atomParser
   bonds <- bondParser nAtoms
   let updatedAtoms =
-        [ (atoms !! i) & atom_Connectivity .~ (bonds !! i)
+        [ (atoms !! i) & atom_Connectivity .~ I.fromList (bonds !! i)
         | i <- [ 0 .. length atoms - 1 ]
         ]
   return Molecule
@@ -184,7 +186,7 @@ parse_MOL2 = do
             , _atom_FFType = ffType
             , _atom_PCharge = Just partialCharge
             , _atom_Coordinates = (x, y, z)
-            , _atom_Connectivity = []
+            , _atom_Connectivity = I.empty
             }
     bondParser :: Int -> Parser [[Int]]
     bondParser nAtoms = do
