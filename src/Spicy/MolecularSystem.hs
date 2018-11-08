@@ -13,6 +13,7 @@ module Spicy.MolecularSystem
 , criterionDistance
 , criterionAngle4Atoms
 , findNearestAtom
+, FragmentBonds
 , fragmentMolecule
 ) where
 import           Control.Applicative
@@ -199,15 +200,6 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
       ]
     nlMolecule = mol & molecule_Atoms .~ newAtoms
 
-{-
--- | Splits a molecule with correct bonds in individual fragments
-fragmentMolecule :: Molecule -> SuperMolecule
-fragmentMolecule m =
-  where
-    atoms = m ^. molecule_Atoms
-    atomsBonds = map (^. atom_Connectivity) atoms
--}
-
 
 --------------------------------------------------------------------------------
 -- Analysis and filtering of molecules
@@ -285,9 +277,21 @@ findNearestAtom pos m
     indexMaybe = findIndex (== smallestDistance) distances
     index = fromJust indexMaybe
 
--- | Detects fragment based on bond analysis
-fragmentMolecule :: Molecule -> SuperMolecule
-fragmentMolecule m = (Just m, fragments)
+-- | When segmenting a molecule into fragments, how should the bonds in the fragment be handled?
+-- |   OnlySuper -> Remove all bonds in the fragments and only keep them in the super molecule
+-- |   SuperAndFragment -> In supermolecule the original bonds remain but in the fragments all bonds
+-- |     are remapped to have intrafragment bonds as they were in the super molecule
+-- |   NewGuess -> Applies bond guessing based on covalent radii fragment wise
+-- |   RemoveAll -> Remove all bonds from supermolecule and fragments
+data FragmentBonds = OnlySuper | SuperAndFragment | NewGuess (Maybe Double) | RemoveAll deriving Eq
+
+-- | Detects fragment based on bond analysis. Bonds are handled according to FragmentBonds
+fragmentMolecule :: FragmentBonds -> Molecule -> Maybe SuperMolecule
+fragmentMolecule bondHandling m
+  | bondHandling == SuperAndFragment = Nothing
+  | isNothing fragmentsBondsUpdate = Nothing
+  | bondHandling == RemoveAll = Just (moleculeWithoutBonds, fromJust fragmentsBondsUpdate)
+  | otherwise = Just (m, fromJust fragmentsBondsUpdate)
   where
     atoms = m ^. molecule_Atoms
     nAtoms = length atoms
@@ -297,7 +301,7 @@ fragmentMolecule m = (Just m, fragments)
       | i <- [0 .. nAtoms - 1]
       ]
     fragmentsIndices = reduceToZeroOverlap bondPartners
-    fragments = -- the atoms are not correct yet, the bonds need to be updated for new indices
+    fragments =
       [ Molecule
           { _molecule_Label    = "Fragment " ++ show i
           , _molecule_Atoms    = [(m ^. molecule_Atoms) !! a | a <- I.toList (fragmentsIndices !! i)]
@@ -307,6 +311,27 @@ fragmentMolecule m = (Just m, fragments)
           }
       | i <- [0 .. length fragmentsIndices - 1]
       ]
+    fragmentsBondsUpdate = case bondHandling of
+      OnlySuper ->
+        Just fragmentsWithoutBonds
+      SuperAndFragment ->
+        Nothing
+      NewGuess s ->
+        Just
+        [ guessBonds s f
+        | f <- fragments
+        ]
+      RemoveAll ->
+        Just fragmentsWithoutBonds
+      where
+        fragmentsWithoutBonds =
+          [ f & molecule_Atoms .~
+            map (\a -> a & atom_Connectivity .~ I.empty) (f ^. molecule_Atoms)
+          | f <- fragments
+          ]
+    moleculeWithoutBonds =
+      m & molecule_Atoms .~
+      map (\a -> a & atom_Connectivity .~ I.empty) (m ^. molecule_Atoms)
 
 
 --------------------------------------------------------------------------------

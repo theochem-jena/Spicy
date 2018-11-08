@@ -173,7 +173,7 @@ type Trajectory = [Molecule]
 -- | separate molecules. The whole supermolecule containts all atoms and all bonds, but is optional,
 -- | as the structure can be completely defined using the fragments. The supermolecule on the other
 -- | hand side is suposed to store the results of a calculation (energy, gradient, ...)
-type SuperMolecule = (Maybe Molecule, [Molecule])
+type SuperMolecule = (Molecule, [Molecule])
 
 
 --------------------------------------------------------------------------------
