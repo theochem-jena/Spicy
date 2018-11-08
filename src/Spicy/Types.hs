@@ -17,7 +17,9 @@ module Spicy.Types
 , atom_Coordinates
 , atom_Connectivity
 , Molecule(..)
+, LayerMolecule
 , Trajectory
+, SuperMolecule
 , molecule_Label
 , molecule_Atoms
 , molecule_Energy
@@ -162,6 +164,12 @@ type LayerMolecule = (Int, Molecule)
 
 -- | Trajectories are simply a list of molecules
 type Trajectory = [Molecule]
+
+-- | A supermolecule, which is the whole system (first), and then a list of fragments, treated as
+-- | separate molecules. The whole supermolecule containts all atoms and all bonds, but is optional,
+-- | as the structure can be completely defined using the fragments. The supermolecule on the other
+-- | hand side is suposed to store the results of a calculation (energy, gradient, ...)
+type SuperMolecule = (Maybe Molecule, [Molecule])
 
 
 --------------------------------------------------------------------------------

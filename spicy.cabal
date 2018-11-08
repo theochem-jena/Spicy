@@ -48,7 +48,6 @@ library
     , Spicy.Wrapper
     , Spicy.Wrapper.ORCA
     , Spicy.Wrapper.ORCA.Methods
-    , Spicy.Trajectory
   default-language: Haskell2010
 
 executable simple-exe
