@@ -9,11 +9,12 @@ module Spicy.MolecularSystem
 ( guessBonds
 , insertPseudoBond
 , isolateLayer
+, wrapFragmentsToBox
 , filterByCriteria
 , criterionDistance
 , criterionAngle4Atoms
 , findNearestAtom
-, FragmentBonds
+, FragmentBonds(..)
 , fragmentMolecule
 ) where
 import           Control.Applicative
@@ -200,6 +201,14 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
       ]
     nlMolecule = mol & molecule_Atoms .~ newAtoms
 
+-- | Assume the origin is (0, 0, 0) and rectangular box
+wrapFragmentsToBox :: R3Vec -> SuperMolecule -> SuperMolecule
+wrapFragmentsToBox (x, y, z) (supermol, fragments) = (updatedSupermol, wrappedFragments)
+  where
+    wrappedFragments = map (shiftFragmentToUnitCell (x, y, z)) fragments
+    fragmentAtoms = map (^. molecule_Atoms) wrappedFragments
+    updatedSupermol = supermol & molecule_Atoms .~ concat fragmentAtoms
+
 
 --------------------------------------------------------------------------------
 -- Analysis and filtering of molecules
@@ -283,7 +292,14 @@ findNearestAtom pos m
 -- |     are remapped to have intrafragment bonds as they were in the super molecule
 -- |   NewGuess -> Applies bond guessing based on covalent radii fragment wise
 -- |   RemoveAll -> Remove all bonds from supermolecule and fragments
-data FragmentBonds = OnlySuper | SuperAndFragment | NewGuess (Maybe Double) | RemoveAll deriving Eq
+-- |   KeepBonds -> Do not change the bonds in the fragment and keep the indices from the supermol
+data FragmentBonds =
+    OnlySuper
+  | SuperAndFragment
+  | NewGuess (Maybe Double)
+  | RemoveAll
+  | KeepBonds
+  deriving Eq
 
 -- | Detects fragment based on bond analysis. Bonds are handled according to FragmentBonds
 fragmentMolecule :: FragmentBonds -> Molecule -> Maybe SuperMolecule
@@ -323,6 +339,8 @@ fragmentMolecule bondHandling m
         ]
       RemoveAll ->
         Just fragmentsWithoutBonds
+      KeepBonds ->
+        Just fragments
       where
         fragmentsWithoutBonds =
           [ f & molecule_Atoms .~
@@ -337,6 +355,97 @@ fragmentMolecule bondHandling m
 --------------------------------------------------------------------------------
 -- Generic Helper Functions
 --------------------------------------------------------------------------------
+-- | For a given base vector defining a rectangular cell with the coordinate origin and a fragment
+-- |(molecule) shift the molecule such, that it is at least partially contained in the unit cell
+shiftFragmentToUnitCell :: R3Vec -> Molecule -> Molecule
+shiftFragmentToUnitCell (bx, by, bz) m = moleculeShifted
+  where
+    atoms = m ^. molecule_Atoms
+    atomCoords = map (^. atom_Coordinates) atoms
+    xShifts =
+      [ floor ((a ^. _1) / bx)
+      | a <- atomCoords
+      ] :: [Int]
+    yShifts =
+      [ floor ((a ^. _2) / by)
+      | a <- atomCoords
+      ] :: [Int]
+    zShifts =
+      [ floor ((a ^. _3) / bz)
+      | a <- atomCoords
+      ] :: [Int]
+    extremaX = (minimum xShifts, maximum xShifts)
+    extremaY = (minimum yShifts, maximum yShifts)
+    extremaZ = (minimum zShifts, maximum zShifts)
+    effectiveX =
+      if (abs . fst $ extremaX) > (snd extremaX)
+        then fst extremaX
+        else snd extremaX
+    effectiveY =
+      if (abs . fst $ extremaY) > (snd extremaY)
+        then fst extremaY
+        else snd extremaY
+    effectiveZ =
+      if (abs . fst $ extremaZ) > (snd extremaZ)
+        then fst extremaZ
+        else snd extremaZ
+    xShift = (-1) * (fromIntegral effectiveX) * bx
+    yShift = (-1) * (fromIntegral effectiveY) * by
+    zShift = (-1) * (fromIntegral effectiveZ) * bz
+    shiftVec = (xShift, yShift, zShift)
+    moleculeShifted = shiftFragment shiftVec m
+
+
+
+-- | check for a fragment if if is partially in the unit cell (one atom in the unit cell is
+-- | enough)
+isFragInUnitCell :: R3Vec -> Molecule -> Bool
+isFragInUnitCell (bx, by, bz) m = True `elem` atomsInUnitCell
+  where
+    atoms = m ^. molecule_Atoms
+    atomCoords = map (^. atom_Coordinates) atoms
+    atomsInUnitCell =
+      [ (\(ax, ay, az) ->
+          (ax / bx) >= 0 && (ax / bx) <= 1.0 &&
+          (ay / by) >= 0 && (ay / by) <= 1.0 &&
+          (az / bz) >= 0 && (az / bz) <= 1.0
+        ) (a ^. atom_Coordinates)
+      | a <- atoms
+      ]
+
+-- | shift an R3Vec back to the boundaries of a rectangular box
+toBaseVec :: R3Vec -> R3Vec -> R3Vec
+toBaseVec (cx, cy, cz) (bx, by, bz) = coordR3Shifted
+  where
+    -- in each axis, how many unit vectors offset could i shift the molecule back
+    (ox, oy, oz) =
+      ( floor (cx / bx)
+      , floor (cy / by)
+      , floor (cz / bz)
+      )
+    coordR3Shifted =
+      ( cx + (fromIntegral ox) * bx
+      , cy + (fromIntegral oy) * by
+      , cz + (fromIntegral oz) * bz
+      )
+
+-- | Shift a molecule by a given vector. The shift only applies to the cartesian coordinates
+shiftFragment :: R3Vec -> Molecule -> Molecule
+shiftFragment shiftVec m = moleculeShifted
+  where
+    atoms = m ^. molecule_Atoms
+    atomCoords = map (^. atom_Coordinates) atoms
+    atomCoordsHM = map r3Vec2hmVec atomCoords
+    shiftHMVec = r3Vec2hmVec shiftVec
+    atomCoordsShiftedHM = map (+ shiftHMVec) atomCoordsHM
+    atomCoordsShifted = map (fromJust . hmVec2r3Vec) atomCoordsShiftedHM
+    atomsShifted =
+      [ (atoms !! i) & atom_Coordinates .~ (atomCoordsShifted !! i)
+      | i <- [0 .. length atoms - 1]
+      ]
+    moleculeShifted = m & molecule_Atoms .~ atomsShifted
+
+
 -- | given a list of substituions [(new, old)] replace all elements in a list
 -- | with the new ones and remove them if there is no correponding new element
 substituteElemsInList :: Eq a => [(a, a)] -> [a] -> [a]
@@ -403,6 +512,7 @@ reduceToZeroOverlap (a:as) =
 
     -- Join all sets with overlap at once
     reducedSet =
+      nub
       [ I.unions (((a:as) !! i) : (overlaps !! i))
       | i <- [0 .. length (a:as) - 1]
       ]
