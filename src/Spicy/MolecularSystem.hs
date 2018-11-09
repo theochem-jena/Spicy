@@ -378,17 +378,23 @@ shiftFragmentToUnitCell (bx, by, bz) m = moleculeShifted
     extremaY = (minimum yShifts, maximum yShifts)
     extremaZ = (minimum zShifts, maximum zShifts)
     effectiveX =
-      if (abs . fst $ extremaX) > (snd extremaX)
-        then fst extremaX
-        else snd extremaX
+      if (0 `elem` xShifts)
+        then 0
+        else if (abs . fst $ extremaX) > (snd extremaX)
+               then fst extremaX
+               else snd extremaX
     effectiveY =
-      if (abs . fst $ extremaY) > (snd extremaY)
-        then fst extremaY
-        else snd extremaY
+      if (0 `elem` yShifts)
+        then 0
+        else if (abs . fst $ extremaY) > (snd extremaY)
+               then fst extremaY
+               else snd extremaY
     effectiveZ =
-      if (abs . fst $ extremaZ) > (snd extremaZ)
-        then fst extremaZ
-        else snd extremaZ
+      if (0 `elem` zShifts)
+        then 0
+        else if (abs . fst $ extremaZ) > (snd extremaZ)
+               then fst extremaZ
+               else snd extremaZ
     xShift = (-1) * (fromIntegral effectiveX) * bx
     yShift = (-1) * (fromIntegral effectiveY) * by
     zShift = (-1) * (fromIntegral effectiveZ) * bz
