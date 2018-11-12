@@ -333,7 +333,7 @@ findNearestAtom pos m
 -- |   OnlySuper -> Remove all bonds in the fragments and only keep them in the super molecule
 -- |   SuperAndFragment -> In supermolecule the original bonds remain but in the fragments all bonds
 -- |     are remapped to have intrafragment bonds as they were in the super molecule
--- |   NewGuess -> Applies bond guessing based on covalent radii fragment wise
+-- |   NewGuess -> Applies bond guessing based on covalent radii fragmentwise only in the fragments
 -- |   RemoveAll -> Remove all bonds from supermolecule and fragments
 -- |   KeepBonds -> Do not change the bonds in the fragment and keep the indices from the supermol
 data FragmentBonds =
