@@ -211,10 +211,11 @@ wrapFragmentsToBox (x, y, z) (supermol, fragments) = (updatedSupermol, wrappedFr
     fragmentAtoms = map (^. molecule_Atoms) wrappedFragments
     updatedSupermol = supermol & molecule_Atoms .~ concat fragmentAtoms
 
-
+-- | Select the axis along which to replicate the system
 data ReplicationAxis = AxisX | AxisY | AxisZ deriving Eq
 
--- | Replicate along a given Axis
+-- | Replicate along a given Axis. Shift coordinates, so that the new unit cell has its origin
+-- | allways at 0,0,0
 replicateSystemAlongAxis :: R3Vec -> ReplicationAxis -> Molecule -> Molecule
 replicateSystemAlongAxis (bx, by, bz) axis m = mReplicatedShifted
   where
