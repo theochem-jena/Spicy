@@ -10,6 +10,8 @@ module Spicy.MolecularSystem
 , insertPseudoBond
 , isolateLayer
 , wrapFragmentsToBox
+, ReplicationAxis(..)
+, replicateSystemAlongAxis
 , filterByCriteria
 , criterionDistance
 , criterionAngle4Atoms
@@ -208,6 +210,46 @@ wrapFragmentsToBox (x, y, z) (supermol, fragments) = (updatedSupermol, wrappedFr
     wrappedFragments = map (shiftFragmentToUnitCell (x, y, z)) fragments
     fragmentAtoms = map (^. molecule_Atoms) wrappedFragments
     updatedSupermol = supermol & molecule_Atoms .~ concat fragmentAtoms
+
+
+data ReplicationAxis = AxisX | AxisY | AxisZ deriving Eq
+
+-- | Replicate along a given Axis
+replicateSystemAlongAxis :: R3Vec -> ReplicationAxis -> Molecule -> Molecule
+replicateSystemAlongAxis (bx, by, bz) axis m = mReplicatedShifted
+  where
+    atoms = m ^. molecule_Atoms
+    nAtoms = length atoms
+    replicaAtomsPos =
+      [ a
+        & atom_Coordinates .~ case axis of
+          AxisX -> fromJust . hmVec2r3Vec $ (r3Vec2hmVec $ a ^. atom_Coordinates) + (r3Vec2hmVec (bx, 0, 0))
+          AxisY -> fromJust . hmVec2r3Vec $ (r3Vec2hmVec $ a ^. atom_Coordinates) + (r3Vec2hmVec (0, by, 0))
+          AxisZ -> fromJust . hmVec2r3Vec $ (r3Vec2hmVec $ a ^. atom_Coordinates) + (r3Vec2hmVec (0, 0, bz))
+        & atom_Connectivity .~ (I.fromList . (map (+ nAtoms)) $ (I.toList $ a ^. atom_Connectivity))
+      | a <- atoms
+      ]
+    replicaAtomsNeg =
+      [ a
+        & atom_Coordinates .~ case axis of
+          AxisX -> fromJust . hmVec2r3Vec $ (r3Vec2hmVec $ a ^. atom_Coordinates) - (r3Vec2hmVec (bx, 0, 0))
+          AxisY -> fromJust . hmVec2r3Vec $ (r3Vec2hmVec $ a ^. atom_Coordinates) - (r3Vec2hmVec (0, by, 0))
+          AxisZ -> fromJust . hmVec2r3Vec $ (r3Vec2hmVec $ a ^. atom_Coordinates) - (r3Vec2hmVec (0, 0, bz))
+        & atom_Connectivity .~ (I.fromList . (map (+ (2 * nAtoms))) $ (I.toList $ a ^. atom_Connectivity))
+      | a <- atoms
+      ]
+    allNewAtoms = atoms ++ replicaAtomsPos ++ replicaAtomsNeg
+    reShiftVec =
+      r3Vec2hmVec $
+      case axis of
+        AxisX -> (bx, 0, 0)
+        AxisY -> (0, by, 0)
+        AxisZ -> (0, 0, bz)
+    allNewAtomsNewPos =
+      [ a & atom_Coordinates .~ fromJust (hmVec2r3Vec (r3Vec2hmVec (a ^. atom_Coordinates) + reShiftVec))
+      | a <- allNewAtoms
+      ]
+    mReplicatedShifted = m & molecule_Atoms .~ allNewAtomsNewPos
 
 
 --------------------------------------------------------------------------------
@@ -500,7 +542,7 @@ reduceToZeroOverlap :: [IntSet] -> [IntSet]
 reduceToZeroOverlap [] = []
 reduceToZeroOverlap [a] = [a]
 reduceToZeroOverlap (a:as) =
-  if (all (\a -> length a == 0) overlaps)
+  if (all null overlaps)
     then (a:as)
     else reduceToZeroOverlap reducedSet
   where
