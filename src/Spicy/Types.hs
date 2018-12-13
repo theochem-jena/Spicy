@@ -2,6 +2,8 @@
 The module defines all data types that are used in spicy
 -}
 
+{-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Spicy.Types
 ( Element(..)
@@ -89,6 +91,7 @@ module Spicy.Types
 , methods_qc_CAS
 , dummyMethods
 ) where
+import           Control.DeepSeq
 import           Data.IntSet           (IntSet)
 import qualified Data.IntSet           as I
 import           Data.Map              (Map)
@@ -96,6 +99,7 @@ import qualified Data.Map              as Map
 import           Data.Maybe
 import           Data.Set              (Set)
 import qualified Data.Set              as S
+import           GHC.Generics          (Generic, Generic1)
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
@@ -121,7 +125,7 @@ data Element =
   Rb  | Sr                                                                                      | Y   | Zr  | Nb  | Mo  | Tc  | Ru  | Rh  | Pd  | Ag  | Cd  | In  | Sn  | Sb  | Te  | I   | Xe  |
   Cs  | Ba  | La  | Ce  | Pr  | Nd  | Pm  | Sm  | Eu  | Gd  | Tb  | Dy  | Ho  | Er  | Tm  | Yb  | Lu  | Hf  | Ta  | W   | Re  | Os  | Ir  | Pt  | Au  | Hg  | Tl  | Pb  | Bi  | Po  | At  | Rn  |
   Fr  | Ra  | Ac  | Th  | Pa  | U   | Np  | Pu  | Am  | Cm  | Bk  | Cf  | Es  | Fm  | Md  | No  | Lr  | Rf  | Db  | Sg  | Bh  | Hs  | Mt  | Ds  | Rg  | Cn  | Uut | Fl  | Uup | Lv  | Uus | Uuo
-  deriving (Show, Eq, Read, Ord, Enum)
+  deriving (Show, Eq, Read, Ord, Enum, Generic, NFData)
 
 -- | An atom label
 -- | They may come from pdb or force field parameter files or can be assigned by
@@ -147,7 +151,7 @@ data Atom = Atom
                                        --   absolutely meaningless for a single atom, but set on atom level in molecules
                                        --   this is here and not in the molecule layer, because this makes handling with
                                        --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
-  } deriving (Eq, Ord)
+  } deriving (Eq, Ord, Generic, NFData)
 makeLenses ''Atom
 
 -- | A molecule (might be the whole system or a layer, doesnt matter) and all
@@ -158,7 +162,7 @@ data Molecule = Molecule
   , _molecule_Energy   :: Maybe Double          -- an energy might have been calculated
   , _molecule_Gradient :: Maybe (Vector Double) -- a gradient might have been calculated
   , _molecule_Hessian  :: Maybe (Matrix Double) -- a hessian might have been calculated
-  } deriving (Eq)
+  } deriving (Eq, Generic, NFData)
 makeLenses ''Molecule
 
 -- | A ONIOM layer with "pseudoatoms" (set 2 atoms in https://doi.org/10.1016/S0166-1280(98)00475-8)
