@@ -140,12 +140,12 @@ writeSpicy m =
   "\n" ++
   "#Spicy-Molecule\n" ++
   "  Label:\n" ++
-  "    " ++ show (m ^. molecule_Label) ++ "\n" ++
+  "    " ++ (m ^. molecule_Label) ++ "\n" ++
   case energy of
     Nothing -> ""
     Just e ->
       "  Energy / Hartree:\n" ++
-      "    " ++ printf "%20.10E\n" (show $ m ^. molecule_Energy)
+      "    " ++ printf "%20.10e\n" e
   ++
   case gradient of
     Nothing -> ""
@@ -172,7 +172,7 @@ writeSpicy m =
                 Nothing -> "No"
                 Just c -> printf "%8.5f" c
             ) ++
-          printf "  %16.10F  %16.10F  %16.10F  "
+          printf "  %16.10f  %16.10f  %16.10f  "
             (a ^. atom_Coordinates ^. _1)
             (a ^. atom_Coordinates ^. _2)
             (a ^. atom_Coordinates ^. _3) ++
