@@ -2,8 +2,8 @@
 This module deals with the partitioning of the system, creation of bonds,
 assignment of substructeres to layers and creation of ghost atoms.
 Following conventions shall apply:
-  - highest level region has index 0
-  - lowest level region has highest index
+  - highest level region has highest index
+  - lowest level region has index 0 and contains the complete system
 -}
 module Spicy.MolecularSystem
 ( guessBonds

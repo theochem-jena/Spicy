@@ -1,7 +1,7 @@
 module Spicy.Parser
-( parse_XYZ
-, parse_TXYZ
-, parse_MOL2
+( parseXYZ
+, parseTXYZ
+, parseMOL2
 ) where
 import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
@@ -23,8 +23,8 @@ maybeOption p = option Nothing (Just <$> p)
 -- Parser for molecular formats
 --------------------------------------------------------------------------------
 -- | parse a .xyz file (has no connectivity, atom types or partioal charges)
-parse_XYZ :: Parser Molecule
-parse_XYZ = do
+parseXYZ :: Parser Molecule
+parseXYZ = do
   skipSpace
   nAtoms <- decimal
   skipSpace
@@ -61,8 +61,8 @@ parse_XYZ = do
 
 -- | parse a .txyz file (Tinkers xyz format)
 -- | it has coordinates and might have connectivity and atom types
-parse_TXYZ :: Parser Molecule
-parse_TXYZ = do
+parseTXYZ :: Parser Molecule
+parseTXYZ = do
   skipSpace
   nAtoms <- decimal
   _ <- many' (char ' ' <|> char '\t')
@@ -114,8 +114,8 @@ parse_TXYZ = do
 
 -- | Parse the "interesting" fields of a MOL2 file. This contains partial
 -- | charges as well as connectivity.
-parse_MOL2 :: Parser Molecule
-parse_MOL2 = do
+parseMOL2 :: Parser Molecule
+parseMOL2 = do
   (label, nAtoms, nBonds) <- moleculeParser
   atoms <- atomParser
   bonds <- bondParser nAtoms

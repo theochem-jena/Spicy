@@ -1,3 +1,7 @@
+{-
+The module collects data only used for unit testing, such as the correct answers
+for unit tests.
+-}
 module Spicy.UnitTests.Data
 ( moleculeHFeCNxH2O
 , moleculeHFeCNxH2OTXYZ
