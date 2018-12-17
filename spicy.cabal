@@ -36,6 +36,7 @@ library
     , attoparsec >=0.13.1.0
     , text >=1.2.2.0
     , process >= 1.4.3.0
+    , split >= 0.2.3.2
   exposed-modules:
       Spicy.MolecularSystem
     , Spicy.Types
@@ -77,6 +78,7 @@ executable spicy-tests
     , spicy
     , either-unwrap >= 1.1
     , tasty-hunit
+    , hmatrix >= 0.18.0.0
   default-language:
       Haskell2010
 

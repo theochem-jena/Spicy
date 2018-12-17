@@ -17,6 +17,7 @@ import           Spicy.Types
 import qualified Data.Text as T
 import Data.Text (Text)
 import Lens.Micro.Platform
+import Numeric.LinearAlgebra
 
 ----------------------------------------------------------------------------------------------------
 -- Atom and molecules for testing
@@ -105,12 +106,16 @@ moleculeHFeCNxH2O = Molecule
       , atomH5
       , atomH6
       ]
-  , _molecule_Energy = Nothing
-  , _molecule_Gradient = Nothing
-  , _molecule_Hessian = Nothing
+  , _molecule_Energy = Just (-1000.0)
+  , _molecule_Gradient = Just $ fromList . map fromInteger $ [1 .. 21]
+  , _molecule_Hessian = Just $ diagRect 21.0 (fromList [1.0 .. 6.0]) 6 6
   }
 -- | Test molecule with all informations a TXYZ could have (without calling Tinker)
-moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O & molecule_Atoms .~ newAtoms
+moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
+  & molecule_Atoms .~ newAtoms
+  & molecule_Energy .~ Nothing
+  & molecule_Gradient .~ Nothing
+  & molecule_Hessian .~ Nothing
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
     newAtoms = map
@@ -119,7 +124,11 @@ moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O & molecule_Atoms .~ newAtoms
       ) oldAtoms
 
 -- | Test molecule with all informations a XYZ could have
-moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O & molecule_Atoms .~ newAtoms
+moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
+  & molecule_Atoms .~ newAtoms
+  & molecule_Energy .~ Nothing
+  & molecule_Gradient .~ Nothing
+  & molecule_Hessian .~ Nothing
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
     newAtoms = map
@@ -130,7 +139,11 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O & molecule_Atoms .~ newAtoms
       ) oldAtoms
 
 -- | Test molecule with all informations a TXYZ could have
-moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O & molecule_Atoms .~ newAtoms
+moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
+  & molecule_Atoms .~ newAtoms
+  & molecule_Energy .~ Nothing
+  & molecule_Gradient .~ Nothing
+  & molecule_Hessian .~ Nothing
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
     newFFTypes =

@@ -15,7 +15,7 @@ import           Test.Tasty
 import           Test.Tasty.HUnit
 
 instance Show Molecule where
-  show = writeMOL2
+  show = writeSpicy
 
 main = defaultMain tests
 
