@@ -134,8 +134,8 @@ writeMOL2 mol =
     bondIndexList = [ 1 .. nBonds]
     numberedBonds = zip bondIndexList pairBonds
 
--- | Write Spicy format, which is a custom format (not stable yet), containing
--- | all informations, that are internally used to represent a molecule
+-- | Write Spicy format, which is a custom format (not stable yet), containing all informations,
+-- | that are internally used to represent a molecule
 writeSpicy :: Molecule -> String
 writeSpicy m =
   "#Spicy-Format v0.1\n" ++
@@ -153,7 +153,8 @@ writeSpicy m =
     Nothing -> ""
     Just g ->
       "  Gradient / Hartee/Bohr:\n" ++
-      ( concat . map ((++ "\n") . ("    " ++) . show) . chunksOf 3 . toList $ g )
+      (concat . map ("  " ++) . map writeSafeListToLine . chunksOf 3 . toList $ g)
+      --( concat . map ((++ "\n") . ("    " ++) . show) . chunksOf 3 . toList $ g )
   ++
   case hessian of
     Nothing -> ""
@@ -187,3 +188,9 @@ writeSpicy m =
     energy = m ^. molecule_Energy
     gradient = m ^. molecule_Gradient
     hessian = m ^. molecule_Hessian
+    writeSafeListToLine :: (Floating a, PrintfArg a) => [a] -> String
+    writeSafeListToLine [] = ""
+    writeSafeListToLine [x] = printf "  %8.5f\n" x
+    writeSafeListToLine (x:xs) =
+      printf "  %8.5f  " x ++
+      writeSafeListToLine xs
