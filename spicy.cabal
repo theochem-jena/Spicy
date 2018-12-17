@@ -6,10 +6,10 @@ license: GPL-3
 license-file: LICENSE
 copyright: Phillip Seeber
 maintainer: phillip.seeber@uni-jena.de
-homepage: https://github.com/sheepforce/hONIOM
-bug-reports: https://github.com/sheepforce/hONIOM/issues
+homepage: https://github.com/sheepforce/Spicy
+bug-reports: https://github.com/sheepforce/Spicy/issues
 description:
-    Please see the README on Github at <https://github.com/githubuser/simple#readme>
+    Please see the README on Github at <https://github.com/sheepforce/Spicy>
 author: Phillip Seeber
 extra-source-files:
     ChangeLog.md
