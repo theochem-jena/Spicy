@@ -2,6 +2,8 @@
 The module defines all data types that are used in spicy
 -}
 
+{-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Spicy.Types
 ( Element(..)
@@ -17,6 +19,9 @@ module Spicy.Types
 , atom_Coordinates
 , atom_Connectivity
 , Molecule(..)
+, LayerMolecule
+, Trajectory
+, SuperMolecule
 , molecule_Label
 , molecule_Atoms
 , molecule_Energy
@@ -86,9 +91,15 @@ module Spicy.Types
 , methods_qc_CAS
 , dummyMethods
 ) where
+import           Control.DeepSeq
+import           Data.IntSet           (IntSet)
+import qualified Data.IntSet           as I
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 import           Data.Maybe
+import           Data.Set              (Set)
+import qualified Data.Set              as S
+import           GHC.Generics          (Generic, Generic1)
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
@@ -114,7 +125,7 @@ data Element =
   Rb  | Sr                                                                                      | Y   | Zr  | Nb  | Mo  | Tc  | Ru  | Rh  | Pd  | Ag  | Cd  | In  | Sn  | Sb  | Te  | I   | Xe  |
   Cs  | Ba  | La  | Ce  | Pr  | Nd  | Pm  | Sm  | Eu  | Gd  | Tb  | Dy  | Ho  | Er  | Tm  | Yb  | Lu  | Hf  | Ta  | W   | Re  | Os  | Ir  | Pt  | Au  | Hg  | Tl  | Pb  | Bi  | Po  | At  | Rn  |
   Fr  | Ra  | Ac  | Th  | Pa  | U   | Np  | Pu  | Am  | Cm  | Bk  | Cf  | Es  | Fm  | Md  | No  | Lr  | Rf  | Db  | Sg  | Bh  | Hs  | Mt  | Ds  | Rg  | Cn  | Uut | Fl  | Uup | Lv  | Uus | Uuo
-  deriving (Show, Eq, Read, Ord, Enum)
+  deriving (Show, Eq, Read, Ord, Enum, Generic, NFData)
 
 -- | An atom label
 -- | They may come from pdb or force field parameter files or can be assigned by
@@ -136,28 +147,37 @@ data Atom = Atom
   , _atom_FFType       :: FFType       -- label depending on the mm software used, identifying topological atom
   , _atom_PCharge      :: Maybe Double -- possibly a partial charge
   , _atom_Coordinates  :: R3Vec        -- coordinates of the atom, cartesian in R³
-  , _atom_Connectivity :: [Int]        -- a list of other atoms this one binds to (in the sense of force fields)
+  , _atom_Connectivity :: IntSet       -- a set of other atoms this one binds to (in the sense of force fields)
                                        --   absolutely meaningless for a single atom, but set on atom level in molecules
                                        --   this is here and not in the molecule layer, because this makes handling with
                                        --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
-  } deriving (Eq)
+  } deriving (Eq, Ord, Generic, NFData)
 makeLenses ''Atom
 
 -- | A molecule (might be the whole system or a layer, doesnt matter) and all
 -- | associated informations
 data Molecule = Molecule
   { _molecule_Label    :: String                -- give the molecule a name
-  , _molecule_Atoms    :: [Atom]                -- a set of Atoms
+  , _molecule_Atoms    :: [Atom]                -- a list of Atoms
   , _molecule_Energy   :: Maybe Double          -- an energy might have been calculated
   , _molecule_Gradient :: Maybe (Vector Double) -- a gradient might have been calculated
   , _molecule_Hessian  :: Maybe (Matrix Double) -- a hessian might have been calculated
-  } deriving (Eq)
+  } deriving (Eq, Generic, NFData)
 makeLenses ''Molecule
 
 -- | A ONIOM layer with "pseudoatoms" (set 2 atoms in https://doi.org/10.1016/S0166-1280(98)00475-8)
 -- | While the molecule is ordinary for this program, pseudo atoms need to be
 -- | handled differently from program to program
 type LayerMolecule = (Int, Molecule)
+
+-- | Trajectories are simply a list of molecules
+type Trajectory = [Molecule]
+
+-- | A supermolecule, which is the whole system (first), and then a list of fragments, treated as
+-- | separate molecules. The whole supermolecule containts all atoms and all bonds, but is optional,
+-- | as the structure can be completely defined using the fragments. The supermolecule on the other
+-- | hand side is suposed to store the results of a calculation (energy, gradient, ...)
+type SuperMolecule = (Molecule, [Molecule])
 
 
 --------------------------------------------------------------------------------
@@ -308,12 +328,12 @@ instance NiceShow Efficiency where
       (concatMap niceComplex $ a ^. has_Gradient)
       (case a ^. has_SolventGradient of
         Nothing -> "/"
-        Just x -> concatMap niceComplex x
+        Just x  -> concatMap niceComplex x
       )
       (concatMap niceComplex $ a ^. has_Hessian)
       (case a ^. has_SolventHessian of
         Nothing -> "/"
-        Just x -> concatMap niceComplex x
+        Just x  -> concatMap niceComplex x
       )
       (concatMap niceComplex $ a ^. has_higherDerivatives)
   niceComplex a =
@@ -322,14 +342,14 @@ instance NiceShow Efficiency where
     "(" ++
     (case a ^. has_SolventGradient of
       Nothing -> "/"
-      Just x -> concatMap niceComplex x
+      Just x  -> concatMap niceComplex x
     ) ++ ")  " ++
     "H-" ++
     (concatMap niceComplex $ a ^. has_Hessian) ++
     "(" ++
     (case a ^. has_SolventHessian of
       Nothing -> "/"
-      Just x -> concatMap niceComplex x
+      Just x  -> concatMap niceComplex x
     ) ++ ")  " ++
     "\n"
 

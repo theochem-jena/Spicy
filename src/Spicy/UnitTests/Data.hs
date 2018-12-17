@@ -11,13 +11,15 @@ module Spicy.UnitTests.Data
 , testHFeCNxH2OXYZ
 , testHFeCNxH2OMOL2
 ) where
-import           Data.Map    (Map)
-import qualified Data.Map    as Map
+import           Data.IntSet           (IntSet)
+import qualified Data.IntSet           as I
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
+import           Data.Text             (Text)
+import qualified Data.Text             as T
+import           Lens.Micro.Platform
+import           Numeric.LinearAlgebra
 import           Spicy.Types
-import qualified Data.Text as T
-import Data.Text (Text)
-import Lens.Micro.Platform
-import Numeric.LinearAlgebra
 
 ----------------------------------------------------------------------------------------------------
 -- Atom and molecules for testing
@@ -31,7 +33,7 @@ atomC0 = Atom
   , _atom_FFType = "6"
   , _atom_PCharge = Just 0.5
   , _atom_Coordinates = ( 0.000960, -0.001240, 0.281420)
-  , _atom_Connectivity = [1, 2]
+  , _atom_Connectivity = I.fromList [1, 2]
   }
 
 atomN1 = Atom
@@ -41,7 +43,7 @@ atomN1 = Atom
   , _atom_FFType = "7"
   , _atom_PCharge = Just (-0.5)
   , _atom_Coordinates = ( 0.000960, -0.001240,-0.875780)
-  , _atom_Connectivity = [0]
+  , _atom_Connectivity = I.fromList [0]
   }
 
 atomFe2 = Atom
@@ -51,7 +53,7 @@ atomFe2 = Atom
   , _atom_FFType = "26"
   , _atom_PCharge = Just 1.4
   , _atom_Coordinates = ( 0.000450, -0.000610, 2.307300)
-  , _atom_Connectivity = [0, 3]
+  , _atom_Connectivity = I.fromList [0, 3]
   }
 
 atomH3 = Atom
@@ -61,7 +63,7 @@ atomH3 = Atom
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.4
   , _atom_Coordinates = (-0.002370,  0.003010, 4.869300)
-  , _atom_Connectivity = [2]
+  , _atom_Connectivity = I.fromList [2]
   }
 
 atomO4 = Atom
@@ -71,7 +73,7 @@ atomO4 = Atom
   , _atom_FFType = "8"
   , _atom_PCharge = Just (-0.8)
   , _atom_Coordinates = ( 2.059230, -2.830320, 3.280180)
-  , _atom_Connectivity = [5, 6]
+  , _atom_Connectivity = I.fromList [5, 6]
   }
 
 atomH5 = Atom
@@ -81,7 +83,7 @@ atomH5 = Atom
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.5
   , _atom_Coordinates = ( 2.096560, -2.818240, 2.290710)
-  , _atom_Connectivity = [4]
+  , _atom_Connectivity = I.fromList [4]
   }
 
 atomH6 = Atom
@@ -91,7 +93,7 @@ atomH6 = Atom
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.4
   , _atom_Coordinates = ( 2.708520, -2.137580, 3.561450)
-  , _atom_Connectivity = [4]
+  , _atom_Connectivity = I.fromList [4]
   }
 
 -- | Test molecule with all information a molecule could have
@@ -134,7 +136,7 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
     newAtoms = map
       ( (& atom_Label .~ "")
       . (& atom_FFType .~ "")
-      . (& atom_Connectivity .~ [])
+      . (& atom_Connectivity .~ I.empty)
       . (& atom_PCharge .~ Nothing)
       ) oldAtoms
 

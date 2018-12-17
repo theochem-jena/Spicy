@@ -10,14 +10,16 @@ module Spicy.MolWriter
 , writeMOL2
 , writeSpicy
 ) where
+import           Data.IntSet           (IntSet)
+import qualified Data.IntSet           as I
 import           Data.List
+import           Data.List.Split
 import           Data.Maybe
 import           Data.Tuple
 import           Lens.Micro.Platform
+import           Numeric.LinearAlgebra
 import           Spicy.Types
 import           Text.Printf
-import Numeric.LinearAlgebra
-import Data.List.Split
 
 
 --------------------------------------------------------------------------------
@@ -33,7 +35,7 @@ writeXYZ mol =
                   printf "%12.8F    " (a ^. atom_Coordinates . _1) ++
                   printf "%12.8F    " (a ^. atom_Coordinates . _2) ++
                   printf "%12.8F\n"   (a ^. atom_Coordinates . _3)
-          ) (mol ^. molecule_Atoms)
+          ) (mol ^.  molecule_Atoms)
     )
   where
     nAtoms = length (mol ^. molecule_Atoms)
@@ -59,7 +61,7 @@ writeTXYZ mol =
                           else a ^. atom_FFType
                         ) ++
                       concat
-                        ( map (printf "%6d  " . (+ 1)) (a ^. atom_Connectivity)
+                        ( map (printf "%6d  " . (+ 1)) (I.toList $ a ^. atom_Connectivity)
                         ) ++ "\n"
           ) numberedAtoms
     )
@@ -96,7 +98,7 @@ writeMOL2 mol =
                         (if a ^. atom_FFType == ""
                            then show (a ^. atom_Element) ++
                                 "." ++
-                                show (length $ a ^. atom_Connectivity)
+                                show (length . I.toList $ a ^. atom_Connectivity)
                            else a ^. atom_FFType
                         ) ++
                       printf "%2d    " (1 :: Int) ++
@@ -117,7 +119,7 @@ writeMOL2 mol =
     atomIndexList = [ 1 .. nAtoms ]
     numberedAtoms = zip atomIndexList atoms
     nAtoms = length atoms
-    bonds = map (^. atom_Connectivity) atoms
+    bonds = map (I.toList . (^. atom_Connectivity)) atoms
     pairBondsRedundant =
       concat
       [ map (\a -> (i + 1, a + 1)) (bonds !! i)
@@ -170,13 +172,13 @@ writeSpicy m =
           printf "  %8s  "
             ( case (a ^. atom_PCharge) of
                 Nothing -> "No"
-                Just c -> printf "%8.5f" c
+                Just c  -> printf "%8.5f" c
             ) ++
           printf "  %16.10f  %16.10f  %16.10f  "
             (a ^. atom_Coordinates ^. _1)
             (a ^. atom_Coordinates ^. _2)
             (a ^. atom_Coordinates ^. _3) ++
-          (concat . map (printf "  %6d  ") $ a ^. atom_Connectivity) ++
+          (concat . map (printf "  %6d  ") . I.toList $ a ^. atom_Connectivity) ++
           "\n"
       ) $ atoms
     )
