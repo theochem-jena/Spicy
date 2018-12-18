@@ -151,7 +151,7 @@ data Atom = Atom
                                        --   absolutely meaningless for a single atom, but set on atom level in molecules
                                        --   this is here and not in the molecule layer, because this makes handling with
                                        --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
-  } deriving (Eq, Ord, Generic, NFData)
+  } deriving (Eq, Ord, Generic, NFData, Show)
 makeLenses ''Atom
 
 -- | A molecule (might be the whole system or a layer, doesnt matter) and all

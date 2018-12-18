@@ -14,8 +14,6 @@ import           System.IO.Unsafe
 import           Test.Tasty
 import           Test.Tasty.HUnit
 
-instance Show Molecule where
-  show = writeSpicy
 
 main = defaultMain tests
 
@@ -32,6 +30,7 @@ testParser = testGroup "Parser"
   [ testParserTXYZ1
   , testParserXYZ1
   , testParserMOL21
+  , testParserSpicy
   ]
 
 testParserTXYZ1 = testCase "Tinker XYZ (1)" $
@@ -42,6 +41,9 @@ testParserXYZ1 = testCase "Molden XYZ (1)" $
 
 testParserMOL21 = testCase "SyByl MOL2 (1)" $
  parseOnly parseMOL2 testHFeCNxH2OMOL2 @?= Right moleculeHFeCNxH2OMOL2
+
+testParserSpicy = testCase "Spicy format (1)" $
+  parseOnly parseSpicy testHFeCNxH2OSpicy @?= Right moleculeHFeCNxH2O
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem

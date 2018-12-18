@@ -9,6 +9,7 @@ module Spicy.MolWriter
 , writeTXYZ
 , writeMOL2
 , writeSpicy
+, Molecule(..)
 ) where
 import           Data.IntSet           (IntSet)
 import qualified Data.IntSet           as I
@@ -21,6 +22,9 @@ import           Numeric.LinearAlgebra
 import           Spicy.Types
 import           Text.Printf
 
+
+instance Show Molecule where
+  show = writeSpicy
 
 --------------------------------------------------------------------------------
 -- Converters from Molecules to chemical formats

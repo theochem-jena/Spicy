@@ -2,6 +2,8 @@ module Spicy.Parser
 ( parseXYZ
 , parseTXYZ
 , parseMOL2
+, parseSpicy
+, parseHMatrix
 ) where
 import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
@@ -12,6 +14,11 @@ import qualified Data.Text                 as T
 import           Data.Tuple
 import           Lens.Micro.Platform
 import           Spicy.Types
+import Numeric.LinearAlgebra hiding (double)
+import Data.Char
+import Spicy.MolWriter
+import qualified Data.Text.IO as T
+
 
 --------------------------------------------------------------------------------
 -- General helper functions
@@ -214,3 +221,124 @@ parseMOL2 = do
           _ <- many' (char ' ' <|> char '\t')
           endOfLine
           return (originAtom - 1, targetAtom - 1)
+
+-- | Parser for the Spicy format used in this program
+parseSpicy :: Parser Molecule
+parseSpicy = do
+  _ <- string $ T.pack "#Spicy-Format v0.1"
+  endOfLine
+  skipSpace
+  _ <- string $ T.pack "#Spicy-Molecule"
+  endOfLine
+  _ <- string $ T.pack "  Label:"
+  endOfLine
+  _ <- string $ T.pack "    "
+  mLabel <- takeTill isEndOfLine
+  skipSpace
+  mEnergy <- maybeOption parseEnergy
+  mGradient <- maybeOption parseGradient
+  mHessian <- maybeOption parseHessian
+  skipSpace
+  _ <- string $ T.pack "#Spicy-Atoms"
+  skipSpace
+  mAtoms <- many1 parseAtoms
+  return Molecule
+    { _molecule_Label = T.unpack mLabel
+    , _molecule_Atoms = mAtoms
+    , _molecule_Energy = mEnergy
+    , _molecule_Gradient = mGradient --  mGradient
+    , _molecule_Hessian = mHessian -- mHessian
+    }
+  where
+    parseEnergy = do
+      _ <- manyTill anyChar (string $ T.pack "Energy / Hartree:")
+      skipSpace
+      energy <- double
+      return energy
+    parseGradient = do
+      _ <- manyTill anyChar (string $ T.pack "Gradient / Hartee/Bohr:")
+      skipSpace
+      gradient <- many1 $ do
+        skipSpace
+        gVal <- double
+        return gVal
+      return $ fromList gradient
+    parseHessian = do
+      _ <- manyTill anyChar (string $ T.pack "Hessian / a.u.:")
+      skipSpace
+      hessian <- parseHMatrix
+      return hessian
+    parseAtoms = do
+      _ <- many' (char ' ' <|> char '\t')
+      cElement <- many1 letter
+      _ <- many1 (char ' ' <|> char '\t')
+      label <- takeTill isSpace
+      _ <- many1 (char ' ' <|> char '\t')
+      pseudo <- option ' ' (char 'P')
+      _ <- many' (char ' ' <|> char '\t')
+      ffType <- takeTill isHorizontalSpace
+      _ <- many1 (char ' ' <|> char '\t')
+      pChargeTest <- maybeOption $ string $ T.pack "No"
+      pCharge <- if pChargeTest == Nothing
+        then Just <$> double
+        else return Nothing
+      _ <- many1 (char ' ' <|> char '\t')
+      coordVec <- count 3 $ do
+        coordComponent <- double
+        _ <- many1 (char ' ' <|> char '\t')
+        return coordComponent
+      _ <- many' (char ' ' <|> char '\t')
+      connectivity <- many' $ do
+        conAtom <- decimal
+        _ <- many' (char ' ' <|> char '\t')
+        return conAtom
+      endOfLine
+      return Atom
+        { _atom_Element = read cElement
+        , _atom_Label = T.unpack label
+        , _atom_IsPseudo = if pseudo == 'P' then True else False
+        , _atom_FFType = T.unpack ffType
+        , _atom_PCharge = pCharge
+        , _atom_Coordinates = (\[x, y, z] -> (x, y, z)) coordVec
+        , _atom_Connectivity = I.fromList connectivity
+        }
+
+main = do
+  raw <- T.readFile "/home/phillip/Spicy.spc"
+  let spc = parseOnly parseSpicy raw
+  putStrLn $ show spc
+
+----------------------------------------------------------------------------------------------------
+-- Parser for generic formats
+----------------------------------------------------------------------------------------------------
+-- | Parse the "show" instance output for HMatrix' matrix Type, including the dimension infos
+parseHMatrix :: Parser (Matrix Double)
+parseHMatrix = do
+  skipSpace
+  _ <- char '('
+  dimX <- decimal
+  _ <- char '>'
+  _ <- char '<'
+  dimY <- decimal
+  _ <- char ')'
+  skipSpace
+  _ <- char '['
+  _ <- many' (char ' ' <|> char '\t')
+  rows <- do
+    count dimX $ do
+      singleRow <- count dimY parseElement
+      skipSpace
+      return singleRow
+  _ <- char ']'
+  return $ fromRows . map fromList $ rows
+  where
+    parseElement :: Parser Double
+    parseElement = do
+      _ <- many' (char ' ' <|> char '\t')
+      _ <- option ',' (char ',')
+      _ <- many' (char ' ' <|> char '\t')
+      element <- double
+      _ <- many' (char ' ' <|> char '\t')
+      _ <- option ',' (char ',')
+      _ <- many' (char ' ' <|> char '\t')
+      return element
