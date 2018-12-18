@@ -3,7 +3,8 @@ The module collects data only used for unit testing, such as the correct answers
 for unit tests.
 -}
 module Spicy.UnitTests.Data
-( moleculeHFeCNxH2O
+( moleculeEmpty
+, moleculeHFeCNxH2O
 , moleculeHFeCNxH2OTXYZ
 , moleculeHFeCNxH2OXYZ
 , moleculeHFeCNxH2OMOL2
@@ -25,6 +26,15 @@ import           Spicy.Types
 ----------------------------------------------------------------------------------------------------
 -- Atom and molecules for testing
 ----------------------------------------------------------------------------------------------------
+-- | Empty molecule
+moleculeEmpty = Molecule
+  { _molecule_Label = ""
+  , _molecule_Atoms = []
+  , _molecule_Energy = Nothing
+  , _molecule_Gradient = Nothing
+  , _molecule_Hessian = Nothing
+  }
+
 -- | Define a molecule HFe(CN)xH2O, with hydrid iron distance being exactly at 1.4 times the sum of
 -- | the covalent radii of H and Fe
 atomC0 = Atom

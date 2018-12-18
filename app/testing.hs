@@ -16,6 +16,8 @@ import           System.IO.Unsafe
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
+import Control.Applicative
+import Data.Maybe
 
 
 --main = defaultMain tests
@@ -65,9 +67,11 @@ testMolecularSystem = testGroup "Molecular System"
   , testGuessBonds4
   , testGuessBonds5
   , testGuessBonds6
+  , testIsolateLayer1
+  , testIsolateLayer2
   ]
 
--- | Guessing of bonds
+-- | Guessing of bonds by colvant radii
 testGuessBonds1 = goldenVsString
   "Guess bonds - defaults (N2 in binding distance)"
   "goldentests/output/N2_bonded__GuessBonds1.txyz" $ do
@@ -127,3 +131,31 @@ testGuessBonds6 = goldenVsString
       Right molInput -> do
         let molResult = guessBonds Nothing molInput
         return . LBS.fromString . writeTXYZ $ molResult
+
+-- | Isolating ONIOM layers and capping dangling bonds
+testIsolateLayer1 = goldenVsString
+  "Isolate ONIOM layer - defaults (Heme like system, isolate Fe-porphyrine)"
+  "goldentests/output/FePorphyrine_IsolateLayer1.txyz" $ do
+    raw <- T.readFile "goldentests/input/FePorphyrine.txyz"
+    case (parseOnly parseTXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let molResult = isolateLayer [0 .. 35] Nothing Nothing molInput
+        return . LBS.fromString . writeTXYZ . fromMaybe moleculeEmpty $ molResult
+
+testIsolateLayer2 = goldenVsString
+  "Isolate ONIOM layer - fluorine capping, short dinstance (Ru complex with H20 solvent molecules)"
+  "goldentests/output/RuKomplex_IsolateLayer2.txyz" $ do
+    raw <- T.readFile "goldentests/input/RuKomplex.txyz"
+    case (parseOnly parseTXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let molResult = isolateLayer
+              (  [0 .. 19]                                                                -- bPy
+              ++ [20]                                                                     -- Ru
+              ++ [26, 22, 21, 25, 27, 28, 33, 23, 24, 30, 31, 32, 36, 37, 34, 35, 38, 39] -- bPy
+              ++ [46, 42, 44, 41, 43, 45, 49, 47, 48, 50, 51, 52, 54, 55, 57, 56, 58, 53] -- bPy
+              ++ [95, 98]                                                                 -- PO
+              ++ [126, 127, 128]                                                          -- H2O
+              ) (Just F) (Just 0.6) molInput
+        return . LBS.fromString . writeTXYZ . fromMaybe moleculeEmpty $ molResult
