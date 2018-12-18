@@ -305,8 +305,6 @@ parseSpicy = do
         _ <- many' (char ' ' <|> char '\t')
         return conAtom
       endOfLine
-      {-
-      -}
       return Atom
         { _atom_Element = read cElement
         , _atom_Label = T.unpack . T.strip . T.pack $ label
