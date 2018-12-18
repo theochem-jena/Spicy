@@ -303,10 +303,6 @@ parseSpicy = do
         , _atom_Connectivity = I.fromList connectivity
         }
 
-main = do
-  raw <- T.readFile "/home/phillip/Spicy.spc"
-  let spc = parseOnly parseSpicy raw
-  putStrLn $ show spc
 
 ----------------------------------------------------------------------------------------------------
 -- Parser for generic formats
