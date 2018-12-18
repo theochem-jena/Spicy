@@ -142,7 +142,7 @@ writeMOL2 mol =
 -- | that are internally used to represent a molecule
 writeSpicy :: Molecule -> String
 writeSpicy m =
-  "#Spicy-Format v0.1\n" ++
+  "#Spicy-Format v0.2\n" ++
   "\n" ++
   "#Spicy-Molecule\n" ++
   "  Label:\n" ++

@@ -225,7 +225,7 @@ parseMOL2 = do
 -- | Parser for the Spicy format used in this program
 parseSpicy :: Parser Molecule
 parseSpicy = do
-  _ <- string $ T.pack "#Spicy-Format v0.1"
+  _ <- string $ T.pack "#Spicy-Format v0.2"
   endOfLine
   skipSpace
   _ <- string $ T.pack "#Spicy-Molecule"
@@ -246,8 +246,8 @@ parseSpicy = do
     { _molecule_Label = T.unpack mLabel
     , _molecule_Atoms = mAtoms
     , _molecule_Energy = mEnergy
-    , _molecule_Gradient = mGradient --  mGradient
-    , _molecule_Hessian = mHessian -- mHessian
+    , _molecule_Gradient = mGradient
+    , _molecule_Hessian = mHessian
     }
   where
     parseEnergy = do
@@ -269,23 +269,35 @@ parseSpicy = do
       hessian <- parseHMatrix
       return hessian
     parseAtoms = do
+      -- indendation
       _ <- many' (char ' ' <|> char '\t')
+      -- chemical element
       cElement <- many1 letter
-      _ <- many1 (char ' ' <|> char '\t')
-      label <- takeTill isSpace
-      _ <- many1 (char ' ' <|> char '\t')
-      pseudo <- option ' ' (char 'P')
-      _ <- many' (char ' ' <|> char '\t')
-      ffType <- takeTill isHorizontalSpace
-      _ <- many1 (char ' ' <|> char '\t')
-      pChargeTest <- maybeOption $ string $ T.pack "No"
+      --
+      _ <- count 4 (char ' ')
+      -- label of the atom
+      label <- count 6 anyChar
+
+      --
+      _ <- count 4 (char ' ')
+      -- pseudo label
+      pseudo <- anyChar
+      --
+      _ <- count 4 (char ' ')
+      -- FFType
+      ffType <- count 6 anyChar
+      pChargeTest <- maybeOption $ do
+        skipSpace
+        (string $ T.pack "No")
       pCharge <- if pChargeTest == Nothing
-        then Just <$> double
+        then Just <$> do
+          _ <- many' (char ' ' <|> char '\t')
+          double
         else return Nothing
-      _ <- many1 (char ' ' <|> char '\t')
+      _ <- many' (char ' ' <|> char '\t')
       coordVec <- count 3 $ do
         coordComponent <- double
-        _ <- many1 (char ' ' <|> char '\t')
+        _ <- many' (char ' ' <|> char '\t')
         return coordComponent
       _ <- many' (char ' ' <|> char '\t')
       connectivity <- many' $ do
@@ -293,11 +305,13 @@ parseSpicy = do
         _ <- many' (char ' ' <|> char '\t')
         return conAtom
       endOfLine
+      {-
+      -}
       return Atom
         { _atom_Element = read cElement
-        , _atom_Label = T.unpack label
+        , _atom_Label = T.unpack . T.strip . T.pack $ label
         , _atom_IsPseudo = if pseudo == 'P' then True else False
-        , _atom_FFType = T.unpack ffType
+        , _atom_FFType = T.unpack . T.strip . T.pack $ ffType
         , _atom_PCharge = pCharge
         , _atom_Coordinates = (\[x, y, z] -> (x, y, z)) coordVec
         , _atom_Connectivity = I.fromList connectivity
