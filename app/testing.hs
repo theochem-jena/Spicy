@@ -1,7 +1,9 @@
+import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
-import           Data.ByteString.Lazy.UTF8      as LBS
+import           Data.ByteString.Lazy.UTF8 as LBS
 import           Data.Either
 import           Data.Either.Unwrap
+import           Data.Maybe
 import           Data.Maybe
 import           Data.Ord
 import qualified Data.Text                 as T
@@ -16,8 +18,6 @@ import           System.IO.Unsafe
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
-import Control.Applicative
-import Data.Maybe
 
 
 --main = defaultMain tests
@@ -69,6 +69,8 @@ testMolecularSystem = testGroup "Molecular System"
   , testGuessBonds6
   , testIsolateLayer1
   , testIsolateLayer2
+  , testFragmentDetection1
+  , testFragmentDetection2
   ]
 
 -- | Guessing of bonds by colvant radii
@@ -135,7 +137,7 @@ testGuessBonds6 = goldenVsString
 -- | Isolating ONIOM layers and capping dangling bonds
 testIsolateLayer1 = goldenVsString
   "Isolate ONIOM layer - defaults (Heme like system, isolate Fe-porphyrine)"
-  "goldentests/output/FePorphyrine_IsolateLayer1.txyz" $ do
+  "goldentests/output/FePorphyrine__IsolateLayer1.txyz" $ do
     raw <- T.readFile "goldentests/input/FePorphyrine.txyz"
     case (parseOnly parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
@@ -145,7 +147,7 @@ testIsolateLayer1 = goldenVsString
 
 testIsolateLayer2 = goldenVsString
   "Isolate ONIOM layer - fluorine capping, short dinstance (Ru complex with H20 solvent molecules)"
-  "goldentests/output/RuKomplex_IsolateLayer2.txyz" $ do
+  "goldentests/output/RuKomplex__IsolateLayer2.txyz" $ do
     raw <- T.readFile "goldentests/input/RuKomplex.txyz"
     case (parseOnly parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
@@ -159,3 +161,28 @@ testIsolateLayer2 = goldenVsString
               ++ [126, 127, 128]                                                          -- H2O
               ) (Just F) (Just 0.6) molInput
         return . LBS.fromString . writeTXYZ . fromMaybe moleculeEmpty $ molResult
+
+-- | Fragment detection
+testFragmentDetection1 = goldenVsString
+  "Detect fragments - remove all bonds (sulfate in mixture of H20 and NH3)"
+  "goldentests/output/SulfateInSolution__FragmentDetection1.xyz" $ do
+    raw <- T.readFile "goldentests/input/SulfateInSolution.txyz"
+    case (parseOnly parseTXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let fragments = snd <$> fragmentMolecule RemoveAll molInput
+        case fragments of
+          Nothing -> return $ LBS.fromString "Failed"
+          Just f -> return . LBS.fromString . concat . map writeTXYZ $ f
+
+testFragmentDetection2 = goldenVsString
+  "Detect fragments - new bond guess (sulfate in mixture of H20 and NH3)"
+  "goldentests/output/SulfateInSolution__FragmentDetection2.xyz" $ do
+    raw <- T.readFile "goldentests/input/SulfateInSolution.txyz"
+    case (parseOnly parseTXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let fragments = snd <$> fragmentMolecule (NewGuess (Just 1.4)) molInput
+        case fragments of
+          Nothing -> return $ LBS.fromString "Failed"
+          Just f -> return . LBS.fromString . concat . map writeTXYZ $ f
