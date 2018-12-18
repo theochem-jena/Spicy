@@ -60,7 +60,7 @@ atomFe2 = Atom
 atomH3 = Atom
   { _atom_Element = H
   , _atom_Label = "H3"
-  , _atom_IsPseudo = False
+  , _atom_IsPseudo = True
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.4
   , _atom_Coordinates = (-0.002370,  0.003010, 4.869300)
@@ -74,7 +74,7 @@ atomO4 = Atom
   , _atom_FFType = "8"
   , _atom_PCharge = Just (-0.8)
   , _atom_Coordinates = ( 2.059230, -2.830320, 3.280180)
-  , _atom_Connectivity = I.fromList [5, 6]
+  , _atom_Connectivity = I.fromList [5]
   }
 
 atomH5 = Atom
@@ -82,7 +82,7 @@ atomH5 = Atom
   , _atom_Label = "H5"
   , _atom_IsPseudo = False
   , _atom_FFType = "1"
-  , _atom_PCharge = Just 0.5
+  , _atom_PCharge = Nothing
   , _atom_Coordinates = ( 2.096560, -2.818240, 2.290710)
   , _atom_Connectivity = I.fromList [4]
   }
@@ -90,11 +90,11 @@ atomH5 = Atom
 atomH6 = Atom
   { _atom_Element = H
   , _atom_Label = "H6"
-  , _atom_IsPseudo = False
+  , _atom_IsPseudo = True
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.4
   , _atom_Coordinates = ( 2.708520, -2.137580, 3.561450)
-  , _atom_Connectivity = I.fromList [4]
+  , _atom_Connectivity = I.empty
   }
 
 -- | Test molecule with all information a molecule could have
@@ -124,6 +124,7 @@ moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
     newAtoms = map
       ( (& atom_Label .~ "")
       . (& atom_PCharge .~ Nothing)
+      . (& atom_IsPseudo .~ False)
       ) oldAtoms
 
 -- | Test molecule with all informations a XYZ could have
@@ -139,6 +140,7 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
       . (& atom_FFType .~ "")
       . (& atom_Connectivity .~ I.empty)
       . (& atom_PCharge .~ Nothing)
+      . (& atom_IsPseudo .~ False)
       ) oldAtoms
 
 -- | Test molecule with all informations a TXYZ could have
@@ -151,8 +153,12 @@ moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
     newFFTypes =
       [ "C.1", "N.pl3", "Fe", "H", "O.3", "H", "H" ]
-    newAtoms =
+    newAtoms'' =
       zipWith (\a ft -> a & atom_FFType .~ ft) oldAtoms newFFTypes
+    newAtoms' = map
+      ( (& atom_IsPseudo .~ False)
+      ) newAtoms''
+    newAtoms = newAtoms' & (ix 5 . atom_PCharge) .~ Just 0.5
 
 -- | Test molecule as TXYZ file
 textHFeCNxH2OTXYZ = T.pack . concat $
@@ -161,9 +167,9 @@ textHFeCNxH2OTXYZ = T.pack . concat $
   , "    2  N      0.000960   -0.001240   -0.875780     7     1           \n"
   , "    3 Fe      0.000450   -0.000610    2.307300    26     1     4     \n"
   , "    4  H     -0.002370    0.003010    4.869300     1     3           \n"
-  , "    5  O      2.059230   -2.830320    3.280180     8     6     7     \n"
+  , "    5  O      2.059230   -2.830320    3.280180     8     6           \n"
   , "    6  H      2.096560   -2.818240    2.290710     1     5           \n"
-  , "    7  H      2.708520   -2.137580    3.561450     1     5           \n"
+  , "    7  H      2.708520   -2.137580    3.561450     1                 \n"
   ]
 
 -- | Test molecule as XYZ file
@@ -195,16 +201,15 @@ testHFeCNxH2OMOL2 = T.pack . concat $
   , "      6 H5          2.096560   -2.818240    2.290710 H       0  HOH0        0.5000 \n"
   , "      7 H6          2.708520   -2.137580    3.561450 H       0  HOH0        0.4000 \n"
   , "@<TRIPOS>BOND\n"
-  , "     1     1     2    1\n"
-  , "     2     1     3    3\n"
-  , "     3     3     4    1\n"
-  , "     4     5     6    1\n"
-  , "     5     5     7    1\n"
+  , "         1         1         2         1\n"
+  , "         2         1         3         1\n"
+  , "         3         3         4         1\n"
+  , "         4         5         6         1\n"
   , "\n"
   ]
 
 testHFeCNxH2OSpicy = T.pack . concat $
-  [ "#Spicy-Format v0.1\n"
+  [ "#Spicy-Format v0.2\n"
   , "\n"
   , "#Spicy-Molecule\n"
   , "  Label:\n"
@@ -232,8 +237,8 @@ testHFeCNxH2OSpicy = T.pack . concat $
   , "    C        C0              6     0.50000        0.0009600000     -0.0012400000      0.2814200000         1         2  \n"
   , "    N        N1              7    -0.50000        0.0009600000     -0.0012400000     -0.8757800000         0  \n"
   , "   Fe       Fe2             26     1.40000        0.0004500000     -0.0006100000      2.3073000000         0         3  \n"
-  , "    H        H3              1     0.40000       -0.0023700000      0.0030100000      4.8693000000         2  \n"
-  , "    O        O4              8    -0.80000        2.0592300000     -2.8303200000      3.2801800000         5         6  \n"
-  , "    H        H5              1     0.50000        2.0965600000     -2.8182400000      2.2907100000         4  \n"
-  , "    H        H6              1     0.40000        2.7085200000     -2.1375800000      3.5614500000         4\n"
+  , "    H        H3    P         1     0.40000       -0.0023700000      0.0030100000      4.8693000000         2  \n"
+  , "    O        O4              8    -0.80000        2.0592300000     -2.8303200000      3.2801800000         5  \n"
+  , "    H        H5              1          No        2.0965600000     -2.8182400000      2.2907100000         4  \n"
+  , "    H        H6    P         1     0.40000        2.7085200000     -2.1375800000      3.5614500000  \n"
   ]
