@@ -1,6 +1,7 @@
 import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
-import           Data.ByteString.Lazy.UTF8 as LBS
+import qualified Data.ByteString.Lazy      as LBS
+import qualified Data.ByteString.Lazy.UTF8 as LBS
 import           Data.Either
 import           Data.Either.Unwrap
 import           Data.Maybe
@@ -71,6 +72,12 @@ testMolecularSystem = testGroup "Molecular System"
   , testIsolateLayer2
   , testFragmentDetection1
   , testFragmentDetection2
+  , testFragmentDetection3
+  , testWrapFragmentsToBox1
+  , testReplicateSystemAlongAxis1
+  , testReplicateSystemAlongAxis2
+  , testReplicateSystemAlongAxis3
+  , testFindNearestAtom1
   ]
 
 -- | Guessing of bonds by colvant radii
@@ -170,10 +177,12 @@ testFragmentDetection1 = goldenVsString
     case (parseOnly parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
-        let fragments = snd <$> fragmentMolecule RemoveAll molInput
+        let fragments =
+              LBS.fromString . concat . map writeTXYZ . snd <$>
+              fragmentMolecule RemoveAll molInput
         case fragments of
           Nothing -> return $ LBS.fromString "Failed"
-          Just f -> return . LBS.fromString . concat . map writeTXYZ $ f
+          Just s -> return s
 
 testFragmentDetection2 = goldenVsString
   "Detect fragments - new bond guess (sulfate in mixture of H20 and NH3)"
@@ -182,7 +191,80 @@ testFragmentDetection2 = goldenVsString
     case (parseOnly parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
-        let fragments = snd <$> fragmentMolecule (NewGuess (Just 1.4)) molInput
+        let fragments =
+              LBS.fromString . concat . map writeTXYZ . snd <$>
+              fragmentMolecule (NewGuess (Just 1.4)) molInput
         case fragments of
           Nothing -> return $ LBS.fromString "Failed"
-          Just f -> return . LBS.fromString . concat . map writeTXYZ $ f
+          Just s -> return s
+
+testFragmentDetection3 = goldenVsString
+  "Detect fragments - keeping supermol bonds (toluene Cl2 mixture periodic)"
+  "goldentests/output/TolueneCl2__FragmentDetection3.txyz" $ do
+    raw <- T.readFile "goldentests/input/TolueneCl2.txyz"
+    case (parseOnly parseTXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let fragments =
+              LBS.fromString . concat . map writeTXYZ . snd <$>
+              fragmentMolecule KeepBonds molInput
+        case fragments of
+          Nothing -> return $ LBS.fromString "Failed"
+          Just s -> return s
+
+-- | Wrapping of fragments to unit cell molecule-wise
+testWrapFragmentsToBox1 = goldenVsString
+  "Wrap molecules to unit cell molecule-wise (toluene Cl2 mixture periodic)"
+  "goldentests/output/TolueneCl2__WrapFragmentsToBox1.txyz" $ do
+    raw <- T.readFile "goldentests/input/TolueneCl2.txyz"
+    case (parseOnly parseTXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let superMolFragmented =
+              LBS.fromString . writeTXYZ . fst . wrapFragmentsToBox (20.0, 20.0, 20.0) <$>
+              fragmentMolecule KeepBonds molInput
+        case superMolFragmented of
+          Nothing -> return $ LBS.fromString "Failed"
+          Just s -> return s
+
+-- | Supercell generation
+testReplicateSystemAlongAxis1 = goldenVsString
+  "Replicate unit cell - x axis (toluene Cl2 mixture periodic)"
+  "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis1.xyz" $ do
+    raw <- T.readFile "goldentests/input/TolueneCl2.xyz"
+    case (parseOnly parseXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisX molInput
+        return . LBS.fromString . writeXYZ $ superCell
+
+testReplicateSystemAlongAxis2 = goldenVsString
+  "Replicate unit cell - y axis (toluene Cl2 mixture periodic)"
+  "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis2.xyz" $ do
+    raw <- T.readFile "goldentests/input/TolueneCl2.xyz"
+    case (parseOnly parseXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisY molInput
+        return . LBS.fromString . writeXYZ $ superCell
+
+testReplicateSystemAlongAxis3 = goldenVsString
+  "Replicate unit cell - z axis (toluene Cl2 mixture periodic)"
+  "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis3.xyz" $ do
+    raw <- T.readFile "goldentests/input/TolueneCl2.xyz"
+    case (parseOnly parseXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisZ molInput
+        return . LBS.fromString . writeXYZ $ superCell
+
+-- | Nearest neighbour search
+testFindNearestAtom1 = goldenVsString
+  "Find nearest atom"
+  "goldentests/output/N2_bonded__FindNearestAtom1.dat" $ do
+    raw <- T.readFile "goldentests/input/N2_bonded.xyz"
+    case (parseOnly parseXYZ raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right molInput -> do
+        let nearestInfo = findNearestAtom (0.0, 0.0, 0.5499) molInput
+        return . LBS.fromString . show $ nearestInfo
