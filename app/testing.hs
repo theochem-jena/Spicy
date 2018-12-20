@@ -78,6 +78,9 @@ testMolecularSystem = testGroup "Molecular System"
   , testReplicateSystemAlongAxis2
   , testReplicateSystemAlongAxis3
   , testFindNearestAtom1
+  , testFilterByCriteria1
+  , testFilterByCriteria2
+  , testFilterByCriteria3
   ]
 
 -- | Guessing of bonds by colvant radii
@@ -260,7 +263,7 @@ testReplicateSystemAlongAxis3 = goldenVsString
 
 -- | Nearest neighbour search
 testFindNearestAtom1 = goldenVsString
-  "Find nearest atom"
+  "Find nearest atom (toluene Cl2 mixture periodic)"
   "goldentests/output/N2_bonded__FindNearestAtom1.dat" $ do
     raw <- T.readFile "goldentests/input/N2_bonded.xyz"
     case (parseOnly parseXYZ raw) of
@@ -268,3 +271,44 @@ testFindNearestAtom1 = goldenVsString
       Right molInput -> do
         let nearestInfo = findNearestAtom (0.0, 0.0, 0.5499) molInput
         return . LBS.fromString . show $ nearestInfo
+
+-- | Test criterion filtering
+testFilterByCriteria1 = goldenVsString
+  "Trajectory filtering - distance criterion (azine and phophinin)"
+  "goldentests/output/HeteroTraj__FilterByCriteria1.xyz" $ do
+    raw <- T.readFile "goldentests/input/HeteroTraj.xyz"
+    case (parseOnly (many1 parseXYZ) raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right trajInput -> do
+        let filteredTraj =
+              filterByCriteria
+              [ fromMaybe False <$> (criterionDistance (2, 16) (< 5.0))
+              ] trajInput
+        return . LBS.fromString . concat . map writeXYZ $ filteredTraj
+
+testFilterByCriteria2 = goldenVsString
+  "Trajectory filtering - 4 atoms angle criterion (azine and phophinin)"
+  "goldentests/output/HeteroTraj__FilterByCriteria2.xyz" $ do
+    raw <- T.readFile "goldentests/input/HeteroTraj.xyz"
+    case (parseOnly (many1 parseXYZ) raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right trajInput -> do
+        let filteredTraj =
+              filterByCriteria
+              [ fromMaybe False <$> (criterionAngle4Atoms ((5, 2), (2, 16)) (< 1.5708))
+              ] trajInput
+        return . LBS.fromString . concat . map writeXYZ $ filteredTraj
+
+testFilterByCriteria3 = goldenVsString
+  "Trajectory filtering - 2 distance criteria (azine and phophinin)"
+  "goldentests/output/HeteroTraj__FilterByCriteria3.xyz" $ do
+    raw <- T.readFile "goldentests/input/HeteroTraj.xyz"
+    case (parseOnly (many1 parseXYZ) raw) of
+      Left _ -> return $ LBS.fromString "Failed"
+      Right trajInput -> do
+        let filteredTraj =
+              filterByCriteria
+              [ fromMaybe False <$> (criterionDistance (2, 16) (< 3.85))
+              , fromMaybe False <$> (criterionDistance (14, 5) (> 7.85))
+              ] trajInput
+        return . LBS.fromString . concat . map writeXYZ $ filteredTraj
