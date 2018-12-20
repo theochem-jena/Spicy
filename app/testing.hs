@@ -1,3 +1,9 @@
+{-
+Unit testing and golden testing (unit testing based on files) for Spicy. Test all the difficult
+parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
+All tests are required to pass. There is no gray zone!!
+-}
+
 import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.ByteString.Lazy      as LBS
@@ -185,7 +191,7 @@ testFragmentDetection1 = goldenVsString
               fragmentMolecule RemoveAll molInput
         case fragments of
           Nothing -> return $ LBS.fromString "Failed"
-          Just s -> return s
+          Just s  -> return s
 
 testFragmentDetection2 = goldenVsString
   "Detect fragments - new bond guess (sulfate in mixture of H20 and NH3)"
@@ -199,7 +205,7 @@ testFragmentDetection2 = goldenVsString
               fragmentMolecule (NewGuess (Just 1.4)) molInput
         case fragments of
           Nothing -> return $ LBS.fromString "Failed"
-          Just s -> return s
+          Just s  -> return s
 
 testFragmentDetection3 = goldenVsString
   "Detect fragments - keeping supermol bonds (toluene Cl2 mixture periodic)"
@@ -213,7 +219,7 @@ testFragmentDetection3 = goldenVsString
               fragmentMolecule KeepBonds molInput
         case fragments of
           Nothing -> return $ LBS.fromString "Failed"
-          Just s -> return s
+          Just s  -> return s
 
 -- | Wrapping of fragments to unit cell molecule-wise
 testWrapFragmentsToBox1 = goldenVsString
@@ -228,7 +234,7 @@ testWrapFragmentsToBox1 = goldenVsString
               fragmentMolecule KeepBonds molInput
         case superMolFragmented of
           Nothing -> return $ LBS.fromString "Failed"
-          Just s -> return s
+          Just s  -> return s
 
 -- | Supercell generation
 testReplicateSystemAlongAxis1 = goldenVsString

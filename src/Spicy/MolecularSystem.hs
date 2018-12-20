@@ -7,7 +7,6 @@ Following conventions shall apply:
 -}
 module Spicy.MolecularSystem
 ( guessBonds
-, insertPseudoBond
 , isolateLayer
 , wrapFragmentsToBox
 , ReplicationAxis(..)
