@@ -53,23 +53,6 @@ executable spicy
     hs-source-dirs: app
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
 
---executable spicy-tests
---    main-is: testing.hs
---    build-depends:
---        base >=4.7 && <5,
---        tasty >=0.11.3,
---        text >=1.2.2.0,
---        attoparsec >=0.13.1.0,
---        spicy -any,
---        either-unwrap >=1.1,
---        tasty-hunit -any,
---        hmatrix >=0.18.0.0,
---        tasty-golden >=2.3.1,
---        filepath >=1.4.2
---    default-language: Haskell2010
---    hs-source-dirs: app
---    ghc-options: -threaded -rtsopts -with-rtsopts=-N -static
-
 test-suite spicy-unittests
     type: exitcode-stdio-1.0
     main-is: testing.hs
@@ -86,6 +69,20 @@ test-suite spicy-unittests
         filepath >=1.4.2,
         utf8-string >=1.0.1,
         bytestring >=0.10.8
+    default-language: Haskell2010
+    hs-source-dirs: app
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
+
+benchmark spicy-benchmarks
+    type: exitcode-stdio-1.0
+    main-is: benchmarks.hs
+    build-depends:
+        base >=4.7 && <5,
+        spicy -any,
+        criterion >=1.4.1.0,
+        text >=1.2.2.0,
+        split >=0.2.3.2,
+        attoparsec >=0.13.1.0
     default-language: Haskell2010
     hs-source-dirs: app
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
