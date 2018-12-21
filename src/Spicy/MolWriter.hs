@@ -43,7 +43,7 @@ writeXYZ mol =
     )
   where
     nAtoms = length (mol ^. molecule_Atoms)
-    comment = head . lines $ mol ^. molecule_Label
+    comment = mol ^. molecule_Label
 
 -- | Write a .txyz (Tinkers xyz format) from a molecule. The writer trusts the
 -- | _atom_FFType to be correct (if set) and will simply write them out.
