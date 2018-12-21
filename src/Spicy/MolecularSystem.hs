@@ -17,6 +17,7 @@ module Spicy.MolecularSystem
 , findNearestAtom
 , FragmentBonds(..)
 , fragmentMolecule
+, shiftFragment
 ) where
 import           Control.Applicative
 import           Control.Parallel.Strategies
