@@ -8,6 +8,7 @@ import           Data.Attoparsec.Text.Lazy (many1, parseOnly)
 import           Data.IntSet               (IntSet)
 import qualified Data.IntSet               as I
 import           Data.List.Split
+import           Data.Maybe
 import qualified Data.Text                 as T
 import qualified Data.Text.IO              as T
 import           Lens.Micro.Platform
@@ -18,14 +19,13 @@ import           Spicy.Types
 import           Text.Printf
 
 main = defaultMain
-  [ benchmarkGenerators
-  , benchmarkParser
+  [ benchmarkParser
   , benchmarkMolecularSystem
   ]
 ----------------------------------------------------------------------------------------------------
 -- Generate test data
 ----------------------------------------------------------------------------------------------------
--- | generate a very simple repetitive trajectory in XYZ format
+-- | Generate a very simple repetitive trajectory in XYZ format
 generateTrajectoryXYZ :: Int -> Int -> T.Text
 generateTrajectoryXYZ nAtoms nFrames = T.pack frames
   where
@@ -40,6 +40,8 @@ generateTrajectoryXYZ nAtoms nFrames = T.pack frames
       concat $
       replicate nFrames frame
 
+-- | Replicate phosphinin n times in space, so that a set of molecules in space is formed, which is
+-- | in the shabe of a rectangle
 generateNonbondedMolecules :: Int -> Molecule
 generateNonbondedMolecules nMols = superMolecule
   where
@@ -93,67 +95,13 @@ generateNonbondedMolecules nMols = superMolecule
       ( concat . map _molecule_Atoms
       $ zipWith (shiftFragment) (take nMols shiftVec) (repeat molecule)
       )
---shiftVec :: Int -> [(Double, Double, Double)]
-shiftVec n =
-  take n $
-  [ (\(x, y, z) -> (x, y, z)) i
-  | i <- (\x y z -> (x, y, z)) <$>
-      [1 .. l] <*>
-      [1 .. l] <*>
-      [1 .. l]
-  ]
-  where
-    l = ceiling . (**(1/3)) . fromIntegral $ n
 
--- | Benchmarks for generators
-benchmarkGenerators = bgroup
-  "Generators"
-  [ benchmarkTrajGeneratorXYZ
-  , benchmarkGenerateNonbondedMolecules
-  ]
+generateBondedMolecules :: Int -> Molecule
+generateBondedMolecules nMols = guessBonds (Just 1.1) $ generateNonbondedMolecules nMols
 
-benchmarkTrajGeneratorXYZ = bgroup
-  "XYZ trajectory"
-  [ benchmarkTrajGeneratorXYZ100A100F
-  , benchmarkTrajGeneratorXYZ100A500F
-  , benchmarkTrajGeneratorXYZ100A1000F
-  , benchmarkTrajGeneratorXYZ100A5000F
-  ]
+generateFragmentedMolecules :: Int -> Maybe SuperMolecule
+generateFragmentedMolecules nMols = fragmentMolecule RemoveAll $ generateBondedMolecules nMols
 
-benchmarkTrajGeneratorXYZ100A100F = bench
-  "100 atoms, 100 frames" $
-  nf (generateTrajectoryXYZ 100) 100
-
-benchmarkTrajGeneratorXYZ100A500F = bench
-  "100 atoms, 500 frames" $
-  nf (generateTrajectoryXYZ 100) 500
-
-benchmarkTrajGeneratorXYZ100A1000F = bench
-  "100 atoms, 1000 frames" $
-  nf (generateTrajectoryXYZ 100) 1000
-
-benchmarkTrajGeneratorXYZ100A5000F = bench
-  "100 atoms, 5000 frames" $
-  nf (generateTrajectoryXYZ 100) 5000
-
-benchmarkGenerateNonbondedMolecules = bgroup
-  "Multiple molecules"
-  [ benchmarkGenerateNonbondedMoleculesSmall
-  , benchmarkGenerateNonbondedMoleculesMedium
-  , benchmarkGenerateNonbondedMoleculesLarge
-  ]
-
-benchmarkGenerateNonbondedMoleculesSmall = bench
-  "10 molecules" $
-  nf generateNonbondedMolecules 10
-
-benchmarkGenerateNonbondedMoleculesMedium = bench
-  "50 molecules" $
-  nf generateNonbondedMolecules 50
-
-benchmarkGenerateNonbondedMoleculesLarge = bench
-  "100 molecules" $
-  nf generateNonbondedMolecules 100
 
 ----------------------------------------------------------------------------------------------------
 -- Benchmarks for the parsers
@@ -165,47 +113,90 @@ benchmarkParser = bgroup
 
 benchmarkParserXYZ = bgroup
   "XYZ Trajectory"
-  [ benchmarkParserXYZ100A100F
-  , benchmarkParserXYZ100A1000F
-  , benchmarkParserXYZ1000A100F
+  [ bench "100 atoms, 100 frames" $ nf (testCase 100) 100
+  , bench "100 atoms, 1000 frames" $ nf (testCase 100) 1000
+  , bench "1000 atoms, 100 frames" $ nf (testCase 1000) 100
   ]
+  where
+    testCase nAtoms nFrames = (parseOnly (many1 parseXYZ)) (generateTrajectoryXYZ nAtoms nFrames)
 
-benchmarkParserXYZ100A100F = bench
-  "100 atoms, 100 frames" $
-  nf (parseOnly (many1 parseXYZ)) (generateTrajectoryXYZ 100 100)
 
-benchmarkParserXYZ100A1000F = bench
-  "100 atoms, 1000 frames" $
-  nf (parseOnly (many1 parseXYZ)) (generateTrajectoryXYZ 100 1000)
-
-benchmarkParserXYZ1000A100F = bench
-  "1000 atoms, 100 frames" $
-  nf (parseOnly (many1 parseXYZ)) (generateTrajectoryXYZ 1000 100)
-
------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- Benchmarks MolecularSystem
 ----------------------------------------------------------------------------------------------------
-
 benchmarkMolecularSystem = bgroup
   "Molecular system"
   [ benchmarkGuessBonds
+  , benchmarkIsolateLayer
+  , benchmarkFragmentMolecule
+  , benchmarkWrapFragmentsToBox
+  , benchmarkReplicateSystemAlongAxis
+  , benchmarkFilterByCriteria
   ]
-
+----------------------------------------------------------------------------------------------------
 benchmarkGuessBonds = bgroup
   "Guess bonds"
-  [ benchmarkGuessBondsSmall
-  , benchmarkGuessBondsMedium
-  , benchmarkGuessBondsLarge
+  [ bench "Small (10 molecules)" $ nf testCase 10
+  , bench "Medium (50 molecules)" $ nf testCase 50
+  , bench "Large (100 molecules)" $ nf testCase 100
   ]
-
-benchmarkGuessBondsSmall = bench
-  "Small (10 molecules)" $
-  nf (guessBonds (Just 1.2)) (generateNonbondedMolecules 10)
-
-benchmarkGuessBondsMedium = bench
-  "Medium (50 molecules)" $
-  nf (guessBonds (Just 1.2)) (generateNonbondedMolecules 50)
-
-benchmarkGuessBondsLarge = bench
-  "Medium (100 molecules)" $
-  nf (guessBonds (Just 1.2)) (generateNonbondedMolecules 100)
+  where
+    testCase nMols = (guessBonds (Just 1.2)) (generateNonbondedMolecules nMols)
+----------------------------------------------------------------------------------------------------
+benchmarkIsolateLayer = bgroup
+  "Isolate ONIOM layer"
+  [ bench "Small (10 molecules)" $ nf (testCase 30) 10
+  , bench "Medium (50 molecules)" $ nf (testCase 150) 50
+  , bench "Large (100 molecules)" $ nf (testCase 300) 100
+  ]
+  where
+    testCase nAtoms nMols =
+      (isolateLayer [0 .. nAtoms] Nothing Nothing) (generateNonbondedMolecules nMols)
+----------------------------------------------------------------------------------------------------
+benchmarkFragmentMolecule = bgroup
+  "Fragment molecule"
+  [ bench "Small (10 molecules)" $ nf testCase 10
+  , bench "Medium (50 molecules)" $ nf testCase 50
+  , bench "Medium (100 molecules)" $ nf testCase 100
+  ]
+  where
+    testCase nMols =
+      (fragmentMolecule RemoveAll) (generateBondedMolecules 10)
+----------------------------------------------------------------------------------------------------
+benchmarkWrapFragmentsToBox = bgroup
+  "Wrap fragments"
+  [ bench "Small (10 molecules)" $ nf testCase 10
+  , bench "Medium (50 molecules)" $ nf testCase 50
+  , bench "Large (100 molecules)" $ nf testCase 100
+  ]
+  where
+    testCase nMols =
+      (wrapFragmentsToBox (10.0, 10.0, 10.0) <$>) (generateFragmentedMolecules nMols)
+----------------------------------------------------------------------------------------------------
+benchmarkReplicateSystemAlongAxis = bgroup
+  "Replicate system"
+  [ bench "Small (10 molecules)" $ nf testCase 10
+  , bench "Medium (50 molecules)" $ nf testCase 50
+  , bench "Large (100 molecules)" $ nf testCase 100
+  ]
+  where
+    testCase nMols =
+      (replicateSystemAlongAxis (10.0, 10.0, 10.0) AxisX) (generateNonbondedMolecules nMols)
+----------------------------------------------------------------------------------------------------
+benchmarkFilterByCriteria = bgroup
+  "Filter by criteria"
+  [ bench "10 frames, 10 molecules" $ nf (testCase 10) 10
+  , bench "10 frames, 50 molecules" $ nf (testCase 10) 50
+  , bench "10 frames, 100 molecules" $ nf (testCase 10) 100
+  , bench "50 frames, 10 molecules" $ nf (testCase 50) 10
+  , bench "50 frames, 50 molecules" $ nf (testCase 50) 50
+  , bench "50 frames, 100 molecules" $ nf (testCase 50) 100
+  , bench "100 frames, 10 molecules" $ nf (testCase 100) 10
+  , bench "100 frames, 50 molecules" $ nf (testCase 100) 50
+  , bench "100 frames, 100 molecules" $ nf (testCase 100) 100
+  ]
+  where
+    testCase nFrames nMols =
+      filterByCriteria
+      [ fromMaybe False <$> (criterionDistance (2, 15) (< 5.0)) ]
+      (replicate nFrames (generateNonbondedMolecules nMols))
