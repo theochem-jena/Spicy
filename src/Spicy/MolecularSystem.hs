@@ -394,6 +394,34 @@ fragmentMolecule bondHandling m
       m & molecule_Atoms .~
       map (\a -> a & atom_Connectivity .~ I.empty) (m ^. molecule_Atoms)
 
+-- | Calculate the distance matrix of a molecule
+distanceMatrix :: Molecule -> Matrix Double
+distanceMatrix mol =
+  where
+    coordinates = map (r3Vec2hmVec . (^. atom_Coordinates)) $ mol ^. molecule_Atoms
+    -- Give a list of (index of the current atom, vector of the current atom) and a
+    -- list of the coordinate vectors of all atoms and calculate the distance to all atoms with LARGER
+    -- index. This gives the upper right corner of the triangular distance matrix, excluding the
+    -- main diagonal
+    triangularRowDistances :: (Int, Vector Double) -> [Vector Double] -> Vector Double
+    triangularRowDistances (thisInd, thisCoord) allCoordinates =
+      fromList
+      [ hmVecDistance (thisCoord, allCoordinates)
+      | i <- [0 .. nCoords - 1], i > thisInd
+      ]
+      where
+        nCoords = length allCoordinate
+    -- Give a list of the row vectors, constructing the upper triangular matrix and expand it to the
+    -- full square matrix
+    expandToSquareMatrix :: [Vector Double] -> Matrix Double
+    expandToSquareMatrix rowVecs =
+      [
+      | nCoords
+      ]
+      where
+        nCoords = (maximum . map length $ rowVecs) + 1
+
+
 
 --------------------------------------------------------------------------------
 -- Generic Helper Functions
