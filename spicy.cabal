@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 38e6f32d55e9576bf4bebc778a2fa5ebb817a7dfc51e54f574787ae3b134d392
+-- hash: 31f04a3ec6cea690bbacd5c6051891442a932834a7b8d62acca1ae5bccba709a
 
 name:           spicy
 version:        0.0.0.1
@@ -20,6 +20,35 @@ build-type:     Simple
 extra-source-files:
     README.md
     LICENSE
+    goldentests/input/FePorphyrine.txyz
+    goldentests/input/FePorphyrine.xyz
+    goldentests/input/HeteroTraj.xyz
+    goldentests/input/N2_bonded.xyz
+    goldentests/input/N2_nonbonded.xyz
+    goldentests/input/RuKomplex.txyz
+    goldentests/input/SulfateInSolution.txyz
+    goldentests/input/SulfateInSolution.xyz
+    goldentests/input/TolueneCl2.txyz
+    goldentests/input/TolueneCl2.xyz
+    goldentests/output/FePorphyrine__GuessBonds5.txyz
+    goldentests/output/FePorphyrine__IsolateLayer1.txyz
+    goldentests/output/HeteroTraj__FilterByCriteria1.xyz
+    goldentests/output/HeteroTraj__FilterByCriteria2.xyz
+    goldentests/output/HeteroTraj__FilterByCriteria3.xyz
+    goldentests/output/N2_bonded__FindNearestAtom1.dat
+    goldentests/output/N2_bonded__GuessBonds1.txyz
+    goldentests/output/N2_bonded__GuessBonds3.txyz
+    goldentests/output/N2_nonbonded__GuessBonds2.txyz
+    goldentests/output/N2_nonbonded__GuessBonds4.txyz
+    goldentests/output/RuKomplex__IsolateLayer2.txyz
+    goldentests/output/SulfateInSolution__FragmentDetection1.xyz
+    goldentests/output/SulfateInSolution__FragmentDetection2.xyz
+    goldentests/output/SulfateInSolution__GuessBonds6.txyz
+    goldentests/output/TolueneCl2__FragmentDetection3.txyz
+    goldentests/output/TolueneCl2__ReplicateSystemAlongAxis1.xyz
+    goldentests/output/TolueneCl2__ReplicateSystemAlongAxis2.xyz
+    goldentests/output/TolueneCl2__ReplicateSystemAlongAxis3.xyz
+    goldentests/output/TolueneCl2__WrapFragmentsToBox1.txyz
 
 source-repository head
   type: git
