@@ -394,6 +394,7 @@ fragmentMolecule bondHandling m
       m & molecule_Atoms .~
       map (\a -> a & atom_Connectivity .~ I.empty) (m ^. molecule_Atoms)
 
+{-
 -- | Calculate the distance matrix of a molecule
 distanceMatrix :: Molecule -> Matrix Double
 distanceMatrix mol =
@@ -416,11 +417,12 @@ distanceMatrix mol =
     expandToSquareMatrix :: [Vector Double] -> Matrix Double
     expandToSquareMatrix rowVecs =
       [
-      | nCoords
+      | i <- [0 .. nCoords - 1]
       ]
       where
         nCoords = (maximum . map length $ rowVecs) + 1
-
+        rowsVecWithDiag = (map (fromList . (0:) . toList) rowVecs) ++ [vector [0.0]]
+-}
 
 
 --------------------------------------------------------------------------------
