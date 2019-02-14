@@ -9,7 +9,6 @@ import           Data.Attoparsec.Text.Lazy
 import qualified Data.ByteString.Lazy      as LBS
 import qualified Data.ByteString.Lazy.UTF8 as LBS
 import           Data.Either
-import           Data.Either.Unwrap
 import           Data.Maybe
 import           Data.Maybe
 import           Data.Ord

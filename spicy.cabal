@@ -1,106 +1,140 @@
-name: spicy
-version: 0.0.1.0
-cabal-version: >=1.10
-build-type: Simple
-license: GPL-3
-license-file: LICENSE
-copyright: Phillip Seeber
-maintainer: phillip.seeber@uni-jena.de
-homepage: https://github.com/sheepforce/Spicy
-bug-reports: https://github.com/sheepforce/Spicy/issues
-description:
-    Please see the README on Github at <https://github.com/sheepforce/Spicy>
-author: Phillip Seeber
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 38e6f32d55e9576bf4bebc778a2fa5ebb817a7dfc51e54f574787ae3b134d392
+
+name:           spicy
+version:        0.0.0.1
+description:    Please see the README on GitHub at <https://github.com/sheepforce/Spicy#readme>
+homepage:       https://github.com/sheepforce/Spicy#readme
+bug-reports:    https://github.com/sheepforce/Spicy/issues
+author:         Phillip Seeber
+maintainer:     phillip.seeber@uni-jena.de
+copyright:      2019 Phillip Seeber
+license:        GPL-3
+license-file:   LICENSE
+build-type:     Simple
 extra-source-files:
     README.md
+    LICENSE
 
 source-repository head
-    type: git
-    location: https://github.com/sheepforce/hONIOM
+  type: git
+  location: https://github.com/sheepforce/Spicy
 
 library
-    exposed-modules:
-        Spicy.MolecularSystem
-        Spicy.Types
-        Spicy.Math
-        Spicy.Parser
-        Spicy.MolWriter
-        Spicy.Wrapper
-        Spicy.Wrapper.ORCA
-        Spicy.Wrapper.ORCA.Methods
-        Spicy.UnitTests.Data
-    build-depends:
-        base >=4.7 && <5,
-        hmatrix >=0.18.0.0,
-        containers >=0.5.7.1,
-        microlens-platform >=0.3.9.0,
-        attoparsec >=0.13.1.0,
-        text >=1.2.2.0,
-        process >=1.4.3.0,
-        split >=0.2.3.2,
-        deepseq >=1.4.2.0,
-        parallel >=3.2.1.0,
-        random >=1.1
-    default-language: Haskell2010
-    hs-source-dirs: src
-    ghc-options: -O2
+  exposed-modules:
+      Spicy.Math
+      Spicy.MolecularSystem
+      Spicy.MolWriter
+      Spicy.Parser
+      Spicy.Types
+      Spicy.UnitTests.Data
+      Spicy.Wrapper
+      Spicy.Wrapper.ORCA
+      Spicy.Wrapper.ORCA.Methods
+  other-modules:
+      Paths_spicy
+  hs-source-dirs:
+      src
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall
+  build-depends:
+      attoparsec >=0.13.1.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8
+    , containers >=0.5.7.1
+    , deepseq >=1.4.2.0
+    , filepath >=1.4.2
+    , hmatrix >=0.18.0.0
+    , microlens-platform >=0.3.9.0
+    , parallel >=3.2.1.0
+    , process >=1.4.3.0
+    , random >=1.1
+    , split >=0.2.3.2
+    , text >=1.2.2.0
+    , utf8-string >=1.0.1
+  default-language: Haskell2010
 
-executable spicy
-    main-is: spicy.hs
-    build-depends:
-        base >=4.7 && <5,
-        spicy -any
-    default-language: Haskell2010
-    hs-source-dirs: app
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
-
-executable spicy-benchmarks
-    main-is: benchmarks.hs
-    build-depends:
-        base >=4.7 && <5,
-        spicy -any,
-        criterion >=1.4.1.0,
-        text >=1.2.2.0,
-        split >=0.2.3.2,
-        attoparsec >=0.13.1.0,
-        containers >=0.5.7.1,
-        microlens-platform >=0.3.9.0
-    default-language: Haskell2010
-    hs-source-dirs: app
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
+executable exckel
+  main-is: spicy.hs
+  other-modules:
+      Paths_spicy
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall
+  build-depends:
+      attoparsec >=0.13.1.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8
+    , containers >=0.5.7.1
+    , deepseq >=1.4.2.0
+    , filepath >=1.4.2
+    , hmatrix >=0.18.0.0
+    , microlens-platform >=0.3.9.0
+    , parallel >=3.2.1.0
+    , process >=1.4.3.0
+    , random >=1.1
+    , spicy
+    , split >=0.2.3.2
+    , text >=1.2.2.0
+    , utf8-string >=1.0.1
+  default-language: Haskell2010
 
 test-suite unittests
-    type: exitcode-stdio-1.0
-    main-is: testing.hs
-    build-depends:
-        base >=4.7 && <5,
-        tasty >=0.11.3,
-        text >=1.2.2.0,
-        attoparsec >=0.13.1.0,
-        spicy -any,
-        either-unwrap >=1.1,
-        tasty-hunit -any,
-        hmatrix >=0.18.0.0,
-        tasty-golden >=2.3.1,
-        filepath >=1.4.2,
-        utf8-string >=1.0.1,
-        bytestring >=0.10.8
-    default-language: Haskell2010
-    hs-source-dirs: app
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
+  type: exitcode-stdio-1.0
+  main-is: testing.hs
+  other-modules:
+      Paths_spicy
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall
+  build-depends:
+      attoparsec >=0.13.1.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8
+    , containers >=0.5.7.1
+    , deepseq >=1.4.2.0
+    , filepath >=1.4.2
+    , hmatrix >=0.18.0.0
+    , microlens-platform >=0.3.9.0
+    , parallel >=3.2.1.0
+    , process >=1.4.3.0
+    , random >=1.1
+    , spicy
+    , split >=0.2.3.2
+    , tasty >=0.11.3
+    , tasty-golden >=2.3.1
+    , tasty-hunit
+    , text >=1.2.2.0
+    , utf8-string >=1.0.1
+  default-language: Haskell2010
 
 benchmark benchmarks
-    type: exitcode-stdio-1.0
-    main-is: benchmarks.hs
-    build-depends:
-        base >=4.7 && <5,
-        spicy -any,
-        criterion >=1.4.1.0,
-        text >=1.2.2.0,
-        split >=0.2.3.2,
-        attoparsec >=0.13.1.0,
-        containers >=0.5.7.1,
-        microlens-platform >=0.3.9.0
-    default-language: Haskell2010
-    hs-source-dirs: app
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
+  type: exitcode-stdio-1.0
+  main-is: benchmarks.hs
+  other-modules:
+      Paths_spicy
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall
+  build-depends:
+      attoparsec >=0.13.1.0
+    , base >=4.7 && <5
+    , bytestring >=0.10.8
+    , containers >=0.5.7.1
+    , criterion >=1.4.1.0
+    , deepseq >=1.4.2.0
+    , filepath >=1.4.2
+    , hmatrix >=0.18.0.0
+    , microlens-platform >=0.3.9.0
+    , parallel >=3.2.1.0
+    , process >=1.4.3.0
+    , random >=1.1
+    , spicy
+    , split >=0.2.3.2
+    , text >=1.2.2.0
+    , utf8-string >=1.0.1
+  default-language: Haskell2010

@@ -1,0 +1,90 @@
+name:                spicy
+version:             0.0.0.1
+github:              "sheepforce/Spicy"
+license:             GPL-3
+author:              "Phillip Seeber"
+maintainer:          "phillip.seeber@uni-jena.de"
+copyright:           "2019 Phillip Seeber"
+
+extra-source-files:
+  - README.md
+  - LICENSE
+  - goldentests/*
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: Please see the README on GitHub at <https://github.com/sheepforce/Spicy#readme>
+
+dependencies:
+  - base >=4.7 && <5
+  - hmatrix >=0.18.0.0
+  - containers >=0.5.7.1
+  - microlens-platform >=0.3.9.0
+  - attoparsec >=0.13.1.0
+  - text >=1.2.2.0
+  - process >=1.4.3.0
+  - split >=0.2.3.2
+  - deepseq >=1.4.2.0
+  - parallel >=3.2.1.0
+  - random >=1.1
+  - filepath >=1.4.2
+  - utf8-string >=1.0.1
+  - bytestring >=0.10.8
+
+library:
+  source-dirs: src
+  ghc-options:
+    - -optP-Wno-nonportable-include-path
+    - -O2
+    - -Wall
+
+executables:
+  exckel:
+    main: spicy.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -optP-Wno-nonportable-include-path
+      - -O2
+      - -Wall
+    dependencies:
+      - spicy
+
+tests:
+  unittests:
+    main: testing.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -optP-Wno-nonportable-include-path
+      - -O2
+      - -Wall
+    dependencies:
+      - spicy
+      - tasty >=0.11.3
+      - tasty-hunit -any
+      - tasty-golden >=2.3.1
+
+benchmarks:
+  benchmarks:
+    main: benchmarks.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -optP-Wno-nonportable-include-path
+      - -O2
+      - -Wall
+    dependencies:
+      - spicy
+      - criterion >=1.4.1.0
