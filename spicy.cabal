@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 31f04a3ec6cea690bbacd5c6051891442a932834a7b8d62acca1ae5bccba709a
+-- hash: 2f132f79c21f26e1df02475248ffc289e64cd560c4eb2fb3fc34a4bf1be4e6f9
 
 name:           spicy
 version:        0.0.0.1
@@ -69,9 +69,10 @@ library
       Paths_spicy
   hs-source-dirs:
       src
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds
   build-depends:
-      attoparsec >=0.13.1.0
+      array >=0.5.2.0
+    , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
@@ -85,6 +86,7 @@ library
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
+    , vector >=0.12.0.2
   default-language: Haskell2010
 
 executable exckel
@@ -93,9 +95,10 @@ executable exckel
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds
   build-depends:
-      attoparsec >=0.13.1.0
+      array >=0.5.2.0
+    , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
@@ -110,6 +113,7 @@ executable exckel
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
+    , vector >=0.12.0.2
   default-language: Haskell2010
 
 test-suite unittests
@@ -119,9 +123,10 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds
   build-depends:
-      attoparsec >=0.13.1.0
+      array >=0.5.2.0
+    , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
@@ -139,6 +144,7 @@ test-suite unittests
     , tasty-hunit
     , text >=1.2.2.0
     , utf8-string >=1.0.1
+    , vector >=0.12.0.2
   default-language: Haskell2010
 
 benchmark benchmarks
@@ -148,9 +154,10 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds
   build-depends:
-      attoparsec >=0.13.1.0
+      array >=0.5.2.0
+    , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
@@ -166,4 +173,5 @@ benchmark benchmarks
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
+    , vector >=0.12.0.2
   default-language: Haskell2010
