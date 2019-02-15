@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 245ed322bbddad2551de90e310e3df4eb6c56a2acc23a44b1ab9064d6d4eafd5
+-- hash: ca1c652618ce4947ac27678766a5c82ac52d5ba053026928a425b29c2644e66d
 
 name:           spicy
 version:        0.0.0.1
@@ -62,7 +62,6 @@ library
       Spicy.Parser
       Spicy.Types
       Spicy.UnitTests.Data
-      Spicy.Wrapper
       Spicy.Wrapper.ORCA
       Spicy.Wrapper.ORCA.Methods
   other-modules:

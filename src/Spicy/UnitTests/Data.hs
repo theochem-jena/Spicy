@@ -13,10 +13,7 @@ module Spicy.UnitTests.Data
 , testHFeCNxH2OMOL2
 , testHFeCNxH2OSpicy
 ) where
-import           Data.IntSet           (IntSet)
 import qualified Data.IntSet           as I
-import           Data.Map              (Map)
-import qualified Data.Map              as Map
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import           Lens.Micro.Platform
@@ -27,6 +24,7 @@ import           Spicy.Types
 -- Atom and molecules for testing
 ----------------------------------------------------------------------------------------------------
 -- | Empty molecule
+moleculeEmpty :: Molecule
 moleculeEmpty = Molecule
   { _molecule_Label = ""
   , _molecule_Atoms = []
@@ -37,6 +35,7 @@ moleculeEmpty = Molecule
 
 -- | Define a molecule HFe(CN)xH2O, with hydrid iron distance being exactly at 1.4 times the sum of
 -- | the covalent radii of H and Fe
+atomC0 :: Atom
 atomC0 = Atom
   { _atom_Element = C
   , _atom_Label = "C0"
@@ -47,6 +46,7 @@ atomC0 = Atom
   , _atom_Connectivity = I.fromList [1, 2]
   }
 
+atomN1 :: Atom
 atomN1 = Atom
   { _atom_Element = N
   , _atom_Label = "N1"
@@ -57,6 +57,7 @@ atomN1 = Atom
   , _atom_Connectivity = I.fromList [0]
   }
 
+atomFe2 :: Atom
 atomFe2 = Atom
   { _atom_Element = Fe
   , _atom_Label = "Fe2"
@@ -67,6 +68,7 @@ atomFe2 = Atom
   , _atom_Connectivity = I.fromList [0, 3]
   }
 
+atomH3 :: Atom
 atomH3 = Atom
   { _atom_Element = H
   , _atom_Label = "H3"
@@ -77,6 +79,7 @@ atomH3 = Atom
   , _atom_Connectivity = I.fromList [2]
   }
 
+atomO4 :: Atom
 atomO4 = Atom
   { _atom_Element = O
   , _atom_Label = "O4"
@@ -87,6 +90,7 @@ atomO4 = Atom
   , _atom_Connectivity = I.fromList [5]
   }
 
+atomH5 :: Atom
 atomH5 = Atom
   { _atom_Element = H
   , _atom_Label = "H5"
@@ -97,6 +101,7 @@ atomH5 = Atom
   , _atom_Connectivity = I.fromList [4]
   }
 
+atomH6 :: Atom
 atomH6 = Atom
   { _atom_Element = H
   , _atom_Label = "H6"
@@ -108,6 +113,7 @@ atomH6 = Atom
   }
 
 -- | Test molecule with all information a molecule could have
+moleculeHFeCNxH2O :: Molecule
 moleculeHFeCNxH2O = Molecule
   { _molecule_Label = "HFe(CN)xH2O"
   , _molecule_Atoms =
@@ -124,6 +130,7 @@ moleculeHFeCNxH2O = Molecule
   , _molecule_Hessian = Just $ diagRect 21.0 (fromList [1.0 .. 6.0]) 6 6
   }
 -- | Test molecule with all informations a TXYZ could have (without calling Tinker)
+moleculeHFeCNxH2OTXYZ :: Molecule
 moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
   & molecule_Atoms .~ newAtoms
   & molecule_Energy .~ Nothing
@@ -138,6 +145,7 @@ moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
       ) oldAtoms
 
 -- | Test molecule with all informations a XYZ could have
+moleculeHFeCNxH2OXYZ :: Molecule
 moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
   & molecule_Atoms .~ newAtoms
   & molecule_Energy .~ Nothing
@@ -154,6 +162,7 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
       ) oldAtoms
 
 -- | Test molecule with all informations a TXYZ could have
+moleculeHFeCNxH2OMOL2 :: Molecule
 moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
   & molecule_Atoms .~ newAtoms
   & molecule_Energy .~ Nothing
@@ -170,7 +179,8 @@ moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
       ) newAtoms''
     newAtoms = newAtoms' & (ix 5 . atom_PCharge) .~ Just 0.5
 
--- | Test molecule as TXYZ file
+
+textHFeCNxH2OTXYZ :: Text-- | Test molecule as TXYZ file
 textHFeCNxH2OTXYZ = T.pack . concat $
   [ "     7 HFe(CN)xH2O\n"
   , "    1  C      0.000960   -0.001240    0.281420     6     2     3     \n"
@@ -182,7 +192,8 @@ textHFeCNxH2OTXYZ = T.pack . concat $
   , "    7  H      2.708520   -2.137580    3.561450     1                 \n"
   ]
 
--- | Test molecule as XYZ file
+
+testHFeCNxH2OXYZ :: Text-- | Test molecule as XYZ file
 testHFeCNxH2OXYZ = T.pack . concat $
   [ " 7                                         \n"
   , "HFe(CN)xH2O\n"
@@ -195,6 +206,7 @@ testHFeCNxH2OXYZ = T.pack . concat $
   , "H         2.708520   -2.137580    3.561450 \n"
   ]
 
+testHFeCNxH2OMOL2 :: Text
 testHFeCNxH2OMOL2 = T.pack . concat $
   [ "@<TRIPOS>MOLECULE\n"
   , "HFe(CN)xH2O\n"
@@ -218,6 +230,7 @@ testHFeCNxH2OMOL2 = T.pack . concat $
   , "\n"
   ]
 
+testHFeCNxH2OSpicy :: Text
 testHFeCNxH2OSpicy = T.pack . concat $
   [ "#Spicy-Format v0.2\n"
   , "\n"

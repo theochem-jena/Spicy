@@ -7,15 +7,12 @@ module Spicy.Parser
 ) where
 import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
-import           Data.Char
 import qualified Data.IntSet               as I
 import           Data.Maybe
-import qualified Data.Set                  as S
 import qualified Data.Text                 as T
-import qualified Data.Text.IO              as T
 import           Data.Tuple
 import           Lens.Micro.Platform
-import           Numeric.LinearAlgebra     hiding (double)
+import           Numeric.LinearAlgebra     hiding (double, rows)
 import           Spicy.MolWriter
 import           Spicy.Types
 
@@ -109,7 +106,7 @@ parseTXYZ = do
         , _atom_FFType =
           case mFFType of
             Nothing -> ""
-            Just x  -> show x
+            Just x'  -> show x'
         , _atom_PCharge = Nothing
         , _atom_Coordinates = (x, y, z)
         , _atom_Connectivity = I.fromList $ map (+ (-1)) connectivityRaw

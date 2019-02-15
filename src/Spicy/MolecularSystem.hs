@@ -19,20 +19,22 @@ module Spicy.MolecularSystem
 , fragmentMolecule
 , shiftFragment
 ) where
-import           Control.Applicative
+-- import           Control.Applicative
 import           Control.Parallel.Strategies
+import qualified Data.Array.IArray           as A
 import           Data.IntSet                 (IntSet)
 import qualified Data.IntSet                 as I
 import           Data.List
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
 import           Data.Maybe
+-- import qualified Data.Vector                 as V
 import           Lens.Micro.Platform
 import qualified Numeric.LinearAlgebra       as Algebra
-import qualified Numeric.LinearAlgebra       (C, Matrix, R, Vector)
+--import qualified Numeric.LinearAlgebra       (C, Matrix, R, Vector)
 import           Spicy.Math
 import           Spicy.Types
-import           System.Random
+-- import           System.Random
 
 
 --------------------------------------------------------------------------------
@@ -394,13 +396,30 @@ fragmentMolecule bondHandling m
       m & molecule_Atoms .~
       map (\a -> a & atom_Connectivity .~ I.empty) (m ^. molecule_Atoms)
 
-{-
 -- | Calculate the distance matrix of a molecule
-distanceMatrix :: Molecule -> Matrix Double
-distanceMatrix mol =
+distanceMatrix :: Molecule -> A.Array (Int, Int) Double
+distanceMatrix mol = A.array
+  ((0, 0), (length coordinates - 1, length coordinates - 1))
+  (concat
+    [ [ ((i, j), 1.0)
+      | i <- [0 .. length coordinates - 1]
+      ]
+    | j <- [0 .. length coordinates - 1]
+    ]
+  )
+  {-
+  concat (
+    [ [ ((i, j), hmVecDistance (coordinates !! i) (coordinates !! j))
+      | i <- [0 .. length coordinates - 1]
+      ]
+    | j <- [0 .. length coordinates - 1]
+    ]
+  )
+  -}
   where
     coordinates = map (r3Vec2hmVec . (^. atom_Coordinates)) $ mol ^. molecule_Atoms
-    -- Give a list of (index of the current atom, vector of the current atom) and a
+    {-
+        -- Give a list of (index of the current atom, vector of the current atom) and a
     -- list of the coordinate vectors of all atoms and calculate the distance to all atoms with LARGER
     -- index. This gives the upper right corner of the triangular distance matrix, excluding the
     -- main diagonal
@@ -422,7 +441,7 @@ distanceMatrix mol =
       where
         nCoords = (maximum . map length $ rowVecs) + 1
         rowsVecWithDiag = (map (fromList . (0:) . toList) rowVecs) ++ [vector [0.0]]
--}
+    -}
 
 
 --------------------------------------------------------------------------------

@@ -14,7 +14,6 @@ module Spicy.Math
 ) where
 import           Data.List
 import           Numeric.LinearAlgebra
-import           Numeric.LinearAlgebra.Data
 import           Spicy.Types
 
 -- | intersection (subset) of two lists a and b

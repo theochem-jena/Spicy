@@ -31,8 +31,8 @@ module Spicy.Types
 , Task(..)
 , Software(..)
 , Basis(..)
-, Charge(..)
-, Multiplicity(..)
+, Charge
+, Multiplicity
 , Shell(..)
 , DType(..)
 , Efficiency(..)
@@ -53,8 +53,8 @@ module Spicy.Types
 , CAS_Space(..)
 , cas_Space_nElec
 , cas_Space_Orbs
-, CAS_Roots(..)
-, CAS_Weights(..)
+, CAS_Roots
+, CAS_Weights
 , CAS_Approx(..)
 --
 , QC_SE_Method(..)
@@ -89,17 +89,10 @@ module Spicy.Types
 , methods_qc_MPN
 , methods_qc_CC
 , methods_qc_CAS
-, dummyMethods
 ) where
 import           Control.DeepSeq
 import           Data.IntSet           (IntSet)
-import qualified Data.IntSet           as I
-import           Data.Map              (Map)
-import qualified Data.Map              as Map
-import           Data.Maybe
-import           Data.Set              (Set)
-import qualified Data.Set              as S
-import           GHC.Generics          (Generic, Generic1)
+import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
@@ -387,7 +380,7 @@ instance Show SE_Method where
   show SE_RM1  = "RM1"
 instance NiceShow SE_Method where
   niceShow = show
-  --niceComplex = show
+  niceComplex = show
 
 -- | Hartree Fock
 -- |   -> Approximations
@@ -680,6 +673,7 @@ hfShell shell
   | shell == Restricted = "RHF"
   | shell == Unrestricted = "UHF"
   | shell == RestrictedOpen = "ROHF"
+  | otherwise = "unknown"
 
 -- | Generate short strings for ability to use derivatives
 d :: Efficiency -> String
@@ -705,7 +699,9 @@ d e = gGP ++ gSolv ++ hGP ++ hSolv
       | a == Analytical = "a"
       | a == Numerical = "n"
       | a == NotAvail = "/"
+      | otherwise = ""
 
+{-
 dummyMethods = Methods
   { _methods_qc_SE  = []
   , _methods_qc_HF  = []
@@ -714,6 +710,7 @@ dummyMethods = Methods
   , _methods_qc_CC  = []
   , _methods_qc_CAS = []
   }
+-}
 
 --------------------------------------------------------------------------------
 -- test Types for priting. To be removed later

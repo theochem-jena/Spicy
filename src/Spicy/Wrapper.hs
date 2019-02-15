@@ -1,3 +1,0 @@
-module Spicy.Wrapper
-(
-) where
