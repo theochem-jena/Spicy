@@ -2,22 +2,19 @@
 Benchmarks of Spicy functions
 -}
 {-# LANGUAGE BangPatterns #-}
-import           Control.Monad             (replicateM)
 import           Criterion.Main
 import           Data.Attoparsec.Text.Lazy (many1, parseOnly)
-import           Data.IntSet               (IntSet)
 import qualified Data.IntSet               as I
-import           Data.List.Split
 import           Data.Maybe
 import qualified Data.Text                 as T
-import qualified Data.Text.IO              as T
 import           Lens.Micro.Platform
 import           Spicy.MolecularSystem
 import           Spicy.MolWriter
 import           Spicy.Parser
 import           Spicy.Types
-import           Text.Printf
 
+
+main :: IO ()
 main = defaultMain
   [ benchmarkParser
   , benchmarkMolecularSystem
@@ -106,11 +103,13 @@ generateFragmentedMolecules nMols = fragmentMolecule RemoveAll $ generateBondedM
 ----------------------------------------------------------------------------------------------------
 -- Benchmarks for the parsers
 ----------------------------------------------------------------------------------------------------
+benchmarkParser :: Benchmark
 benchmarkParser = bgroup
   "Parser"
   [ benchmarkParserXYZ
   ]
 
+benchmarkParserXYZ :: Benchmark
 benchmarkParserXYZ = bgroup
   "XYZ Trajectory"
   [ bench "100 atoms, 100 frames" $ nf (testCase 100) 100
@@ -124,6 +123,7 @@ benchmarkParserXYZ = bgroup
 ----------------------------------------------------------------------------------------------------
 -- Benchmarks MolecularSystem
 ----------------------------------------------------------------------------------------------------
+benchmarkMolecularSystem :: Benchmark
 benchmarkMolecularSystem = bgroup
   "Molecular system"
   [ benchmarkGuessBonds
@@ -134,6 +134,7 @@ benchmarkMolecularSystem = bgroup
   , benchmarkFilterByCriteria
   ]
 ----------------------------------------------------------------------------------------------------
+benchmarkGuessBonds :: Benchmark
 benchmarkGuessBonds = bgroup
   "Guess bonds"
   [ bench "Small (10 molecules)" $ nf testCase 10
@@ -143,6 +144,7 @@ benchmarkGuessBonds = bgroup
   where
     testCase nMols = (guessBonds (Just 1.2)) (generateNonbondedMolecules nMols)
 ----------------------------------------------------------------------------------------------------
+benchmarkIsolateLayer :: Benchmark
 benchmarkIsolateLayer = bgroup
   "Isolate ONIOM layer"
   [ bench "Small (10 molecules)" $ nf (testCase 30) 10
@@ -153,6 +155,7 @@ benchmarkIsolateLayer = bgroup
     testCase nAtoms nMols =
       (isolateLayer [0 .. nAtoms] Nothing Nothing) (generateNonbondedMolecules nMols)
 ----------------------------------------------------------------------------------------------------
+benchmarkFragmentMolecule :: Benchmark
 benchmarkFragmentMolecule = bgroup
   "Fragment molecule"
   [ bench "Small (10 molecules)" $ nf testCase 10
@@ -163,6 +166,7 @@ benchmarkFragmentMolecule = bgroup
     testCase nMols =
       (fragmentMolecule RemoveAll) (generateBondedMolecules 10)
 ----------------------------------------------------------------------------------------------------
+benchmarkWrapFragmentsToBox :: Benchmark
 benchmarkWrapFragmentsToBox = bgroup
   "Wrap fragments"
   [ bench "Small (10 molecules)" $ nf testCase 10
@@ -173,6 +177,7 @@ benchmarkWrapFragmentsToBox = bgroup
     testCase nMols =
       (wrapFragmentsToBox (10.0, 10.0, 10.0) <$>) (generateFragmentedMolecules nMols)
 ----------------------------------------------------------------------------------------------------
+benchmarkReplicateSystemAlongAxis :: Benchmark
 benchmarkReplicateSystemAlongAxis = bgroup
   "Replicate system"
   [ bench "Small (10 molecules)" $ nf testCase 10
@@ -183,6 +188,7 @@ benchmarkReplicateSystemAlongAxis = bgroup
     testCase nMols =
       (replicateSystemAlongAxis (10.0, 10.0, 10.0) AxisX) (generateNonbondedMolecules nMols)
 ----------------------------------------------------------------------------------------------------
+benchmarkFilterByCriteria :: Benchmark
 benchmarkFilterByCriteria = bgroup
   "Filter by criteria"
   [ bench "10 frames, 10 molecules" $ nf (testCase 10) 10

@@ -4,29 +4,23 @@ parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
 
-import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
-import qualified Data.ByteString.Lazy      as LBS
 import qualified Data.ByteString.Lazy.UTF8 as LBS
-import           Data.Either
 import           Data.Maybe
-import           Data.Maybe
-import           Data.Ord
-import qualified Data.Text                 as T
 import qualified Data.Text.IO              as T
 import           Spicy.MolecularSystem
 import           Spicy.MolWriter
 import           Spicy.Parser
 import           Spicy.Types
 import           Spicy.UnitTests.Data
-import           System.FilePath
-import           System.IO.Unsafe
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 
+instance Show Molecule where
+  show = writeSpicy
 
---main = defaultMain tests
+main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
@@ -50,15 +44,19 @@ testParser = testGroup "Parser"
   , testParserSpicy
   ]
 
+testParserTXYZ1 :: TestTree
 testParserTXYZ1 = testCase "Tinker XYZ (1)" $
   parseOnly parseTXYZ textHFeCNxH2OTXYZ @?= Right moleculeHFeCNxH2OTXYZ
 
+testParserXYZ1 :: TestTree
 testParserXYZ1 = testCase "Molden XYZ (1)" $
   parseOnly parseXYZ testHFeCNxH2OXYZ @?= Right moleculeHFeCNxH2OXYZ
 
+testParserMOL21 :: TestTree
 testParserMOL21 = testCase "SyByl MOL2 (1)" $
  parseOnly parseMOL2 testHFeCNxH2OMOL2 @?= Right moleculeHFeCNxH2OMOL2
 
+testParserSpicy :: TestTree
 testParserSpicy = testCase "Spicy format (1)" $
   parseOnly parseSpicy testHFeCNxH2OSpicy @?= Right moleculeHFeCNxH2O
 
@@ -89,6 +87,7 @@ testMolecularSystem = testGroup "Molecular System"
   ]
 
 -- | Guessing of bonds by colvant radii
+testGuessBonds1 :: TestTree
 testGuessBonds1 = goldenVsString
   "Guess bonds - defaults (N2 in binding distance)"
   "goldentests/output/N2_bonded__GuessBonds1.txyz" $ do
@@ -99,6 +98,7 @@ testGuessBonds1 = goldenVsString
         let molResult = guessBonds Nothing molInput
         return . LBS.fromString . writeTXYZ $ molResult
 
+testGuessBonds2 :: TestTree
 testGuessBonds2 = goldenVsString
   "Guess bonds - defaults (N2 in non-binding distance)"
   "goldentests/output/N2_nonbonded__GuessBonds2.txyz" $ do
@@ -109,6 +109,7 @@ testGuessBonds2 = goldenVsString
         let molResult = guessBonds Nothing molInput
         return . LBS.fromString . writeTXYZ $ molResult
 
+testGuessBonds3 :: TestTree
 testGuessBonds3 = goldenVsString
   "Guess bonds - custom cutoff (N2 in binding distance)"
   "goldentests/output/N2_bonded__GuessBonds3.txyz" $ do
@@ -119,6 +120,7 @@ testGuessBonds3 = goldenVsString
         let molResult = guessBonds (Just 0.1) molInput
         return . LBS.fromString . writeTXYZ $ molResult
 
+testGuessBonds4 :: TestTree
 testGuessBonds4 = goldenVsString
   "Guess bonds - custom cutoff (N2 in non-binding distance)"
   "goldentests/output/N2_nonbonded__GuessBonds4.txyz" $ do
@@ -129,6 +131,7 @@ testGuessBonds4 = goldenVsString
         let molResult = guessBonds (Just 7.042254) molInput
         return . LBS.fromString . writeTXYZ $ molResult
 
+testGuessBonds5 :: TestTree
 testGuessBonds5 = goldenVsString
   "Guess bonds - 1.2 x R_covalent (Heme like system)"
   "goldentests/output/FePorphyrine__GuessBonds5.txyz" $ do
@@ -139,6 +142,7 @@ testGuessBonds5 = goldenVsString
         let molResult = guessBonds (Just 1.2) molInput
         return . LBS.fromString . writeTXYZ $ molResult
 
+testGuessBonds6 :: TestTree
 testGuessBonds6 = goldenVsString
   "Guess bonds - defaults (sulfate in mixture of H20 and NH3)"
   "goldentests/output/SulfateInSolution__GuessBonds6.txyz" $ do
@@ -150,6 +154,7 @@ testGuessBonds6 = goldenVsString
         return . LBS.fromString . writeTXYZ $ molResult
 
 -- | Isolating ONIOM layers and capping dangling bonds
+testIsolateLayer1 :: TestTree
 testIsolateLayer1 = goldenVsString
   "Isolate ONIOM layer - defaults (Heme like system, isolate Fe-porphyrine)"
   "goldentests/output/FePorphyrine__IsolateLayer1.txyz" $ do
@@ -160,6 +165,7 @@ testIsolateLayer1 = goldenVsString
         let molResult = isolateLayer [0 .. 35] Nothing Nothing molInput
         return . LBS.fromString . writeTXYZ . fromMaybe moleculeEmpty $ molResult
 
+testIsolateLayer2 :: TestTree
 testIsolateLayer2 = goldenVsString
   "Isolate ONIOM layer - fluorine capping, short dinstance (Ru complex with H20 solvent molecules)"
   "goldentests/output/RuKomplex__IsolateLayer2.txyz" $ do
@@ -178,6 +184,7 @@ testIsolateLayer2 = goldenVsString
         return . LBS.fromString . writeTXYZ . fromMaybe moleculeEmpty $ molResult
 
 -- | Fragment detection
+testFragmentDetection1 :: TestTree
 testFragmentDetection1 = goldenVsString
   "Detect fragments - remove all bonds (sulfate in mixture of H20 and NH3)"
   "goldentests/output/SulfateInSolution__FragmentDetection1.xyz" $ do
@@ -192,6 +199,7 @@ testFragmentDetection1 = goldenVsString
           Nothing -> return $ LBS.fromString "Failed"
           Just s  -> return s
 
+testFragmentDetection2 :: TestTree
 testFragmentDetection2 = goldenVsString
   "Detect fragments - new bond guess (sulfate in mixture of H20 and NH3)"
   "goldentests/output/SulfateInSolution__FragmentDetection2.xyz" $ do
@@ -206,6 +214,7 @@ testFragmentDetection2 = goldenVsString
           Nothing -> return $ LBS.fromString "Failed"
           Just s  -> return s
 
+testFragmentDetection3 :: TestTree
 testFragmentDetection3 = goldenVsString
   "Detect fragments - keeping supermol bonds (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__FragmentDetection3.txyz" $ do
@@ -221,6 +230,7 @@ testFragmentDetection3 = goldenVsString
           Just s  -> return s
 
 -- | Wrapping of fragments to unit cell molecule-wise
+testWrapFragmentsToBox1 :: TestTree
 testWrapFragmentsToBox1 = goldenVsString
   "Wrap molecules to unit cell molecule-wise (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__WrapFragmentsToBox1.txyz" $ do
@@ -236,6 +246,7 @@ testWrapFragmentsToBox1 = goldenVsString
           Just s  -> return s
 
 -- | Supercell generation
+testReplicateSystemAlongAxis1 :: TestTree
 testReplicateSystemAlongAxis1 = goldenVsString
   "Replicate unit cell - x axis (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis1.xyz" $ do
@@ -246,6 +257,7 @@ testReplicateSystemAlongAxis1 = goldenVsString
         let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisX molInput
         return . LBS.fromString . writeXYZ $ superCell
 
+testReplicateSystemAlongAxis2 :: TestTree
 testReplicateSystemAlongAxis2 = goldenVsString
   "Replicate unit cell - y axis (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis2.xyz" $ do
@@ -256,6 +268,7 @@ testReplicateSystemAlongAxis2 = goldenVsString
         let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisY molInput
         return . LBS.fromString . writeXYZ $ superCell
 
+testReplicateSystemAlongAxis3 :: TestTree
 testReplicateSystemAlongAxis3 = goldenVsString
   "Replicate unit cell - z axis (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis3.xyz" $ do
@@ -267,6 +280,7 @@ testReplicateSystemAlongAxis3 = goldenVsString
         return . LBS.fromString . writeXYZ $ superCell
 
 -- | Nearest neighbour search
+testFindNearestAtom1 :: TestTree
 testFindNearestAtom1 = goldenVsString
   "Find nearest atom (toluene Cl2 mixture periodic)"
   "goldentests/output/N2_bonded__FindNearestAtom1.dat" $ do
@@ -278,6 +292,7 @@ testFindNearestAtom1 = goldenVsString
         return . LBS.fromString . show $ nearestInfo
 
 -- | Test criterion filtering
+testFilterByCriteria1 :: TestTree
 testFilterByCriteria1 = goldenVsString
   "Trajectory filtering - distance criterion (azine and phophinin)"
   "goldentests/output/HeteroTraj__FilterByCriteria1.xyz" $ do
@@ -291,6 +306,7 @@ testFilterByCriteria1 = goldenVsString
               ] trajInput
         return . LBS.fromString . concat . map writeXYZ $ filteredTraj
 
+testFilterByCriteria2 :: TestTree
 testFilterByCriteria2 = goldenVsString
   "Trajectory filtering - 4 atoms angle criterion (azine and phophinin)"
   "goldentests/output/HeteroTraj__FilterByCriteria2.xyz" $ do
@@ -304,6 +320,7 @@ testFilterByCriteria2 = goldenVsString
               ] trajInput
         return . LBS.fromString . concat . map writeXYZ $ filteredTraj
 
+testFilterByCriteria3 :: TestTree
 testFilterByCriteria3 = goldenVsString
   "Trajectory filtering - 2 distance criteria (azine and phophinin)"
   "goldentests/output/HeteroTraj__FilterByCriteria3.xyz" $ do

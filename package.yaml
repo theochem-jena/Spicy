@@ -39,49 +39,43 @@ dependencies:
   - vector >= 0.12.0.2
   - array >= 0.5.2.0
 
+ghc-options:
+  - -optP-Wno-nonportable-include-path
+  - -O2
+  - -Wall
+  - -Wno-unused-matches
+  - -Wno-unused-top-binds
+  - -Wno-unused-local-binds
+  - -Wno-type-defaults
+
 library:
   source-dirs: src
-  ghc-options:
-    - -optP-Wno-nonportable-include-path
-    - -O2
-    - -Wall
-    - -Wno-unused-matches
-    - -Wno-unused-top-binds
-    - -Wno-unused-local-binds
-    - -Wno-type-defaults
 
 executables:
-  exckel:
+  spicy:
     main: spicy.hs
     source-dirs: app
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-      - -optP-Wno-nonportable-include-path
-      - -O2
-      - -Wall
-      - -Wno-unused-matches
-      - -Wno-unused-top-binds
-      - -Wno-unused-local-binds
-      - -Wno-type-defaults
     dependencies:
       - spicy
+  benchmarks-exe:
+    main: benchmarks.hs
+    source-dirs: app
+    dependencies:
+      - spicy
+      - criterion >=1.4.1.0
+  unittests-exe:
+    main: testing.hs
+    source-dirs: app
+    dependencies:
+      - spicy
+      - tasty >=0.11.3
+      - tasty-hunit -any
+      - tasty-golden >=2.3.1
 
 tests:
   unittests:
     main: testing.hs
     source-dirs: app
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-      - -optP-Wno-nonportable-include-path
-      - -O2
-      - -Wall
-      - -Wno-unused-matches
-      - -Wno-unused-top-binds
-      - -Wno-unused-local-binds
     dependencies:
       - spicy
       - tasty >=0.11.3
@@ -92,16 +86,6 @@ benchmarks:
   benchmarks:
     main: benchmarks.hs
     source-dirs: app
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-      - -optP-Wno-nonportable-include-path
-      - -O2
-      - -Wall
-      - -Wno-unused-matches
-      - -Wno-unused-top-binds
-      - -Wno-unused-local-binds
     dependencies:
       - spicy
       - criterion >=1.4.1.0
