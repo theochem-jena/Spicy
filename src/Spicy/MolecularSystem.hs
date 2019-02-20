@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-
 This module deals with the partitioning of the system, creation of bonds,
 assignment of substructeres to layers and creation of ghost atoms.
@@ -17,9 +18,9 @@ module Spicy.MolecularSystem
 , findNearestAtom
 , FragmentBonds(..)
 , fragmentMolecule
+, distanceMatrix
 , shiftFragment
 ) where
--- import           Control.Applicative
 import           Control.Parallel.Strategies
 import qualified Data.Array.IArray           as A
 import           Data.IntSet                 (IntSet)
@@ -28,18 +29,15 @@ import           Data.List
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
 import           Data.Maybe
--- import qualified Data.Vector                 as V
 import           Lens.Micro.Platform
 import qualified Numeric.LinearAlgebra       as Algebra
---import qualified Numeric.LinearAlgebra       (C, Matrix, R, Vector)
 import           Spicy.Math
 import           Spicy.Types
--- import           System.Random
 
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- Manipulations of the Molecule
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- | helper for the manipulation of bonds
 data BondManipulation = Create | Delete deriving Eq
 
@@ -83,29 +81,24 @@ manipulateBond action i_a i_b mol
 guessBonds :: Maybe Double -> Molecule -> Molecule
 guessBonds scale mol = mol & molecule_Atoms .~ updatedAtoms
   where
+    !distances = distanceMatrix mol
     atoms = mol ^. molecule_Atoms
     atomIndRange = [ 0 .. length atoms - 1 ]
-    updatedAtoms =
-      [ (atoms !! a) & atom_Connectivity .~
-      ( I.fromList . nub . concat $
-        [ if isNothing $ cD (atoms !! a) (atoms !! b)
-            then I.toList $ (atoms !! a) ^. atom_Connectivity
-            else
-              if  fromMaybe 1.4 scale * fromJust (cD (atoms !! a) (atoms !! b))
-                  >= d (atoms !! a) (atoms !! b) && a/=b
-                then b : (I.toList $ (atoms !! a) ^. atom_Connectivity)
-                else I.toList $ (atoms !! a) ^. atom_Connectivity
-        | b <- atomIndRange
-        ]
-      )
-      | a <- atomIndRange
-      ]
-    d :: Atom -> Atom -> Double
-    d a b =
-      hmVecLength
-        ( r3Vec2hmVec (a ^. atom_Coordinates)
-        - r3Vec2hmVec (b ^. atom_Coordinates)
-        )
+    indexedAtoms = zip atomIndRange atoms
+    updatedAtoms = zipWith (\refAt otherAts -> makeAllAtomsBonds distances refAt otherAts)
+      indexedAtoms (replicate (length atoms) indexedAtoms) `using` (parListChunk chunkSize) rdeepseq
+    -- This function takes a single reference atom (with index) and a indexed list of other atoms.
+    --  It adds all bonds to other atoms found to the reference atom
+    makeAllAtomsBonds :: A.Array (Int, Int) Double -> (Int, Atom) -> [(Int, Atom)] -> Atom
+    makeAllAtomsBonds distMat thisAt allAt =
+      snd $
+      foldl (\origAtom otherAtom -> if (fst origAtom) == (fst otherAtom)
+        then origAtom
+        else if fromMaybe 1.4 scale * fromJust (cD (snd origAtom) (snd otherAtom)) <=
+                (distMat A.! (fst origAtom, fst otherAtom))
+               then origAtom
+               else (fst origAtom, (snd origAtom) & atom_Connectivity %~ I.insert (fst otherAtom))
+      ) thisAt allAt
     cD :: Atom -> Atom -> Maybe Double
     cD a b =
       (+) <$>
@@ -399,49 +392,25 @@ fragmentMolecule bondHandling m
 -- | Calculate the distance matrix of a molecule
 distanceMatrix :: Molecule -> A.Array (Int, Int) Double
 distanceMatrix mol = A.array
-  ((0, 0), (length coordinates - 1, length coordinates - 1))
-  (concat
-    [ [ ((i, j), 1.0)
-      | i <- [0 .. length coordinates - 1]
-      ]
-    | j <- [0 .. length coordinates - 1]
-    ]
-  )
-  {-
-  concat (
-    [ [ ((i, j), hmVecDistance (coordinates !! i) (coordinates !! j))
-      | i <- [0 .. length coordinates - 1]
-      ]
-    | j <- [0 .. length coordinates - 1]
-    ]
-  )
-  -}
+  ((0, 0), (length coordinates - 1, length coordinates - 1)) $
+  rightUpperEntries ++ diagonalEntries ++ leftLowerEntries
   where
     coordinates = map (r3Vec2hmVec . (^. atom_Coordinates)) $ mol ^. molecule_Atoms
-    {-
-        -- Give a list of (index of the current atom, vector of the current atom) and a
-    -- list of the coordinate vectors of all atoms and calculate the distance to all atoms with LARGER
-    -- index. This gives the upper right corner of the triangular distance matrix, excluding the
-    -- main diagonal
-    triangularRowDistances :: (Int, Vector Double) -> [Vector Double] -> Vector Double
-    triangularRowDistances (thisInd, thisCoord) allCoordinates =
-      fromList
-      [ hmVecDistance (thisCoord, allCoordinates)
-      | i <- [0 .. nCoords - 1], i > thisInd
+    rightUpperIndices =
+      [ (i, j)
+      | i <- [0 .. length coordinates - 1], j <- [0 .. length coordinates - 1], j > i
       ]
-      where
-        nCoords = length allCoordinate
-    -- Give a list of the row vectors, constructing the upper triangular matrix and expand it to the
-    -- full square matrix
-    expandToSquareMatrix :: [Vector Double] -> Matrix Double
-    expandToSquareMatrix rowVecs =
-      [
-      | i <- [0 .. nCoords - 1]
-      ]
-      where
-        nCoords = (maximum . map length $ rowVecs) + 1
-        rowsVecWithDiag = (map (fromList . (0:) . toList) rowVecs) ++ [vector [0.0]]
-    -}
+    !rightUpperEntries =
+      map (\(i, j) ->
+        ( (i, j)
+        , hmVecDistance (coordinates !! i, coordinates !! j)
+        )
+      ) rightUpperIndices -- `using` (parListChunk 5000) rdeepseq
+    diagonalEntries = [ ((i, i), 0.0) | i <- [0 .. length coordinates - 1]]
+    leftLowerIndices = map (\(a, b) -> (b, a)) rightUpperIndices -- `using` (parListChunk chunkSize) rdeepseq
+    !leftLowerEntries =
+      zipWith (\(_, dist) inds -> (inds, dist)) rightUpperEntries leftLowerIndices
+      -- `using` (parListChunk 5000) rdeepseq
 
 
 --------------------------------------------------------------------------------
