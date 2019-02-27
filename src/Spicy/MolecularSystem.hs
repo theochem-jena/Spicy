@@ -86,7 +86,7 @@ guessBonds scale mol = mol & molecule_Atoms .~ updatedAtoms
     atomIndRange = [ 0 .. length atoms - 1 ]
     indexedAtoms = zip atomIndRange atoms
     updatedAtoms = zipWith (\refAt otherAts -> makeAllAtomsBonds distances refAt otherAts)
-      indexedAtoms (replicate (length atoms) indexedAtoms) `using` (parListChunk chunkSize) rdeepseq
+      indexedAtoms (replicate (length atoms) indexedAtoms) `using` (parListChunk 500) rdeepseq
     -- This function takes a single reference atom (with index) and a indexed list of other atoms.
     --  It adds all bonds to other atoms found to the reference atom
     makeAllAtomsBonds :: A.Array (Int, Int) Double -> (Int, Atom) -> [(Int, Atom)] -> Atom
