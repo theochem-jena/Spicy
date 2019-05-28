@@ -1,10 +1,8 @@
-cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.28.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a0b9fad3519ec744a490d2fb9fcac0abf2e8901b8211d85ad4d663910641b91b
+-- hash: 092a0480e4a1b8180b7dff420ec2d5f3d684c0b13a51fc2235de8ae4b4f95ecb
 
 name:           spicy
 version:        0.0.0.1
@@ -17,9 +15,8 @@ copyright:      2019 Phillip Seeber
 license:        GPL-3
 license-file:   LICENSE
 build-type:     Simple
+cabal-version:  >= 1.10
 extra-source-files:
-    README.md
-    LICENSE
     goldentests/input/FePorphyrine.txyz
     goldentests/input/FePorphyrine.xyz
     goldentests/input/HeteroTraj.xyz
@@ -49,6 +46,8 @@ extra-source-files:
     goldentests/output/TolueneCl2__ReplicateSystemAlongAxis2.xyz
     goldentests/output/TolueneCl2__ReplicateSystemAlongAxis3.xyz
     goldentests/output/TolueneCl2__WrapFragmentsToBox1.txyz
+    LICENSE
+    README.md
 
 source-repository head
   type: git
@@ -82,6 +81,7 @@ library
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
@@ -109,6 +109,7 @@ executable benchmarks-exe
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
@@ -136,6 +137,7 @@ executable spicy
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
@@ -163,6 +165,7 @@ executable unittests-exe
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , tasty >=0.11.3
@@ -194,6 +197,7 @@ test-suite unittests
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , tasty >=0.11.3
@@ -226,6 +230,7 @@ benchmark benchmarks
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0

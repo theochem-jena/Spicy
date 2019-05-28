@@ -22,22 +22,23 @@ extra-source-files:
 description: Please see the README on GitHub at <https://github.com/sheepforce/Spicy#readme>
 
 dependencies:
-  - base >=4.7 && <5
-  - hmatrix >=0.18.0.0
-  - containers >=0.5.7.1
-  - microlens-platform >=0.3.9.0
-  - attoparsec >=0.13.1.0
-  - text >=1.2.2.0
-  - process >=1.4.3.0
-  - split >=0.2.3.2
-  - deepseq >=1.4.2.0
-  - parallel >=3.2.1.0
-  - random >=1.1
-  - filepath >=1.4.2
-  - utf8-string >=1.0.1
-  - bytestring >=0.10.8
+  - base >= 4.7 && <5
+  - hmatrix >= 0.18.0.0
+  - containers >= 0.5.7.1
+  - microlens-platform >= 0.3.9.0
+  - attoparsec >= 0.13.1.0
+  - text >= 1.2.2.0
+  - process >= 1.4.3.0
+  - split >= 0.2.3.2
+  - deepseq >= 1.4.2.0
+  - parallel >= 3.2.1.0
+  - random >= 1.1
+  - filepath >= 1.4.2
+  - utf8-string >= 1.0.1
+  - bytestring >= 0.10.8
   - vector >= 0.12.0.2
   - array >= 0.5.2.0
+  - repa >= 3.4.1.4
 
 ghc-options:
   - -optP-Wno-nonportable-include-path
@@ -63,16 +64,16 @@ executables:
     source-dirs: app
     dependencies:
       - spicy
-      - criterion >=1.4.1.0
+      - criterion >= 1.4.1.0
     ghc-options: -threaded -rtsopts "-with-rtsopts=-N -qa"
   unittests-exe:
     main: testing.hs
     source-dirs: app
     dependencies:
       - spicy
-      - tasty >=0.11.3
+      - tasty >= 0.11.3
       - tasty-hunit -any
-      - tasty-golden >=2.3.1
+      - tasty-golden >= 2.3.1
     ghc-options: -threaded -rtsopts "-with-rtsopts=-N -qa"
 
 tests:
@@ -81,9 +82,9 @@ tests:
     source-dirs: app
     dependencies:
       - spicy
-      - tasty >=0.11.3
+      - tasty >= 0.11.3
       - tasty-hunit -any
-      - tasty-golden >=2.3.1
+      - tasty-golden >= 2.3.1
     ghc-options: -threaded -rtsopts "-with-rtsopts=-N1 -qa"
 
 benchmarks:
@@ -92,5 +93,5 @@ benchmarks:
     source-dirs: app
     dependencies:
       - spicy
-      - criterion >=1.4.1.0
+      - criterion >= 1.4.1.0
     ghc-options: -threaded -rtsopts "-with-rtsopts=-N1 -qa"
