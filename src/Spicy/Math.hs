@@ -1,3 +1,20 @@
+{-|
+Module      : Spicy.Math
+Description : Basic mathematical operations
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
+This module defines basic algebraic operations used throughout the program. It
+also handles conversion from "R3Vec" to hMatrix's "Vector" type
+
+    * highest level region has highest index
+
+    * lowest level region has index 0 and contains the complete system
+-}
+
 {-
 This module defines basic algebraic operations used throughout the program. It
 also handles conversion from "R3Vec" to hMatrix's "Vector" type

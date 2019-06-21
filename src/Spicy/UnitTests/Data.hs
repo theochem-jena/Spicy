@@ -1,3 +1,15 @@
+{-|
+Module      : Spicy.UnitTests.Data
+Description : Auxiliary data for unit tests
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
+The module collects data only used for unit testing, such as the correct answers for unit tests.
+-}
+
 {-
 The module collects data only used for unit testing, such as the correct answers
 for unit tests.
@@ -22,8 +34,10 @@ import           Spicy.Types
 
 ----------------------------------------------------------------------------------------------------
 -- Atom and molecules for testing
-----------------------------------------------------------------------------------------------------
--- | Empty molecule
+
+{-|
+Empty molecule.
+-}
 moleculeEmpty :: Molecule
 moleculeEmpty = Molecule
   { _molecule_Label = ""
@@ -33,8 +47,10 @@ moleculeEmpty = Molecule
   , _molecule_Hessian = Nothing
   }
 
--- | Define a molecule HFe(CN)xH2O, with hydrid iron distance being exactly at 1.4 times the sum of
--- | the covalent radii of H and Fe
+{-|
+Define a 'Molecule' HFe(CN)xH2O, with hydrid iron distance being exactly at 1.4 times the sum of the
+covalent radii of H and Fe.
+-}
 atomC0 :: Atom
 atomC0 = Atom
   { _atom_Element = C
@@ -112,7 +128,9 @@ atomH6 = Atom
   , _atom_Connectivity = I.empty
   }
 
--- | Test molecule with all information a molecule could have
+{-|
+Test 'Molecule' with all information a 'Molecule' could have.
+-}
 moleculeHFeCNxH2O :: Molecule
 moleculeHFeCNxH2O = Molecule
   { _molecule_Label = "HFe(CN)xH2O"
@@ -129,7 +147,10 @@ moleculeHFeCNxH2O = Molecule
   , _molecule_Gradient = Just $ fromList . map fromInteger $ [1 .. 21]
   , _molecule_Hessian = Just $ diagRect 21.0 (fromList [1.0 .. 6.0]) 6 6
   }
--- | Test molecule with all informations a TXYZ could have (without calling Tinker)
+
+{-|
+Test 'Molecule' with all informations a TXYZ could have (without calling Tinker).
+-}
 moleculeHFeCNxH2OTXYZ :: Molecule
 moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
   & molecule_Atoms .~ newAtoms
@@ -144,7 +165,9 @@ moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
       . (& atom_IsPseudo .~ False)
       ) oldAtoms
 
--- | Test molecule with all informations a XYZ could have
+{-|
+Test 'Molecule' with all informations a XYZ could have.
+-}
 moleculeHFeCNxH2OXYZ :: Molecule
 moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
   & molecule_Atoms .~ newAtoms
@@ -161,7 +184,9 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
       . (& atom_IsPseudo .~ False)
       ) oldAtoms
 
--- | Test molecule with all informations a TXYZ could have
+{-|
+Test 'Molecule' with all informations a TXYZ could have.
+-}
 moleculeHFeCNxH2OMOL2 :: Molecule
 moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
   & molecule_Atoms .~ newAtoms
@@ -179,8 +204,10 @@ moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
       ) newAtoms''
     newAtoms = newAtoms' & (ix 5 . atom_PCharge) .~ Just 0.5
 
-
-textHFeCNxH2OTXYZ :: Text-- | Test molecule as TXYZ file
+{-|
+Test 'Molecule' as TXYZ file.
+-}
+textHFeCNxH2OTXYZ :: Text
 textHFeCNxH2OTXYZ = T.pack . concat $
   [ "     7 HFe(CN)xH2O\n"
   , "    1  C      0.000960   -0.001240    0.281420     6     2     3     \n"
@@ -192,8 +219,10 @@ textHFeCNxH2OTXYZ = T.pack . concat $
   , "    7  H      2.708520   -2.137580    3.561450     1                 \n"
   ]
 
-
-testHFeCNxH2OXYZ :: Text-- | Test molecule as XYZ file
+{-|
+Test 'Molecule' as XYZ file.
+-}
+testHFeCNxH2OXYZ :: Text
 testHFeCNxH2OXYZ = T.pack . concat $
   [ " 7                                         \n"
   , "HFe(CN)xH2O\n"
@@ -206,6 +235,9 @@ testHFeCNxH2OXYZ = T.pack . concat $
   , "H         2.708520   -2.137580    3.561450 \n"
   ]
 
+{-|
+Test 'Molecule' as MOL2 file.
+-}
 testHFeCNxH2OMOL2 :: Text
 testHFeCNxH2OMOL2 = T.pack . concat $
   [ "@<TRIPOS>MOLECULE\n"
@@ -230,6 +262,9 @@ testHFeCNxH2OMOL2 = T.pack . concat $
   , "\n"
   ]
 
+{-|
+Test 'Molecule' as Spicy file.
+-}
 testHFeCNxH2OSpicy :: Text
 testHFeCNxH2OSpicy = T.pack . concat $
   [ "#Spicy-Format v0.2\n"

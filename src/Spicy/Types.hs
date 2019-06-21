@@ -1,12 +1,23 @@
-{-
-The module defines all data types that are used in spicy
--}
+{-|
+Module      : Spicy.Types
+Description : Data types used in the Spicy program.
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
 
+Spicy.Types contains the definition of all classes and data types, that are used in Spicy. Mainly it
+takes care of the description of molecules (structure, topology, potential energy surface, ...) and
+computations on molecules in different software packages.
+-}
 {-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Spicy.Types
-( Element(..)
+( -- * Molecule Types
+  -- $moleculeTypes
+  Element(..)
 , AtomLabel
 , FFType
 , R3Vec
@@ -27,13 +38,14 @@ module Spicy.Types
 , molecule_Energy
 , molecule_Gradient
 , molecule_Hessian
---
+  -- * Computational Chemistry Types
+  -- $compChemTypes
 , Task(..)
 , Software(..)
 , Basis(..)
 , Charge
 , Multiplicity
-, Shell(..)
+, RefWF(..)
 , DType(..)
 , Efficiency(..)
 , has_Gradient
@@ -56,32 +68,34 @@ module Spicy.Types
 , CAS_Roots
 , CAS_Weights
 , CAS_Approx(..)
---
-, QC_SE_Method(..)
-, qc_se_Method
-, qc_se_Shell
-, QC_HF_Shell(..)
-, qc_hf_Shell
-, qc_hf_Approx
-, QC_DFT_Functional(..)
-, qc_dft_Functional
-, qc_dft_Shell
-, qc_dft_Approx
-, QC_MPN_Flavour(..)
-, qc_mpn_Flavour
-, qc_mpn_Shell
-, qc_mpn_Approx
-, QC_MPN_Order(..)
-, qc_mpn_Order
-, qc_mpn_Flavour'
-, qc_cc_Flavour
-, qc_cc_Shell
-, qc_cc_Approx
-, QC_CC_Order(..)
-, qc_cc_Order
-, qc_cc_Flavour'
-, QC_CAS_Approx(..)
-, qc_cas_Approx
+, QC_SE(..)
+, se_method
+, se_ref
+, se_efficiency
+, QC_HF(..)
+, hf_approx
+, hf_ref
+, hf_efficiency
+, QC_DFT(..)
+, dft_functional
+, dft_ref
+, dft_approx
+, dft_efficiency
+, QC_MPN(..)
+, mpn_flavour
+, mpn_order
+, mpn_approx
+, mpn_ref
+, mpn_efficiency
+, QC_CC(..)
+, cc_order
+, cc_flavour
+, cc_ref
+, cc_approx
+, cc_efficiency
+, QC_CAS(..)
+, cas_approx
+, cas_efficiency
 , Methods(..)
 , methods_qc_SE
 , methods_qc_HF
@@ -98,18 +112,30 @@ import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
 
 
--- | Have a class for the printing of the calculation niveau, which allows to
--- | produce a very readable output
+{-|
+Have a class for the printing of the calculation niveau, which allows to produce a very readable
+output.
+-}
 class NiceShow a where
-  niceShow :: a -> String    -- printing the isolated object
-  niceComplex :: a -> String -- printing the object in the complex form,
-                             --   where everything is meant to be printed at once
+  niceShow    :: a -> String -- ^ Printing the isolated object
+  niceComplex :: a -> String -- ^ Printing the object in the complex form,
+                             --   where everything is meant to be printed at once as overview
 
---------------------------------------------------------------------------------
--- Representation of a molecule and its parts
---------------------------------------------------------------------------------
--- | All chemical elements, have them very clear because force fields and pdb
--- | names may interfer and are just arbitrary strings
+
+----------------------------------------------------------------------------------------------------
+{- $moleculeTypes
+Types to describe a molecule from a computational geometry point of view. The representation of a
+molecule aims to be as descriptive as unambigous as possible and capture all quantities relevant for
+molecular dynamics and geometry optimisations (energies, gradients, hessians, force fiekd types,
+coordinates, connectivities). Electronic properties, such as dipoles, orbitals, the wavefunction and
+so on, will be ignored, as Spicy is not aiming to be an analysis program, but a interface to create
+multilayer calculations. Analysis of the results is up to postprocessing.
+-}
+
+{-|
+All chemical elements. Have them very clear because force fields and pdb names may interfer and are
+just arbitrary strings.
+-}
 data Element =
   H   |                                                                                                                                                                                     He  |
   Li  | Be                                                                                                                                                  | B   | C   | N   | O   | F   | Ne  |
@@ -120,63 +146,83 @@ data Element =
   Fr  | Ra  | Ac  | Th  | Pa  | U   | Np  | Pu  | Am  | Cm  | Bk  | Cf  | Es  | Fm  | Md  | No  | Lr  | Rf  | Db  | Sg  | Bh  | Hs  | Mt  | Ds  | Rg  | Cn  | Uut | Fl  | Uup | Lv  | Uus | Uuo
   deriving (Show, Eq, Read, Ord, Enum, Generic, NFData)
 
--- | An atom label
--- | They may come from pdb or force field parameter files or can be assigned by
--- | other ways just to distinguish specific atoms
+{-|
+An atom label. They may come from pdb or force field parameter files or can be assigned by other
+ways just to distinguish specific atoms.
+-}
 type AtomLabel = String
 
--- | These are labels for molecular mechanics software.
--- | The strings are basically arbitrary and depending on the MM software used
+{-|
+These are labels for molecular mechanics software. The strings are basically arbitrary and depending
+on the MM software used.
+-}
 type FFType = String
 
--- | A vector in the R3 space, used for storing coordinates of atoms (cartesian)
+{-|
+A vector in the R3 space, used for storing coordinates of atoms (cartesian).
+-}
 type R3Vec = (Double, Double, Double)
 
--- | An Atom in a molecule
+{-|
+An Atom in a molecule.
+-}
 data Atom = Atom
-  { _atom_Element      :: Element      -- element of the atom
-  , _atom_Label        :: AtomLabel    -- label, e.g. from a pdb, just for identification, can be empty
-  , _atom_IsPseudo     :: Bool         -- boolean telling if this is a pseudo atom, introduced because a bond was broken
-  , _atom_FFType       :: FFType       -- label depending on the mm software used, identifying topological atom
-  , _atom_PCharge      :: Maybe Double -- possibly a partial charge
-  , _atom_Coordinates  :: R3Vec        -- coordinates of the atom, cartesian in R³
-  , _atom_Connectivity :: IntSet       -- a set of other atoms this one binds to (in the sense of force fields)
-                                       --   absolutely meaningless for a single atom, but set on atom level in molecules
-                                       --   this is here and not in the molecule layer, because this makes handling with
-                                       --   most MM softwares and chemical formats easier (tinker, mol2, PDB)
+  { _atom_Element      :: Element      -- ^ Chemical element of the atom
+  , _atom_Label        :: AtomLabel    -- ^ Label, e.g. from a pdb, just for identification, can be empty
+  , _atom_IsPseudo     :: Bool         -- ^ Boolean, telling if this is a pseudo atom, introduced because a bond was broken
+  , _atom_FFType       :: FFType       -- ^ Label depending on the MM software used, identifying topological atom
+  , _atom_PCharge      :: Maybe Double -- ^ Possibly a partial charge
+  , _atom_Coordinates  :: R3Vec        -- ^ Coordinates of the atom, cartesian in R³
+  , _atom_Connectivity :: IntSet       -- ^ A set of other 'Atom' this one binds to (in the sense of force fields).
+                                       --   This is absolutely meaningless for a single atom, but this is set here
+                                       --   and not in the 'Molecule' layer, because this makes handling with
+                                       --   most MM softwares and chemical formats easier (tinker, mol2, PDB).
   } deriving (Eq, Ord, Generic, NFData, Show)
 makeLenses ''Atom
 
--- | A molecule (might be the whole system or a layer, doesnt matter) and all
--- | associated informations
+{-|
+A molecule (might be the whole system or just an ONIOM layer) and all associated informations.
+-}
 data Molecule = Molecule
-  { _molecule_Label    :: String                -- give the molecule a name
-  , _molecule_Atoms    :: [Atom]                -- a list of Atoms
-  , _molecule_Energy   :: Maybe Double          -- an energy might have been calculated
-  , _molecule_Gradient :: Maybe (Vector Double) -- a gradient might have been calculated
-  , _molecule_Hessian  :: Maybe (Matrix Double) -- a hessian might have been calculated
+  { _molecule_Label    :: String                -- ^ Comment or identifier of a molecule. Can be empty.
+  , _molecule_Atoms    :: [Atom]                -- ^ A list of Atoms.
+  , _molecule_Energy   :: Maybe Double          -- ^ An energy, that might have been calculated.
+  , _molecule_Gradient :: Maybe (Vector Double) -- ^ A gradient, that might have been calculated.
+  , _molecule_Hessian  :: Maybe (Matrix Double) -- ^ A hessian, that might have been calculated.
   } deriving (Eq, Generic, NFData)
 makeLenses ''Molecule
 
--- | A ONIOM layer with "pseudoatoms" (set 2 atoms in https://doi.org/10.1016/S0166-1280(98)00475-8)
--- | While the molecule is ordinary for this program, pseudo atoms need to be
--- | handled differently from program to program
+{-|
+A ONIOM layer with "pseudoatoms" (set 2 atoms in https://doi.org/10.1016/S0166-1280(98)00475-8).
+While the molecule is ordinary for Spicy, pseudo atoms need to be handled differently, depending on
+the ONIOM type.
+-}
 type LayerMolecule = (Int, Molecule)
 
--- | Trajectories are simply a list of molecules
+{-|
+Trajectories are simply a list of molecules.
+-}
 type Trajectory = [Molecule]
 
--- | A supermolecule, which is the whole system (first), and then a list of fragments, treated as
--- | separate molecules. The whole supermolecule containts all atoms and all bonds, but is optional,
--- | as the structure can be completely defined using the fragments. The supermolecule on the other
--- | hand side is suposed to store the results of a calculation (energy, gradient, ...)
+{-|
+A supermolecule, which is the whole system (first), and then a list of fragments, treated as
+separate molecules. The whole supermolecule containts all atoms and all bonds, but is optional,
+as the structure can be completely defined using the fragments. The supermolecule on the other
+hand side is suposed to store the results of a calculation (energy, gradient, ...)......
+-}
 type SuperMolecule = (Molecule, [Molecule])
 
 
---------------------------------------------------------------------------------
--- Everything that is necessary to describe the calculation niveau
---------------------------------------------------------------------------------
--- | Define commonon tasks we ask the software to perform
+----------------------------------------------------------------------------------------------------
+{- $compChemTypes
+Data types to describe the calculation niveau. They are hierarchically organised and try to cover
+everything, so that Spicy is fully aware of the calculation niveau. This has the advantage, that
+users basically do not need to know the input of a specific program to perform a Spicy calculation.
+-}
+
+{-|
+Define commonon tasks for quantum chemistry software.
+-}
 data Task =
     Energy
   | Gradient
@@ -184,10 +230,12 @@ data Task =
   | PartialCharge
   deriving (Show, Eq)
 instance NiceShow Task where
-  niceShow = show
+  niceShow    = show
   niceComplex = show
 
--- | Software we could talk to
+{-|
+Software packages, that have been interfaced by Spicy.
+-}
 data Software =
     ORCA
   | Psi4
@@ -195,6 +243,7 @@ data Software =
   | CP2K
   | GAMMES_US
   | Tinker
+  | MRCC
   deriving (Show, Eq)
 instance NiceShow Software where
   niceShow ORCA      = "ORCA"
@@ -203,12 +252,14 @@ instance NiceShow Software where
   niceShow CP2K      = "CP2K"
   niceShow GAMMES_US = "GAMESS US"
   niceShow Tinker    = "Tinker"
-  niceComplex = niceShow
+  niceShow MRCC      = "MRCC"
+  niceComplex        = niceShow
 
--- | Definition of basis sets. Prefer to have a prebuilt list, but allow for the
--- | option to use one, that is not known here by the program specific (!)
--- | keyword (CustomSimple) or by giving the program specific (!) inline notation
--- | of the basis
+{-|
+Definition of basis sets. Prefer to have a prebuilt list, but allow for the option to use one, that
+is not known here by the program specific (!) keyword ('CustomSimple') or by giving the program
+specific (!) inline notation of the basis ('CustomComplex').
+-}
 data Basis =
   -- Ahlrich
     Def2_mSVP
@@ -236,8 +287,7 @@ data Basis =
   | Aug_cc_pVQZ
   | Aug_cc_pV5Z
   | Aug_cc_pV6Z
-  -- Custom Basis Set. Either as a single keyword or multiline (contraction)
-  -- coefficients and so on listed
+  -- Custom basis set
   | CustomSimple String
   | CustomComplex String
   deriving (Show, Eq)
@@ -268,19 +318,27 @@ instance NiceShow Basis where
   niceShow Aug_cc_pV6Z       = "aug-cc-pV6Z"
   niceShow (CustomSimple a)  = a
   niceShow (CustomComplex a) = a
-  niceComplex = niceShow
+  niceComplex                = niceShow
 
--- | Charge and multiplicity of a molecule
-type Charge = Int
+{-|
+Charge of the system in the calculation.
+-}
+type Charge       = Int
+
+{-|
+Multiplicity of the system in the calculation.
+-}
 type Multiplicity = Int
 
--- | Type of the wavefunction
-data Shell =
+{-|
+Type of the referece wavefunction.
+-}
+data RefWF =
     Restricted
   | Unrestricted
   | RestrictedOpen
   deriving (Show, Eq)
-instance NiceShow Shell where
+instance NiceShow RefWF where
   niceShow Restricted     = "restricted"
   niceShow Unrestricted   = "unrestricted"
   niceShow RestrictedOpen = "restricted open shell"
@@ -288,12 +346,14 @@ instance NiceShow Shell where
   niceComplex Unrestricted   = "u"
   niceComplex RestrictedOpen = "o"
 
--- | The way a derivative will be calculated
+{-|
+Method to calculate derivatives of the energy with respect to coordinates (gradients and hessians).
+-}
 data DType =
     Analytical
   | Numerical
   | NotAvail
-  deriving Eq
+  deriving (Show, Eq)
 instance NiceShow DType where
   niceShow Analytical = "analytical"
   niceShow Numerical  = "numerical"
@@ -302,15 +362,17 @@ instance NiceShow DType where
   niceComplex Numerical  = "n"
   niceComplex NotAvail   = "x"
 
--- | For a given method; how efficient is the calulation of derivatives (beyond
--- | energy)
+{-|
+Determines, how the calculation of derivatives can be performed. The records are lists, as it is not
+assumed, that e.g. analytical gradients also imply numerical gradients being available.
+-}
 data Efficiency = Efficiency
   { _has_Gradient          :: [DType]
-  , _has_SolventGradient   :: Maybe [DType]
+  , _has_SolventGradient   :: [DType]
   , _has_Hessian           :: [DType]
-  , _has_SolventHessian    :: Maybe [DType]
+  , _has_SolventHessian    :: [DType]
   , _has_higherDerivatives :: [DType]
-  }
+  } deriving (Show, Eq)
 makeLenses ''Efficiency
 instance NiceShow Efficiency where
   niceShow a =
@@ -319,42 +381,26 @@ instance NiceShow Efficiency where
     "-----------+-----------+-----------+-----------+-----------------------" ++ "\n" ++
     printf "  %7s  |  %7s  |  %7s  |  %7s  |  %7s  \n"
       (concatMap niceComplex $ a ^. has_Gradient)
-      (case a ^. has_SolventGradient of
-        Nothing -> "/"
-        Just x  -> concatMap niceComplex x
-      )
+      (concatMap niceComplex $ a ^. has_SolventGradient)
       (concatMap niceComplex $ a ^. has_Hessian)
-      (case a ^. has_SolventHessian of
-        Nothing -> "/"
-        Just x  -> concatMap niceComplex x
-      )
+      (concatMap niceComplex $ a ^. has_SolventHessian)
       (concatMap niceComplex $ a ^. has_higherDerivatives)
   niceComplex a =
     "G-" ++
     (concatMap niceComplex $ a ^. has_Gradient) ++
     "(" ++
-    (case a ^. has_SolventGradient of
-      Nothing -> "/"
-      Just x  -> concatMap niceComplex x
-    ) ++ ")  " ++
+    (concatMap niceComplex $ a ^. has_SolventGradient) ++
+    ")  " ++
     "H-" ++
     (concatMap niceComplex $ a ^. has_Hessian) ++
     "(" ++
-    (case a ^. has_SolventHessian of
-      Nothing -> "/"
-      Just x  -> concatMap niceComplex x
-    ) ++ ")  " ++
+    (concatMap niceComplex $ a ^. has_SolventHessian) ++
+    ")  " ++
     "\n"
 
-
-  --gradGasPh = a ^. has_Gradient
-  --gradSolv = a ^. has_SolventGradient
-  --hessGasPh = a ^. has_Hessian
-  --hessSolv = a ^. has_SolventHessian
-
-
--- | Semiempiricism
--- |   -> Available semiempirical hamiltonians
+{-|
+Available hamiltonians for semiempirical methods.
+-}
 data SE_Method =
     SE_XTB1
   | SE_XTB2
@@ -379,8 +425,9 @@ instance Show SE_Method where
   show SE_AM1  = "AM1"
   show SE_RM1  = "RM1"
 instance NiceShow SE_Method where
-  niceShow = show
+  niceShow    = show
   niceComplex = show
+
 
 -- | Hartree Fock
 -- |   -> Approximations
@@ -396,9 +443,9 @@ instance Show HF_Approx where
   show HF_RIJONX  = "RI-JONX"
   show HF_RIJCOSX = "RI-JCOSX"
 
--- | DFT
--- |   -> Functional
--- |   -> Approximations
+{-|
+Available density functionals in density functional theory calculations.
+-}
 data DFT_Functional =
   -- LDA
     DFT_PWLDA
@@ -452,12 +499,18 @@ data DFT_Functional =
   | DFT_PWPB95
   | DFT_PBPB95_RI
   deriving (Eq, Show)
+
+{-|
+Available approximations to DFT calculations.
+-}
 data DFT_Approx =
-    DFT_None
-  | DFT_RIJ
-  | DFT_RIJK
-  | DFT_RIJCOSX
-  | DFT_RIJONX
+    DFT_None     -- ^ Conventional DFT without integral approximations
+  | DFT_RIJ      -- ^ Density fitting of the Coulomb integrals.
+  | DFT_RIJK     -- ^ Density fitting of the Coulomb and exchange integrals.
+  | DFT_RIJCOSX  -- ^ ORCA's methods with "normal" fitting of Coulomb integrals and chain of spheres
+                 --   fitting for exchange.
+  | DFT_RIJONX   -- ^ ORCA's methods with "normal" fitting of Coulomb integrals and alternative
+                 --   fitting of exchange integrals
   deriving (Eq)
 instance Show DFT_Approx where
   show DFT_None    = "none"
@@ -466,11 +519,9 @@ instance Show DFT_Approx where
   show DFT_RIJCOSX = "RI-JCOSX"
   show DFT_RIJONX  = "RI-JONX"
 
--- | Møller-Plesset pertubation theory
--- |  -> Order of pertubation theory
--- |  -> Flavour of the MPn. Conventional, orbital optimised or explicitly
--- |     correlated
--- |  -> Approximative MPn calculation
+{-|
+Order of the pertubation theory expansion in Møller-Plesset theory calculations.
+-}
 data MP_Order =
     MP_N2
   | MP_N2_5
@@ -485,39 +536,43 @@ instance Show MP_Order where
   show MP_N4   = "4"
   show MP_N5   = "6"
 
+{-|
+The type of the Møller-Plesset calculation.
+-}
 data MP_Flavour =
-    MP_Conv
-  | MP_OO
-  | MP_F12
+    MP_Conv -- ^ Canonical/Conventional Møller-Plesset theory.
+  | MP_OO   -- ^ Orbital optimised Møller-Plesset methods.
+  | MP_F12  -- ^ Explicitly correlated \( F_{12} \) methods.
   deriving (Eq)
 instance Show MP_Flavour where
   show MP_Conv = "conventional"
   show MP_OO   = "orbital optimised"
   show MP_F12  = "explicitly correlated"
 
+{-|
+Integral approximations in Møller-Plesset calculations.
+-}
 data MP_Approx =
-    MP_None
-  | MP_RI
-  | MP_DLPNO
+    MP_None  -- ^ No approximations to Møller-Plesset integrals.
+  | MP_RI    -- ^ Use RI-Møller-Plesset methods (will propably need a RI/C basis).
+  | MP_DLPNO -- ^ Domain-based local pair natural orbital approximations applied to Møller-Plesset
+             --   calculations.
   deriving (Eq)
 instance Show MP_Approx where
   show MP_None  = "none"
   show MP_RI    = "RI"
   show MP_DLPNO = "DLPNO"
 
--- | Coupled Cluster
--- |  -> Coupled Cluster truncation level
--- |  -> Flavour of the CC. Conventional, orbital optimised, locally
--- |     renormalized, completely renormalized, orbital optimised or explicitly
--- |     correlated
--- |  -> Approximations to the CC.
+{-|
+Coupled cluster truncation level of the calculation.
+-}
 data CC_Order =
-    CC_D
-  | CC_SD
-  | CC_SDT
-  | CC_SDTQ
-  | CC_SDt
-  | CC_SDtq
+    CC_D    -- ^ CCD
+  | CC_SD   -- ^ CCSD
+  | CC_SDT  -- ^ CCSDT
+  | CC_SDTQ -- ^ CCSDTQ
+  | CC_SDt  -- ^ CCSD(T)
+  | CC_SDtq -- ^ CCSD(TQ)
   deriving (Eq)
 instance Show CC_Order where
   show CC_D    = "CCD"
@@ -527,12 +582,15 @@ instance Show CC_Order where
   show CC_SDt  = "CCSD(T)"
   show CC_SDtq = "CCSD(TQ)"
 
+{-|
+Type of the coupled cluster calculation.
+-}
 data CC_Flavour =
-    CC_Conv
-  | CC_OO
-  | CC_LR
-  | CC_CR
-  | CC_F12
+    CC_Conv -- ^ Convenctional coupled cluster calculation.
+  | CC_OO   -- ^ Orbital optimised coupled cluster calculation.
+  | CC_LR   -- ^ Locally renormalised coupled cluster calculation.
+  | CC_CR   -- ^ Completely renormalised coupled cluster calculation.
+  | CC_F12  -- ^ Explicitly correlated \( F_{12} \) coupled cluster calculation.
   deriving (Eq)
 instance Show CC_Flavour where
   show CC_Conv = "conventional"
@@ -541,304 +599,130 @@ instance Show CC_Flavour where
   show CC_CR   = "completely renormalised"
   show CC_F12  = "explicitly correlated"
 
+{-|
+Approximations applied for coupled cluster calculations.
+-}
 data CC_Approx =
-    CC_None
-  | CC_RI
-  | CC_DLPNO
+    CC_None  -- ^ No approximations applied.
+  | CC_RI    -- ^ Density fitted coupled cluster calculation.
+  | CC_DLPNO -- ^ Domain based local natural pair orbitals approximation.
   deriving (Eq)
 instance Show CC_Approx where
   show CC_None  = "none"
   show CC_RI    = "RI"
   show CC_DLPNO = "DLPNO"
 
--- | CAS
--- |   -> Size of the active space. Number of Electrons and List of Orbitals
--- |   -> For state averaging the number of roots
--- |   -> A list of weights of the roots
--- |   -> Approximations applied to the CAS
+{-|
+CASSCF active space selection.
+-}
 data CAS_Space = CAS_Space
-  { _cas_Space_nElec :: Int
-  , _cas_Space_Orbs  :: [Int]
+  { _cas_Space_nElec :: Int   -- ^ Number of electrons in the active space.
+  , _cas_Space_Orbs  :: [Int] -- ^ List of orbitals in the active space.
   } deriving (Eq)
 makeLenses ''CAS_Space
 instance Show CAS_Space where
   show a =
     printf "%10s | %10s\n" "electrons" "orbitals" ++
     printf "%10d | %10d %s"   (a ^. cas_Space_nElec) (length $ a ^. cas_Space_Orbs) (show $ a ^. cas_Space_Orbs)
+
+{-|
+In state averaging CASSCF the number of roots to calculate.
+-}
 type CAS_Roots = Int
+
+{-|
+The weights of the individual roots in a state averaging CASSCF calculation. Length of this list
+should equal 'CAS_Roots'.
+-}
 type CAS_Weights = [Double]
+
+{-|
+Approximations applied to CASSCF calculations.
+-}
 data CAS_Approx =
-    CAS_Conv
-  | CAS_RIJK
-  | CAS_RIJONX
-  | CAS_RIJCOSX
-  | CAS_DMRG
+    CAS_Conv    -- ^ No approximations in CASSCF calculation.
+  | CAS_RIJK    -- ^ Density fitting of both exchange and Coulomb integrals.
+  | CAS_RIJONX  -- ^ Density fitting of Coulomb integrals and ORCA's version of exchange integral
+                --   fitting.
+  | CAS_RIJCOSX -- ^ Density fitting of Coulomb integrals and chain of spheres fitting of exchange
+                --   integrals.
+  | CAS_DMRG    -- ^ Density Matrix Renormalisation Group approximation of CASSCF. Makes active
+                --   space non-invariant againts active-active orbital rotations.
   deriving (Show, Eq)
 
--- | A data type, which is designed only for holding quantum chemical
--- | capabilities. It is a highly linked data type containing hierarchical list
--- | of possible QC combination
-data QC_SE_Shell = QC_SE_Shell
-  { _qc_se_Shell      :: Shell
-  , _qc_se_Efficiency :: Efficiency
-  }
-makeLenses ''QC_SE_Shell
-data QC_SE_Method = QC_SE_Method
-  { _qc_se_Method :: SE_Method
-  , _qc_se_Shell' :: [QC_SE_Shell]
-  }
-makeLenses ''QC_SE_Method
---------------------------------------------------------------------------------
-data QC_HF_Approx = QC_HF_Approx
-  { _qc_hf_Approx     :: HF_Approx
-  , _qc_hf_Efficiency :: Efficiency
-  }
-makeLenses ''QC_HF_Approx
-data QC_HF_Shell = QC_HF_Shell
-  { _qc_hf_Shell   :: Shell
-  , _qc_hf_Approx' :: [QC_HF_Approx]
-  }
-makeLenses ''QC_HF_Shell
---------------------------------------------------------------------------------
-data QC_DFT_Approx = QC_DFT_Approx
-  { _qc_dft_Approx     :: DFT_Approx
-  , _qc_dft_Efficiency :: Efficiency
-  }
-makeLenses ''QC_DFT_Approx
-data QC_DFT_Functional = QC_DFT_Functional
-  { _qc_dft_Functional :: DFT_Functional
-  , _qc_dft_Shell      :: [Shell]
-  , _qc_dft_Approx'    :: [QC_DFT_Approx]
-  }
-makeLenses ''QC_DFT_Functional
---------------------------------------------------------------------------------
-data QC_MPN_Flavour = QC_MPN_Flavour
-  { _qc_mpn_Flavour :: MP_Flavour
-  , _qc_mpn_Shell   :: [Shell]
-  , _qc_mpn_Approx  :: [MP_Approx]
-  }
-makeLenses ''QC_MPN_Flavour
-data QC_MPN_Order = QC_MPN_Order
-  { _qc_mpn_Order    :: MP_Order
-  , _qc_mpn_Flavour' :: [QC_MPN_Flavour]
-  }
-makeLenses ''QC_MPN_Order
---------------------------------------------------------------------------------
-data QC_CC_Approx = QC_CC_Approx
-  { _qc_cc_Approx     :: CC_Approx
-  , _qc_cc_Efficiency :: Efficiency
-  }
-makeLenses ''QC_CC_Approx
-data QC_CC_Flavour = QC_CC_Flavour
-  { _qc_cc_Flavour :: CC_Flavour
-  , _qc_cc_Shell   :: [Shell]
-  , _qc_cc_Approx' :: [QC_CC_Approx]
-  }
-makeLenses ''QC_CC_Flavour
-data QC_CC_Order = QC_CC_Order
-  { _qc_cc_Order    :: CC_Order
-  , _qc_cc_Flavour' :: [QC_CC_Flavour]
-  }
-makeLenses ''QC_CC_Order
---------------------------------------------------------------------------------
-data QC_CAS_Approx = QC_CAS_Approx
-  { _qc_cas_Approx     :: CAS_Approx
-  , _qc_cas_Efficiency :: Efficiency
-  }
-makeLenses ''QC_CAS_Approx
---------------------------------------------------------------------------------
+{-|
+Description of a semiempirical calculation capabilities.
+-}
+data QC_SE = QC_SE
+  { _se_method     :: SE_Method
+  , _se_ref        :: RefWF
+  , _se_efficiency :: Efficiency
+  } deriving (Eq, Show)
+makeLenses ''QC_SE
 
+{-|
+Description of a Hartree-Fock calculation.
+-}
+data QC_HF = QC_HF
+  { _hf_approx     :: HF_Approx
+  , _hf_ref        :: RefWF
+  , _hf_efficiency :: Efficiency
+  } deriving (Eq, Show)
+makeLenses ''QC_HF
+
+{-|
+Description of a DFT calculation.
+-}
+data QC_DFT = QC_DFT
+  { _dft_functional :: DFT_Functional
+  , _dft_ref        :: RefWF
+  , _dft_approx     :: DFT_Approx
+  , _dft_efficiency :: Efficiency
+  } deriving (Eq, Show)
+makeLenses ''QC_DFT
+
+{-|
+Description of a Moller-Plesset calculation.
+-}
+data QC_MPN = QC_MPN
+  { _mpn_flavour    :: MP_Flavour
+  , _mpn_order      :: MP_Order
+  , _mpn_approx     :: MP_Approx
+  , _mpn_ref        :: RefWF
+  , _mpn_efficiency :: Efficiency
+  } deriving (Eq, Show)
+makeLenses ''QC_MPN
+
+{-|
+Description of a coupled cluster calculation.
+-}
+data QC_CC = QC_CC
+  { _cc_order      :: CC_Order
+  , _cc_flavour    :: CC_Flavour
+  , _cc_ref        :: RefWF
+  , _cc_approx     :: CC_Approx
+  , _cc_efficiency :: Efficiency
+  } deriving (Eq, Show)
+makeLenses ''QC_CC
+
+{-|
+Description of a CASSCF calculation capabilities.
+-}
+data QC_CAS = QC_CAS
+  { _cas_approx     :: CAS_Approx
+  , _cas_efficiency :: Efficiency
+  } deriving (Eq, Show)
+makeLenses ''QC_CAS
+
+{-|
+A data type, which is designed only for holding quantum chemical capabilities.
+-}
 data Methods = Methods
-  { _methods_qc_SE  :: [QC_SE_Method]
-  , _methods_qc_HF  :: [QC_HF_Shell]
-  , _methods_qc_DFT :: [QC_DFT_Functional]
-  , _methods_qc_MPN :: [QC_MPN_Order]
-  , _methods_qc_CC  :: [QC_CC_Order]
-  , _methods_qc_CAS :: [QC_CAS_Approx]
-  }
+  { _methods_qc_SE  :: [QC_SE]  -- ^ Semiempirical methods.
+  , _methods_qc_HF  :: [QC_HF]  -- ^ Hartee-Fock.
+  , _methods_qc_DFT :: [QC_DFT] -- ^ Density functional theory.
+  , _methods_qc_MPN :: [QC_MPN] -- ^ Moller-Plesset theory.
+  , _methods_qc_CC  :: [QC_CC]  -- ^ Coupled cluster.
+  , _methods_qc_CAS :: [QC_CAS] -- ^ CASSCF.
+  } deriving (Eq, Show)
 makeLenses ''Methods
-
--- | Generate a string for the possible different wavefunction types
-s :: [Shell] -> String
-s shell = "(" ++ concatMap shellString shell ++ ") "
-  where
-    shellString :: Shell -> String
-    shellString a
-      | Restricted == a = "r"
-      | Unrestricted == a = "u"
-      | RestrictedOpen == a = "o"
-      | otherwise = ""
-hfShell :: Shell -> String
-hfShell shell
-  | shell == Restricted = "RHF"
-  | shell == Unrestricted = "UHF"
-  | shell == RestrictedOpen = "ROHF"
-  | otherwise = "unknown"
-
--- | Generate short strings for ability to use derivatives
-d :: Efficiency -> String
-d e = gGP ++ gSolv ++ hGP ++ hSolv
-  where
-    gGP = "G" ++ concatMap dString (e ^. has_Gradient)
-    e_gSolv = e ^. has_SolventHessian
-    gSolv =
-      "(" ++
-      case e_gSolv of
-        Nothing -> ""
-        Just x  -> concatMap dString x
-      ++ ") "
-    hGP = "H" ++ concatMap dString (e ^. has_Hessian)
-    e_hSolv = e ^. has_SolventHessian
-    hSolv =
-      "(" ++
-      case e_hSolv of
-        Nothing -> ""
-        Just x  -> concatMap dString x
-      ++ ") "
-    dString a
-      | a == Analytical = "a"
-      | a == Numerical = "n"
-      | a == NotAvail = "/"
-      | otherwise = ""
-
-{-
-dummyMethods = Methods
-  { _methods_qc_SE  = []
-  , _methods_qc_HF  = []
-  , _methods_qc_DFT = []
-  , _methods_qc_MPN = []
-  , _methods_qc_CC  = []
-  , _methods_qc_CAS = []
-  }
--}
-
---------------------------------------------------------------------------------
--- test Types for priting. To be removed later
---------------------------------------------------------------------------------
-{-
-testSE =
-  [ QC_SE_Method
-      { _qc_se_Method = SE_PM6
-      , _qc_se_Shell' =
-          [ QC_SE_Shell
-              { _qc_se_Shell = Restricted
-              , _qc_se_Efficiency =
-                  Efficiency
-                    { _has_Gradient = [Analytical]
-                    , _has_SolventGradient = Nothing
-                    , _has_Hessian = [Numerical]
-                    , _has_SolventHessian = Nothing
-                    }
-              }
-          ]
-      }
-  ] :: [QC_SE_Method]
-
-
-testHF =
-  [ QC_HF_Shell
-      { _qc_hf_Shell = RestrictedOpen
-      , _qc_hf_Approx =
-          [ HF_None
-          , HF_RIJK
-          , HF_RIJCOSX
-          , HF_RIJONX
-          ]
-      }
-  ] :: [QC_HF_Shell]
-
-testDFT =
-  [ QC_DFT_Functional
-      { _qc_dft_Functional = DFT_TPSS
-      , _qc_dft_Shell = [Restricted, Unrestricted, RestrictedOpen]
-      , _qc_dft_Approx =
-          [ DFT_RIJ
-          , DFT_RIJCOSX
-          ]
-      }
-  , QC_DFT_Functional
-      { _qc_dft_Functional = DFT_M06
-      , _qc_dft_Shell = [Restricted, Unrestricted, RestrictedOpen]
-      , _qc_dft_Approx =
-          [ DFT_RIJONX
-          , DFT_RIJK
-          , DFT_RIJCOSX
-          ]
-      }
-  ] :: [QC_DFT_Functional]
-
-testMPN =
-  [ QC_MPN_Order
-      { _qc_mpn_Order = MP_N2
-      , _qc_mpn_Flavour' =
-          [ QC_MPN_Flavour
-              { _qc_mpn_Flavour = MP_OO
-              , _qc_mpn_Shell = [Restricted, Unrestricted]
-              , _qc_mpn_Approx =
-                  [ MP_None
-                  , MP_RI
-                  , MP_DLPNO
-                  ]
-              }
-          , QC_MPN_Flavour
-              { _qc_mpn_Flavour = MP_Conv
-              , _qc_mpn_Shell = [Restricted, Unrestricted]
-              , _qc_mpn_Approx =
-                  [ MP_RI
-                  , MP_DLPNO
-                  ]
-              }
-          ]
-      }
-  , QC_MPN_Order
-      { _qc_mpn_Order = MP_N2_5
-      , _qc_mpn_Flavour' =
-          [ QC_MPN_Flavour
-              { _qc_mpn_Flavour = MP_OO
-              , _qc_mpn_Shell = [Restricted, Unrestricted]
-              , _qc_mpn_Approx =
-                  [ MP_RI
-                  , MP_DLPNO
-                  ]
-              }
-          , QC_MPN_Flavour
-              { _qc_mpn_Flavour = MP_Conv
-              , _qc_mpn_Shell = [Restricted, Unrestricted]
-              , _qc_mpn_Approx =
-                  [ MP_None
-                  ]
-              }
-          ]
-      }
-  ]
-
-testCC =
-  [ QC_CC_Order
-      { _qc_cc_Order = CC_SD
-      , _qc_cc_Flavour' =
-          [ QC_CC_Flavour
-              { _qc_cc_Flavour = CC_Conv
-              , _qc_cc_Shell = [Restricted, Unrestricted]
-              , _qc_cc_Approx =
-                  [ CC_None
-                  , CC_RI
-                  ]
-              }
-          ]
-      }
-  ]
-
-testCAS =
-  [ QC_CAS_Approx
-      { _qc_cas_Approx = CAS_RIJK }
-  ]
-
-testMethods = Methods
-  { _methods_qc_SE = testSE
-  , _methods_qc_HF = testHF
-  , _methods_qc_DFT = testDFT
-  , _methods_qc_MPN = testMPN
-  , _methods_qc_CC = testCC
-  , _methods_qc_CAS = testCAS
-  }
--}

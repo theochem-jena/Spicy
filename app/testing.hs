@@ -31,11 +31,13 @@ tests = testGroup "All tests"
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for Parser
-----------------------------------------------------------------------------------------------------
--- | These tests are HUnit tests within the Tasty framework. Correct results and answers are stored
--- | in Spicy.UnitTests.Data, to make sure the parsers work absolutely indepent from environmet.
--- | If one of these tests fail, you are in trouble, as all the others will rely on working parsers
--- | and are Golden Tests instead of UnitTests
+
+{-|
+These tests are HUnit tests within the Tasty framework. Correct results and answers are stored in
+Spicy.UnitTests.Data, to make sure the parsers work absolutely indepent from environmet. If one of
+these tests fail, you are in trouble, as all the others will rely on working parsers and are Golden
+Tests instead of UnitTests.
+-}
 testParser :: TestTree
 testParser = testGroup "Parser"
   [ testParserTXYZ1
@@ -63,7 +65,7 @@ testParserSpicy = testCase "Spicy format (1)" $
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem
-----------------------------------------------------------------------------------------------------
+
 testMolecularSystem :: TestTree
 testMolecularSystem = testGroup "Molecular System"
   [ testGuessBonds1
@@ -87,7 +89,7 @@ testMolecularSystem = testGroup "Molecular System"
   , testFilterByCriteria3
   ]
 
--- | Guessing of bonds by colvant radii
+-- Guessing of bonds by colvant radii
 testGuessBonds1 :: TestTree
 testGuessBonds1 = goldenVsString
   "Guess bonds - defaults (N2 in binding distance)"
@@ -154,7 +156,7 @@ testGuessBonds6 = goldenVsString
         let molResult = guessBonds Nothing molInput
         return . LBS.fromString . writeTXYZ $ molResult
 
--- | Isolating ONIOM layers and capping dangling bonds
+-- Isolating ONIOM layers and capping dangling bonds
 testIsolateLayer1 :: TestTree
 testIsolateLayer1 = goldenVsString
   "Isolate ONIOM layer - defaults (Heme like system, isolate Fe-porphyrine)"
@@ -184,7 +186,7 @@ testIsolateLayer2 = goldenVsString
               ) (Just F) (Just 0.6) molInput
         return . LBS.fromString . writeTXYZ . fromMaybe moleculeEmpty $ molResult
 
--- | Fragment detection
+-- Fragment detection
 testFragmentDetection1 :: TestTree
 testFragmentDetection1 = goldenVsString
   "Detect fragments - remove all bonds (sulfate in mixture of H20 and NH3)"
@@ -230,7 +232,7 @@ testFragmentDetection3 = goldenVsString
           Nothing -> return $ LBS.fromString "Failed"
           Just s  -> return s
 
--- | Wrapping of fragments to unit cell molecule-wise
+-- Wrapping of fragments to unit cell molecule-wise
 testWrapFragmentsToBox1 :: TestTree
 testWrapFragmentsToBox1 = goldenVsString
   "Wrap molecules to unit cell molecule-wise (toluene Cl2 mixture periodic)"
@@ -280,7 +282,7 @@ testReplicateSystemAlongAxis3 = goldenVsString
         let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisZ molInput
         return . LBS.fromString . writeXYZ $ superCell
 
--- | Nearest neighbour search
+-- Nearest neighbour search
 testFindNearestAtom1 :: TestTree
 testFindNearestAtom1 = goldenVsString
   "Find nearest atom (toluene Cl2 mixture periodic)"
@@ -292,7 +294,7 @@ testFindNearestAtom1 = goldenVsString
         let nearestInfo = findNearestAtom (0.0, 0.0, 0.5499) molInput
         return . LBS.fromString . show $ nearestInfo
 
--- | Test criterion filtering
+-- Test criterion filtering
 testFilterByCriteria1 :: TestTree
 testFilterByCriteria1 = goldenVsString
   "Trajectory filtering - distance criterion (azine and phophinin)"

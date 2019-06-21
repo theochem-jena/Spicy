@@ -1,25 +1,38 @@
-{-# LANGUAGE BangPatterns #-}
-{-
+{-|
+Module      : Spicy.MolecularSystem
+Description : Handling molecular informations
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
 This module deals with the partitioning of the system, creation of bonds,
 assignment of substructeres to layers and creation of ghost atoms.
 Following conventions shall apply:
-  - highest level region has highest index
-  - lowest level region has index 0 and contains the complete system
+
+    * highest level region has highest index
+
+    * lowest level region has index 0 and contains the complete system
 -}
+{-# LANGUAGE BangPatterns #-}
 module Spicy.MolecularSystem
-( guessBonds
+( -- * Manipulation of the Molecule
+  guessBonds
 , isolateLayer
 , wrapFragmentsToBox
 , ReplicationAxis(..)
 , replicateSystemAlongAxis
+, fragmentMolecule
+, shiftFragment
+  -- * Filtering trajectories and analysing molecules
 , filterByCriteria
 , criterionDistance
 , criterionAngle4Atoms
 , findNearestAtom
 , FragmentBonds(..)
-, fragmentMolecule
+-- * Utility and Analysis functions
 , distanceMatrix
-, shiftFragment
 ) where
 import           Control.Parallel.Strategies
 import qualified Data.Array.IArray           as A
@@ -36,16 +49,20 @@ import           Spicy.Types
 
 
 ----------------------------------------------------------------------------------------------------
--- Manipulations of the Molecule
-----------------------------------------------------------------------------------------------------
--- | helper for the manipulation of bonds
+{-|
+Auxiliary data type for the manipulation of bonds.
+-}
 data BondManipulation = Create | Delete deriving Eq
 
--- | Create or delete bonds between pairs of atoms and return a tuple with their
--- | updated connectivities.
--- | The atoms need to be given with their respective index in the molecule and
--- | the atom itseld
-manipulateBondAtomic :: BondManipulation -> (Int, Atom) -> (Int, Atom) -> (Atom, Atom)
+{-|
+Create or delete bonds between pairs of 'Atom's A and B and return a tuple with their updated
+connectivities.
+-}
+manipulateBondAtomic ::
+     BondManipulation -- ^ Create or delete a bond.
+  -> (Int, Atom)      -- ^ (Index of 'Atom' A in the 'Molecule', 'Atom' A).
+  -> (Int, Atom)      -- ^ (Index of 'Atom' B in the 'Molecule', 'Atom' B).
+  -> (Atom, Atom)     -- ^ (Updated 'Atom' A, updated 'Atom' B).
 manipulateBondAtomic action (i_a, a) (i_b, b) = (atomNew_a, atomNew_b)
   where
     atom_a = a
@@ -63,8 +80,15 @@ manipulateBondAtomic action (i_a, a) (i_b, b) = (atomNew_a, atomNew_b)
     atomNew_a = atom_a & atom_Connectivity .~ I.fromList connectivityCleaned_a
     atomNew_b = atom_b & atom_Connectivity .~ I.fromList connectivityCleaned_b
 
--- | Create or delete bonds between pairs of atoms and give back a molecule
-manipulateBond :: BondManipulation -> Int -> Int -> Molecule -> Maybe Molecule
+{-|
+Create or delete bonds between pairs of 'Atom's A and B and give back an updated 'Molecule'.
+-}
+manipulateBond ::
+     BondManipulation -- ^ Create or delete a bond.
+  -> Int              -- ^ Index of 'Atom' A.
+  -> Int              -- ^ Index of 'Atom' B.
+  -> Molecule         -- ^ The 'Molecule' which to update.
+  -> Maybe Molecule   -- ^ Result 'Molecule'. Might fail with 'Nothing' if indices are invalid.
 manipulateBond action i_a i_b mol
   | i_a > maxInd || i_a < 0 || i_b > maxInd || i_b < 0 = Nothing
   | otherwise = Just $ mol & molecule_Atoms .~ atomsNew
@@ -76,9 +100,14 @@ manipulateBond action i_a i_b mol
     (atomNew_a, atomNew_b) = manipulateBondAtomic action (i_a, atom_a) (i_b, atom_b)
     atomsNew = (replaceNth i_b atomNew_b) . (replaceNth i_a atomNew_a) $ atoms
 
--- | For a molecule without connectivity yet, guess bonds based on interatomic
--- | distances only and give back the molecule with bonds
-guessBonds :: Maybe Double -> Molecule -> Molecule
+{-|
+For a 'Molecule' without connectivity yet, guess bonds based on interatomic distances only and give
+back the 'Molecule' with bonds.
+-}
+guessBonds ::
+     Maybe Double -- ^ An optional scaling factor for the covalent radii.
+  -> Molecule     -- ^ 'Molecule', of which to guess the bonds.
+  -> Molecule     -- ^ 'Molecule' with new bonds guessed.
 guessBonds scale mol = mol & molecule_Atoms .~ updatedAtoms
   where
     !distances = distanceMatrix mol
@@ -105,12 +134,25 @@ guessBonds scale mol = mol & molecule_Atoms .~ updatedAtoms
       Map.lookup (a ^. atom_Element) covalentRadii <*>
       Map.lookup (b ^. atom_Element) covalentRadii
 
--- | Insert a pseudo atom in a molecule with in a given scaled distance. Atom a
--- | and b are retained amd their bond will be untouched. A pseudo atom in
--- | between them will be inserted (at the end of the atom list of the molecule).
--- | The position of the pseudo atom (set 2 according to the paper) is
--- | calculated as described in https://doi.org/10.1016/S0166-1280(98)00475-8
-insertPseudoBond :: Maybe Element -> Maybe Double -> Int -> Int -> Molecule -> Maybe Molecule
+{-|
+Insert a pseudo 'Atom' in a 'Molecule' with in a given scaled distance. 'Atom's A and B are retained
+and their bond will be untouched. A pseudo 'Atom' in between them will be inserted (at the end of
+the 'Atom' list of the 'Molecule'). The position of the pseudo atom (set 2 according to the paper)
+is calculated as described in <https://doi.org/10.1016/S0166-1280(98)00475-8>.
+-}
+insertPseudoBond ::
+     Maybe Element   -- ^ Optionally a chemical 'Element' to be used as pseubond capping. Hydrogen
+                     --   is used if not specified.
+  -> Maybe Double    -- ^ Optional scaling factor, where to place the pseudoatom on the original
+                     --   bond vector. 1 means the pseudoatom will be placed, where the original cut
+                     --   off atom was, 0.5 by half the distance of the original bond. Default is to
+                     --   calculate the scaling by covalent radii of the atoms.
+  -> Int             -- ^ Index of 'Atom' A.
+  -> Int             -- ^ Index of 'Atom' B.
+  -> Molecule        -- ^ Original 'Molecule' to modify.
+  -> Maybe Molecule  -- ^ Result 'Molecule' with pseudo 'Atom' and pseubond inserted. May fail
+                     --   because of out of bound indices or because covalent radii for the elements
+                     --   are unknown.
 insertPseudoBond psElementTemplate psScalingTemplate i_a i_b mol
   | i_a > maxInd || i_a < 0 || i_b > maxInd || i_b < 0 = Nothing
   | (isNothing covRad_ab || isNothing covRad_ap) && isNothing psElementTemplate = Nothing
@@ -147,13 +189,19 @@ insertPseudoBond psElementTemplate psScalingTemplate i_a i_b mol
       , _atom_Connectivity = I.fromList [i_a]
       }
 
--- | Isolate parts of a molecule (defined by its indices) as a new ONIOM layer
--- | and saturate resulting dangling (single) bonds with a optionally specified
--- | element in a optionally specified distance.
--- | This if the fundamental principle for mechanical embedding. The pseudo
--- | get marked as such and can therefore be fixed in optimizations
--- | https://www.sciencedirect.com/science/article/pii/S0166128098004758?via%3Dihub
-isolateLayer :: [Int] -> Maybe Element -> Maybe Double -> Molecule -> Maybe Molecule
+{-|
+Isolate parts of a molecule (defined by its indices) as a new ONIOM layer and saturate resulting
+dangling (single) bonds with a optionally specified element in a optionally specified distance. This
+is the fundamental principle for mechanical embedding. The pseudo get marked as such and can
+therefore be fixed in optimisations
+<https://www.sciencedirect.com/science/article/pii/S0166128098004758?via%3Dihub>.
+-}
+isolateLayer ::
+     [Int]          -- ^ Indices of the 'Atom's in the new ONIOM layer.
+  -> Maybe Element  -- ^ Optional element to be used as capping atom. See 'insertPseudoBond'
+  -> Maybe Double   -- ^ Optional scaling factor for pseudobonds. See 'insertPseudoBond'.
+  -> Molecule       -- ^ Molecule from which to cut the ONIOM layer.
+  -> Maybe Molecule -- ^ New pseudoatom saturated ONIOM layer molecule.
 isolateLayer nlInd pseudoElement pseudoScaling mol
   | maximum nlInd > maximum olIndRange || minimum nlInd < 0 = Nothing
   | Nothing `elem` pseudoAtomsToOl = Nothing
@@ -198,20 +246,34 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
       ]
     nlMolecule = mol & molecule_Atoms .~ newAtoms
 
--- | Assume the origin is (0, 0, 0) and rectangular box
-wrapFragmentsToBox :: R3Vec -> SuperMolecule -> SuperMolecule
+{-|
+Wrap fragments moleculewise to the rectangular unit cell. This function assumes that the origin is
+at (0, 0, 0).
+-}
+wrapFragmentsToBox ::
+     R3Vec         -- ^ Length of x y and z axes of a rectangular unit cell.
+  -> SuperMolecule -- ^ Fragmented 'Supermolecule' before wrapping.
+  -> SuperMolecule -- ^ Wrapped 'Supermolecule' after wrapping.
 wrapFragmentsToBox (x, y, z) (supermol, fragments) = (updatedSupermol, wrappedFragments)
   where
     wrappedFragments = map (shiftFragmentToUnitCell (x, y, z)) fragments
     fragmentAtoms = map (^. molecule_Atoms) wrappedFragments
     updatedSupermol = supermol & molecule_Atoms .~ concat fragmentAtoms
 
--- | Select the axis along which to replicate the system
+{-|
+Select the axis along which to replicate the system.
+-}
 data ReplicationAxis = AxisX | AxisY | AxisZ deriving Eq
 
--- | Replicate along a given Axis. Shift coordinates, so that the new unit cell has its origin
--- | allways at 0,0,0
-replicateSystemAlongAxis :: R3Vec -> ReplicationAxis -> Molecule -> Molecule
+{-|
+Replicate along a given Axis. Shift coordinates, so that the new unit cell has its origin allways at
+0,0,0.
+-}
+replicateSystemAlongAxis ::
+     R3Vec           -- ^ Length of x y and z axes of a rectangular unit cell.
+  -> ReplicationAxis -- ^ Axis along which to replicate the system.
+  -> Molecule        -- ^ 'Molecule' to replicate.
+  -> Molecule        -- ^ Replication result 'Molecule'.
 replicateSystemAlongAxis (bx, by, bz) axis m = mReplicatedShifted
   where
     atoms = m ^. molecule_Atoms
@@ -248,11 +310,18 @@ replicateSystemAlongAxis (bx, by, bz) axis m = mReplicatedShifted
     mReplicatedShifted = m & molecule_Atoms .~ allNewAtomsNewPos
 
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- Analysis and filtering of molecules
---------------------------------------------------------------------------------
--- | Filter a trajectory by multiple criteria
-filterByCriteria :: [Molecule -> Bool] -> Trajectory -> Trajectory
+
+{-|
+Filter a 'Trajectory' by multiple criteria. All crieteria must be fullfilled for a 'Molecule'/frame
+to be in the output.
+-}
+filterByCriteria ::
+     [Molecule -> Bool] -- ^ A list of functions, that decide if a 'Molecule' will be kept or
+                        --   discarded a.k.a. the criteria.
+  -> Trajectory         -- ^ Input 'Trajectory' to filter.
+  -> Trajectory         -- ^ Filtered output 'Trajectory'.
 filterByCriteria cs t = resultTraj
   where
     -- Take criterion (c) and a list (l) and check for every element in the list
@@ -276,9 +345,14 @@ filterByCriteria cs t = resultTraj
     -- Filtered marked trajectory
     resultTraj = map snd . filter (\(b, m) -> b == True) $ markedTraj
 
--- | Distance criterion (larger, smaller, equal, ...) of two atoms in a molecule
--- | to be fullfilled
-criterionDistance :: (Int, Int) -> (Double -> Bool) -> Molecule -> Maybe Bool
+{-|
+Distance criterion (larger, smaller, equal, ...) of two atoms in a molecule.
+-}
+criterionDistance ::
+     (Int, Int)       -- ^ Indices of the 2 'Atom's in the molecule, whos distance is calculated.
+  -> (Double -> Bool) -- ^ A distance criterion, e.g. @ (> 5.0) @.
+  -> Molecule         -- ^ 'Molecule' to check.
+  -> Maybe Bool       -- ^ Filter result.
 criterionDistance (a, b) c m
   | a < nAtoms && b < nAtoms = Just $ c $ hmVecDistance (aCoord, bCoord)
   | otherwise = Nothing
@@ -288,9 +362,15 @@ criterionDistance (a, b) c m
     aCoord = r3Vec2hmVec $ (atoms !! a) ^. atom_Coordinates
     bCoord = r3Vec2hmVec $ (atoms !! b) ^. atom_Coordinates
 
--- | Angle criterion, defined between 2x2 atoms. This is the general case, a2
--- | and b1 can be the same to have a 3 atom angle
-criterionAngle4Atoms :: ((Int, Int), (Int, Int)) -> (Double -> Bool) -> Molecule -> Maybe Bool
+{-|
+Angle criterion, defined between 2x2 a1, a2 and b1 and b2 atoms. This is the general case, a2 and b1
+can be the same to have a 3 atom angle.
+-}
+criterionAngle4Atoms ::
+     ((Int, Int), (Int, Int)) -- ^ Index of the 'Atom's ((a1, a2), (b1, b2)).
+  -> (Double -> Bool)         -- ^ An angle criterion, e.g. @ (< 0.5 * pi) @.
+  -> Molecule                 -- ^ 'Molecule' to check.
+  -> Maybe Bool               -- ^ Filter result.
 criterionAngle4Atoms ((a1, a2), (b1, b2)) c m
   | a1 < nAtoms && a2 < nAtoms && b1 < nAtoms && b2 < nAtoms = Just $ c $ hmVecAngle (aVec, bVec)
   | otherwise = Nothing
@@ -304,10 +384,15 @@ criterionAngle4Atoms ((a1, a2), (b1, b2)) c m
     aVec = a2Coord - a1Coord
     bVec = b2Coord - b1Coord
 
--- | Give a point (might be coordinates of an atom) and find the closest atom to
--- | it. Gives a tuple of the distance to the atom, the index of the atom in the
--- | molecule and the atom itself
-findNearestAtom :: R3Vec -> Molecule -> Maybe (Double, Int, Atom)
+{-|
+Give a point (might be coordinates of an 'Atom') and find the closest 'Atom' to it. Gives a tuple of
+the distance to the 'Atom', the index of the 'Atom' in the 'Molecule' and the 'Atom' itself.
+-}
+findNearestAtom ::
+     R3Vec                     -- ^ Position in space from which to search the nearest 'Atom'.
+  -> Molecule                  -- ^ Molecule in which to look for the nearest 'Atom'.
+  -> Maybe (Double, Int, Atom) -- ^ Result with (distance to the nearest 'Atom', index of the
+                               --   nearest 'Atom', nearest 'Atom')
 findNearestAtom pos m
   | length (m ^. molecule_Atoms) < 1 = Nothing
   | isNothing indexMaybe = Nothing
@@ -324,23 +409,34 @@ findNearestAtom pos m
     indexMaybe = findIndex (== smallestDistance) distances
     index = fromJust indexMaybe
 
--- | When segmenting a molecule into fragments, how should the bonds in the fragment be handled?
--- |   OnlySuper -> Remove all bonds in the fragments and only keep them in the super molecule
--- |   SuperAndFragment -> In supermolecule the original bonds remain but in the fragments all bonds
--- |     are remapped to have intrafragment bonds as they were in the super molecule
--- |   NewGuess -> Applies bond guessing based on covalent radii fragmentwise only in the fragments
--- |   RemoveAll -> Remove all bonds from supermolecule and fragments
--- |   KeepBonds -> Do not change the bonds in the fragment and keep the indices from the supermol
+{-|
+When segmenting a 'Molecule' into fragments, how should the bonds in the fragment be handled?
+ SuperAndFragment -> In supermolecule the original bonds remain but in the fragments all bonds
+   are remapped to have intrafragment bonds as they were in the super molecule
+ NewGuess -> Applies bond guessing based on covalent radii fragmentwise only in the fragments
+ RemoveAll -> Remove all bonds from supermolecule and fragments
+ KeepBonds -> Do not change the bonds in the fragment and keep the indices from the supermol
+-}
 data FragmentBonds =
-    OnlySuper
-  | SuperAndFragment
-  | NewGuess (Maybe Double)
-  | RemoveAll
-  | KeepBonds
+    OnlySuper               -- ^ Remove all bonds in the fragments and only keep them in the
+                            --   'SuperMolecule'
+  | SuperAndFragment        -- ^ In 'Supermolecule' the original bonds remain but in the fragments
+                            --   all bonds are remapped to have intrafragment bonds as they were in
+                            --   the 'SuperMolecule'.
+  | NewGuess (Maybe Double) -- ^ Applies bond guessing based on covalent radii fragmentwise only in
+                            --   the fragments.
+  | RemoveAll               -- ^ Remove all bonds from 'Supermolecule' and fragments.
+  | KeepBonds               -- ^ Do not change the bonds in the fragment and keep the indices from
+                            --   the 'SuperMolecule'.
   deriving Eq
 
--- | Detects fragment based on bond analysis. Bonds are handled according to FragmentBonds
-fragmentMolecule :: FragmentBonds -> Molecule -> Maybe SuperMolecule
+{-|
+Detects fragment based on bond analysis. Bonds are handled according to 'FragmentBonds'.
+-}
+fragmentMolecule ::
+     FragmentBonds       -- ^ Mode to handle bonds when fragmenting.
+  -> Molecule            -- ^ 'Molecule' to fragment.
+  -> Maybe SuperMolecule -- ^ Fragmented result 'SuperMolecule'.
 fragmentMolecule bondHandling m
   | bondHandling == SuperAndFragment = Nothing
   | isNothing fragmentsBondsUpdate = Nothing
@@ -389,8 +485,13 @@ fragmentMolecule bondHandling m
       m & molecule_Atoms .~
       map (\a -> a & atom_Connectivity .~ I.empty) (m ^. molecule_Atoms)
 
--- | Calculate the distance matrix of a molecule
-distanceMatrix :: Molecule -> A.Array (Int, Int) Double
+
+{-|
+Calculate the distance matrix of a 'Molecule'.
+-}
+distanceMatrix ::
+     Molecule                  -- ^ Input 'Molecule'.
+  -> A.Array (Int, Int) Double -- ^ Distance matrix of the 'Molecule'.
 distanceMatrix mol = A.array
   ((0, 0), (length coordinates - 1, length coordinates - 1)) $
   rightUpperEntries ++ diagonalEntries ++ leftLowerEntries
@@ -413,12 +514,17 @@ distanceMatrix mol = A.array
       -- `using` (parListChunk 5000) rdeepseq
 
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- Generic Helper Functions
---------------------------------------------------------------------------------
--- | For a given base vector defining a rectangular cell with the coordinate origin and a fragment
--- |(molecule) shift the molecule such, that it is at least partially contained in the unit cell
-shiftFragmentToUnitCell :: R3Vec -> Molecule -> Molecule
+
+{-|
+For a given base 'Vector' defining a rectangular cell with the coordinate origin and a fragment
+('Molecule') shift the 'Molecule' such, that it is at least partially contained in the unit cell.
+-}
+shiftFragmentToUnitCell ::
+     R3Vec    -- ^ Cell 'Vector' of a rectangular unit cell.
+  -> Molecule -- ^ Fragment that shall be shifted to the unit cell.
+  -> Molecule -- ^ Shifted fragment.
 shiftFragmentToUnitCell (bx, by, bz) m = moleculeShifted
   where
     atoms = m ^. molecule_Atoms
@@ -462,10 +568,9 @@ shiftFragmentToUnitCell (bx, by, bz) m = moleculeShifted
     shiftVec = (xShift, yShift, zShift)
     moleculeShifted = shiftFragment shiftVec m
 
-
-
--- | check for a fragment if if is partially in the unit cell (one atom in the unit cell is
--- | enough)
+{-|
+Check for a fragment if if is partially in the unit cell (one atom in the unit cell is enough).
+-}
 isFragInUnitCell :: R3Vec -> Molecule -> Bool
 isFragInUnitCell (bx, by, bz) m = True `elem` atomsInUnitCell
   where
@@ -480,8 +585,13 @@ isFragInUnitCell (bx, by, bz) m = True `elem` atomsInUnitCell
       | a <- atoms
       ]
 
--- | shift an R3Vec back to the boundaries of a rectangular box
-toBaseVec :: R3Vec -> R3Vec -> R3Vec
+{-|
+Shift an 'R3Vec' back to the boundaries of a rectangular box.
+-}
+toBaseVec ::
+    R3Vec -- ^ Point in space, possibly outside a unit cell.
+ -> R3Vec -- ^ Base vector of the cell.
+ -> R3Vec -- ^ Point shifted back to the first unit cell.
 toBaseVec (cx, cy, cz) (bx, by, bz) = coordR3Shifted
   where
     -- in each axis, how many unit vectors offset could i shift the molecule back
@@ -496,8 +606,13 @@ toBaseVec (cx, cy, cz) (bx, by, bz) = coordR3Shifted
       , cz + (fromIntegral oz) * bz
       )
 
--- | Shift a molecule by a given vector. The shift only applies to the cartesian coordinates
-shiftFragment :: R3Vec -> Molecule -> Molecule
+{-|
+Shift a 'Molecule' by a given vector. The shift only applies to the cartesian coordinates.
+-}
+shiftFragment ::
+     R3Vec    -- ^ Vector to shift.
+  -> Molecule -- ^ 'Molecule' to shift.
+  -> Molecule -- ^ Shifted 'Molecule'.
 shiftFragment shiftVec m = moleculeShifted
   where
     atoms = m ^. molecule_Atoms
@@ -512,10 +627,15 @@ shiftFragment shiftVec m = moleculeShifted
       ]
     moleculeShifted = m & molecule_Atoms .~ atomsShifted
 
-
--- | given a list of substituions [(new, old)] replace all elements in a list
--- | with the new ones and remove them if there is no correponding new element
-substituteElemsInList :: Eq a => [(a, a)] -> [a] -> [a]
+{-|
+Given a list of substituions @[(new, old)]@ replace all elements in a list with the new ones and
+remove them if there is no correponding new element.
+-}
+substituteElemsInList ::
+     Eq a
+  => [(a, a)] -- ^ Substitution pairs in the form @(new, old)@.
+  -> [a]      -- ^ Original list to substitute.
+  -> [a]      -- ^ Result list with substituions applied.
 substituteElemsInList substiList origList = substitutedList
   where
     new = map fst substiList
@@ -530,10 +650,14 @@ substituteElemsInList substiList origList = substitutedList
         [] origList
     substitutedList = map fst intermediateSubstitutedList
 
--- | Give a list of interesting indices for a list which is meant to be a subset
--- | of the original list and return a list where old index, new index and the
--- | retained elements are stored
-remapIndices :: [Int] -> [a] -> Maybe [(Int, Int, a)]
+{-|
+Give a list of interesting indices for a list which is meant to be a subset of the original list and
+return a list where old index, new index and the retained elements are stored.
+-}
+remapIndices ::
+     [Int]                 -- ^ List of indices for elements from the old list to keep.
+  -> [a]                   -- ^ The old list.
+  -> Maybe [(Int, Int, a)] -- ^ New List with @(newIndex, oldIndex, element)@.
 remapIndices ind origList
   | maximum ind > (length origList - 1) || minimum ind < 0 = Nothing
   | otherwise = Just newIndOrigIndNewElemList
@@ -545,18 +669,27 @@ remapIndices ind origList
       | nI <- newIndList
       ]
 
--- | Replace the Nth element from a list with a new element
-replaceNth :: Int -> a -> [a] -> [a]
+{-|
+Replace the Nth element from a list with a new element.
+-}
+replaceNth ::
+     Int -- ^ The Nth element to replace.
+  -> a   -- ^ The substituion element.
+  -> [a] -- ^ Original list.
+  -> [a] -- ^ Replaced list.
 replaceNth n newElement oldList =
   take n oldList ++ [newElement] ++ drop (n + 1) oldList
 
--- | Delete the nth element of a list
+{-|
+Delete the Nth element of a list.
+-}
 deleteNth :: Int -> [a] -> [a]
 deleteNth n l = (take n l) ++ (drop (n + 1) l)
 
--- | This reduces a list of IntSets, that potentially has some overlap in the set elements, to a
--- | list of sets, that has no elements in common, by recursively combining all sets, that have
--- | overlap
+{-|
+This reduces a list of IntSets, that potentially has some overlap in the set elements, to a list of
+sets, that has no elements in common, by recursively combining all sets, that have overlap.
+-}
 reduceToZeroOverlap :: [IntSet] -> [IntSet]
 reduceToZeroOverlap [] = []
 reduceToZeroOverlap [a] = [a]
@@ -585,9 +718,11 @@ reduceToZeroOverlap (a:as) =
       ]
 
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- tabulated data
---------------------------------------------------------------------------------
+{-|
+The covalent radii of alle elements in Angstrom.
+-}
 covalentRadii :: Map Element Double
 covalentRadii = Map.fromList
   [ (H  , 0.31 ),                                                                                                                                                                                                                                 (He , 0.28 ),

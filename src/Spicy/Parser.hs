@@ -1,8 +1,21 @@
+{-|
+Module      : Spicy.Parser
+Description : Parsers for chemical data formats and computational chemistry output files.
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
+-}
+{-# LANGUAGE OverloadedStrings #-}
 module Spicy.Parser
-( parseXYZ
+( -- * Chemical Data Formats
+  parseXYZ
 , parseTXYZ
 , parseMOL2
 , parseSpicy
+-- * Generic formats
 , parseHMatrix
 ) where
 import           Control.Applicative
@@ -18,18 +31,16 @@ import           Spicy.MolWriter
 import           Spicy.Types
 
 
---------------------------------------------------------------------------------
--- General helper functions
---------------------------------------------------------------------------------
--- | make a parser optional and wrap it in a Maybe
+{-|
+Make a parser optional and wrap it in a 'Maybe'.
+-}
 maybeOption :: Parser a -> Parser (Maybe a)
 maybeOption p = option Nothing (Just <$> p)
 
-
---------------------------------------------------------------------------------
--- Parser for molecular formats
---------------------------------------------------------------------------------
--- | parse a .xyz file (has no connectivity, atom types or partioal charges)
+----------------------------------------------------------------------------------------------------
+{-|
+Parse a .xyz file (has no connectivity, atom types or partioal charges).
+-}
 parseXYZ :: Parser Molecule
 parseXYZ = do
   skipSpace
@@ -38,11 +49,11 @@ parseXYZ = do
   comment <- manyTill anyChar endOfLine
   atoms <- count nAtoms xyzLineParser
   return Molecule
-    { _molecule_Label = comment
-    , _molecule_Atoms = atoms
-    , _molecule_Energy = Nothing
+    { _molecule_Label    = comment
+    , _molecule_Atoms    = atoms
+    , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
-    , _molecule_Hessian = Nothing
+    , _molecule_Hessian  = Nothing
     }
   where
     xyzLineParser :: Parser Atom
@@ -57,17 +68,19 @@ parseXYZ = do
       z <- double
       skipSpace
       return Atom
-        { _atom_Element = read cElement
-        , _atom_Label = ""
-        , _atom_IsPseudo = False
-        , _atom_FFType = ""
-        , _atom_PCharge = Nothing
-        , _atom_Coordinates = (x, y, z)
+        { _atom_Element      = read cElement
+        , _atom_Label        = ""
+        , _atom_IsPseudo     = False
+        , _atom_FFType       = ""
+        , _atom_PCharge      = Nothing
+        , _atom_Coordinates  = (x, y, z)
         , _atom_Connectivity = I.empty
         }
 
--- | parse a .txyz file (Tinkers xyz format)
--- | it has coordinates and might have connectivity and atom types
+{-|
+Parse a .txyz file (Tinkers xyz format). It has coordinates and might have connectivity and atom
+types.
+-}
 parseTXYZ :: Parser Molecule
 parseTXYZ = do
   skipSpace
@@ -76,11 +89,11 @@ parseTXYZ = do
   comment <- manyTill anyChar endOfLine
   atoms <- many1 txyzLineParser
   return Molecule
-    { _molecule_Label = comment
-    , _molecule_Atoms = atoms
-    , _molecule_Energy = Nothing
+    { _molecule_Label    = comment
+    , _molecule_Atoms    = atoms
+    , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
-    , _molecule_Hessian = Nothing
+    , _molecule_Hessian  = Nothing
     }
   where
     txyzLineParser :: Parser Atom
@@ -101,15 +114,15 @@ parseTXYZ = do
       connectivityRaw <- many' columnDecimal
       endOfLine
       return Atom
-        { _atom_Element = read cElement
-        , _atom_Label = ""
-        , _atom_IsPseudo = False
-        , _atom_FFType =
-          case mFFType of
-            Nothing -> ""
-            Just x'  -> show x'
-        , _atom_PCharge = Nothing
-        , _atom_Coordinates = (x, y, z)
+        { _atom_Element      = read cElement
+        , _atom_Label        = ""
+        , _atom_IsPseudo     = False
+        , _atom_FFType       =
+            case mFFType of
+              Nothing -> ""
+              Just x' -> show x'
+        , _atom_PCharge      = Nothing
+        , _atom_Coordinates  = (x, y, z)
         , _atom_Connectivity = I.fromList $ map (+ (-1)) connectivityRaw
         }
     columnDecimal :: Parser Int
@@ -119,8 +132,11 @@ parseTXYZ = do
       _ <- many' (char ' ' <|> char '\t')
       return i
 
--- | Parse the "interesting" fields of a MOL2 file. This contains partial
--- | charges as well as connectivity.
+{-|
+Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
+connectivity. There is no special understanding for the atom types, that are available in MOL2
+files. They will simply be treated as the force field string.
+-}
 parseMOL2 :: Parser Molecule
 parseMOL2 = do
   (label, nAtoms, nBonds) <- moleculeParser
@@ -131,11 +147,11 @@ parseMOL2 = do
         | i <- [ 0 .. length atoms - 1 ]
         ]
   return Molecule
-    { _molecule_Label = label
-    , _molecule_Atoms = updatedAtoms
-    , _molecule_Energy = Nothing
+    { _molecule_Label    = label
+    , _molecule_Atoms    = updatedAtoms
+    , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
-    , _molecule_Hessian = Nothing
+    , _molecule_Hessian  = Nothing
     }
   where
     moleculeParser :: Parser (String, Int, Int)
@@ -185,12 +201,12 @@ parseMOL2 = do
                   then cElement
                   else cElement ++ "." ++ fromJust ffType2
           return Atom
-            { _atom_Element = read cElement
-            , _atom_Label = label
-            , _atom_IsPseudo = False
-            , _atom_FFType = ffType
-            , _atom_PCharge = Just partialCharge
-            , _atom_Coordinates = (x, y, z)
+            { _atom_Element      = read cElement
+            , _atom_Label        = label
+            , _atom_IsPseudo     = False
+            , _atom_FFType       = ffType
+            , _atom_PCharge      = Just partialCharge
+            , _atom_Coordinates  = (x, y, z)
             , _atom_Connectivity = I.empty
             }
     bondParser :: Int -> Parser [[Int]]
@@ -220,7 +236,10 @@ parseMOL2 = do
           endOfLine
           return (originAtom - 1, targetAtom - 1)
 
--- | Parser for the Spicy format used in this program
+{-|
+Parser for the Spicy format used in this program. Represents fully all informations stored in the
+'Molecule' type.
+-}
 parseSpicy :: Parser Molecule
 parseSpicy = do
   _ <- string "#Spicy-Format v0.2"
@@ -315,9 +334,9 @@ parseSpicy = do
 
 
 ----------------------------------------------------------------------------------------------------
--- Parser for generic formats
-----------------------------------------------------------------------------------------------------
--- | Parse the "show" instance output for HMatrix' matrix Type, including the dimension infos
+{-|
+Parse the "show" instance output for HMatrix' matrix Type, including the dimension infos
+-}
 parseHMatrix :: Parser (Matrix Double)
 parseHMatrix = do
   skipSpace
