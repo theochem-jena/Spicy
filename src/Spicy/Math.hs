@@ -53,7 +53,7 @@ hmVec2r3Vec a
 
 -- | calculate the length of a vector
 hmVecLength :: Vector R -> R
-hmVecLength = sqrt . sum . map (^2) . toList
+hmVecLength = sqrt . sum . map (** 2.0) . toList
 
 -- | Distance between 2 points
 hmVecDistance :: (Vector R, Vector R) -> R
