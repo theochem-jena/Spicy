@@ -9,7 +9,8 @@ import           Control.Applicative
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.IntSet               as I
 import           Data.Maybe
-import qualified Data.Text                 as T
+import qualified Data.Text                 as TS
+import qualified Data.Text.Lazy            as T
 import           Data.Tuple
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra     hiding (double, rows)
@@ -139,7 +140,7 @@ parseMOL2 = do
   where
     moleculeParser :: Parser (String, Int, Int)
     moleculeParser = do
-      _ <- manyTill anyChar (string $ T.pack "@<TRIPOS>MOLECULE")
+      _ <- manyTill anyChar (string "@<TRIPOS>MOLECULE")
       endOfLine
       label <- manyTill anyChar endOfLine
       skipSpace
@@ -150,7 +151,7 @@ parseMOL2 = do
       return (label, nAtoms, nBonds)
     atomParser :: Parser [Atom]
     atomParser = do
-      _ <- manyTill anyChar (string $ T.pack "@<TRIPOS>ATOM")
+      _ <- manyTill anyChar (string "@<TRIPOS>ATOM")
       endOfLine
       atoms <- many1 atomLineParser
       return atoms
@@ -194,7 +195,7 @@ parseMOL2 = do
             }
     bondParser :: Int -> Parser [[Int]]
     bondParser nAtoms = do
-      _ <- manyTill anyChar (string $ T.pack "@<TRIPOS>BOND")
+      _ <- manyTill anyChar (string "@<TRIPOS>BOND")
       endOfLine
       rawBonds <- many1 bondLineParser
       let rawBondsSwaped = map swap rawBonds
@@ -222,38 +223,38 @@ parseMOL2 = do
 -- | Parser for the Spicy format used in this program
 parseSpicy :: Parser Molecule
 parseSpicy = do
-  _ <- string $ T.pack "#Spicy-Format v0.2"
+  _ <- string "#Spicy-Format v0.2"
   endOfLine
   skipSpace
-  _ <- string $ T.pack "#Spicy-Molecule"
+  _ <- string "#Spicy-Molecule"
   endOfLine
-  _ <- string $ T.pack "  Label:"
+  _ <- string "  Label:"
   endOfLine
-  _ <- string $ T.pack "    "
+  _ <- string "    "
   mLabel <- takeTill isEndOfLine
   skipSpace
   mEnergy <- maybeOption parseEnergy
   mGradient <- maybeOption parseGradient
   mHessian <- maybeOption parseHessian
   skipSpace
-  _ <- string $ T.pack "#Spicy-Atoms"
+  _ <- string "#Spicy-Atoms"
   skipSpace
   mAtoms <- many1 parseAtoms
   return Molecule
-    { _molecule_Label = T.unpack mLabel
-    , _molecule_Atoms = mAtoms
-    , _molecule_Energy = mEnergy
+    { _molecule_Label    = TS.unpack mLabel
+    , _molecule_Atoms    = mAtoms
+    , _molecule_Energy   = mEnergy
     , _molecule_Gradient = mGradient
-    , _molecule_Hessian = mHessian
+    , _molecule_Hessian  = mHessian
     }
   where
     parseEnergy = do
-      _ <- manyTill anyChar (string $ T.pack "Energy / Hartree:")
+      _ <- manyTill anyChar (string "Energy / Hartree:")
       skipSpace
       energy <- double
       return energy
     parseGradient = do
-      _ <- manyTill anyChar (string $ T.pack "Gradient / Hartee/Bohr:")
+      _ <- manyTill anyChar (string "Gradient / Hartee/Bohr:")
       skipSpace
       gradient <- many1 $ do
         skipSpace
@@ -261,7 +262,7 @@ parseSpicy = do
         return gVal
       return $ fromList gradient
     parseHessian = do
-      _ <- manyTill anyChar (string $ T.pack "Hessian / a.u.:")
+      _ <- manyTill anyChar (string "Hessian / a.u.:")
       skipSpace
       hessian <- parseHMatrix
       return hessian
@@ -285,7 +286,7 @@ parseSpicy = do
       ffType <- count 6 anyChar
       pChargeTest <- maybeOption $ do
         skipSpace
-        (string $ T.pack "No")
+        (string "No")
       pCharge <- if pChargeTest == Nothing
         then Just <$> do
           _ <- many' (char ' ' <|> char '\t')
@@ -303,12 +304,12 @@ parseSpicy = do
         return conAtom
       endOfLine
       return Atom
-        { _atom_Element = read cElement
-        , _atom_Label = T.unpack . T.strip . T.pack $ label
-        , _atom_IsPseudo = if pseudo == 'P' then True else False
-        , _atom_FFType = T.unpack . T.strip . T.pack $ ffType
-        , _atom_PCharge = pCharge
-        , _atom_Coordinates = (\[x, y, z] -> (x, y, z)) coordVec
+        { _atom_Element      = read cElement
+        , _atom_Label        = T.unpack . T.strip . T.pack $ label
+        , _atom_IsPseudo     = if pseudo == 'P' then True else False
+        , _atom_FFType       = T.unpack . T.strip . T.pack $ ffType
+        , _atom_PCharge      = pCharge
+        , _atom_Coordinates  = (\[x, y, z] -> (x, y, z)) coordVec
         , _atom_Connectivity = I.fromList connectivity
         }
 

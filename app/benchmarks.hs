@@ -3,10 +3,11 @@ Benchmarks of Spicy functions
 -}
 {-# LANGUAGE BangPatterns #-}
 import           Criterion.Main
-import           Data.Attoparsec.Text.Lazy (many1, parseOnly)
+import           Data.Attoparsec.Text.Lazy (many1, parse)
 import qualified Data.IntSet               as I
 import           Data.Maybe
-import qualified Data.Text                 as T
+import           Data.Text.Lazy            (Text)
+import qualified Data.Text.Lazy            as T
 import           Lens.Micro.Platform
 import           Spicy.MolecularSystem
 import           Spicy.MolWriter
@@ -23,7 +24,7 @@ main = defaultMain
 -- Generate test data
 ----------------------------------------------------------------------------------------------------
 -- | Generate a very simple repetitive trajectory in XYZ format
-generateTrajectoryXYZ :: Int -> Int -> T.Text
+generateTrajectoryXYZ :: Int -> Int -> Text
 generateTrajectoryXYZ nAtoms nFrames = T.pack frames
   where
     atomLine = "Rb   1.00000  -15.031654 0.00354\n"
@@ -117,7 +118,7 @@ benchmarkParserXYZ = bgroup
   , bench "1000 atoms, 100 frames" $ nf (testCase 1000) 100
   ]
   where
-    testCase nAtoms nFrames = (parseOnly (many1 parseXYZ)) (generateTrajectoryXYZ nAtoms nFrames)
+    testCase nAtoms nFrames = (parse (many1 parseXYZ)) (generateTrajectoryXYZ nAtoms nFrames)
 
 
 ----------------------------------------------------------------------------------------------------

@@ -14,8 +14,8 @@ module Spicy.UnitTests.Data
 , testHFeCNxH2OSpicy
 ) where
 import qualified Data.IntSet           as I
-import           Data.Text             (Text)
-import qualified Data.Text             as T
+import           Data.Text.Lazy        (Text)
+import qualified Data.Text.Lazy        as T
 import           Lens.Micro.Platform
 import           Numeric.LinearAlgebra
 import           Spicy.Types

@@ -3,11 +3,11 @@ Unit testing and golden testing (unit testing based on files) for Spicy. Test al
 parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
-
+{-# LANGUAGE OverloadedStrings #-}
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.ByteString.Lazy.UTF8 as LBS
 import           Data.Maybe
-import qualified Data.Text.IO              as T
+import qualified Data.Text.Lazy.IO         as T
 import           Spicy.MolecularSystem
 import           Spicy.MolWriter
 import           Spicy.Parser
@@ -46,19 +46,20 @@ testParser = testGroup "Parser"
 
 testParserTXYZ1 :: TestTree
 testParserTXYZ1 = testCase "Tinker XYZ (1)" $
-  parseOnly parseTXYZ textHFeCNxH2OTXYZ @?= Right moleculeHFeCNxH2OTXYZ
+  (maybeResult $ parse parseTXYZ textHFeCNxH2OTXYZ) @?= Just moleculeHFeCNxH2OTXYZ
 
 testParserXYZ1 :: TestTree
 testParserXYZ1 = testCase "Molden XYZ (1)" $
-  parseOnly parseXYZ testHFeCNxH2OXYZ @?= Right moleculeHFeCNxH2OXYZ
+  (maybeResult $ parse parseXYZ testHFeCNxH2OXYZ) @?= Just moleculeHFeCNxH2OXYZ
 
 testParserMOL21 :: TestTree
 testParserMOL21 = testCase "SyByl MOL2 (1)" $
- parseOnly parseMOL2 testHFeCNxH2OMOL2 @?= Right moleculeHFeCNxH2OMOL2
+ (maybeResult $ parse parseMOL2 testHFeCNxH2OMOL2) @?= Just moleculeHFeCNxH2OMOL2
 
 testParserSpicy :: TestTree
 testParserSpicy = testCase "Spicy format (1)" $
-  parseOnly parseSpicy testHFeCNxH2OSpicy @?= Right moleculeHFeCNxH2O
+  (maybeResult $ parse parseSpicy testHFeCNxH2OSpicy) @?= Just moleculeHFeCNxH2O
+
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem
@@ -92,7 +93,7 @@ testGuessBonds1 = goldenVsString
   "Guess bonds - defaults (N2 in binding distance)"
   "goldentests/output/N2_bonded__GuessBonds1.txyz" $ do
     raw <- T.readFile "goldentests/input/N2_bonded.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = guessBonds Nothing molInput
@@ -103,7 +104,7 @@ testGuessBonds2 = goldenVsString
   "Guess bonds - defaults (N2 in non-binding distance)"
   "goldentests/output/N2_nonbonded__GuessBonds2.txyz" $ do
     raw <- T.readFile "goldentests/input/N2_nonbonded.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = guessBonds Nothing molInput
@@ -114,7 +115,7 @@ testGuessBonds3 = goldenVsString
   "Guess bonds - custom cutoff (N2 in binding distance)"
   "goldentests/output/N2_bonded__GuessBonds3.txyz" $ do
     raw <- T.readFile "goldentests/input/N2_bonded.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = guessBonds (Just 0.1) molInput
@@ -125,7 +126,7 @@ testGuessBonds4 = goldenVsString
   "Guess bonds - custom cutoff (N2 in non-binding distance)"
   "goldentests/output/N2_nonbonded__GuessBonds4.txyz" $ do
     raw <- T.readFile "goldentests/input/N2_nonbonded.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = guessBonds (Just 7.042254) molInput
@@ -136,7 +137,7 @@ testGuessBonds5 = goldenVsString
   "Guess bonds - 1.2 x R_covalent (Heme like system)"
   "goldentests/output/FePorphyrine__GuessBonds5.txyz" $ do
     raw <- T.readFile "goldentests/input/FePorphyrine.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = guessBonds (Just 1.2) molInput
@@ -147,7 +148,7 @@ testGuessBonds6 = goldenVsString
   "Guess bonds - defaults (sulfate in mixture of H20 and NH3)"
   "goldentests/output/SulfateInSolution__GuessBonds6.txyz" $ do
     raw <- T.readFile "goldentests/input/SulfateInSolution.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = guessBonds Nothing molInput
@@ -159,7 +160,7 @@ testIsolateLayer1 = goldenVsString
   "Isolate ONIOM layer - defaults (Heme like system, isolate Fe-porphyrine)"
   "goldentests/output/FePorphyrine__IsolateLayer1.txyz" $ do
     raw <- T.readFile "goldentests/input/FePorphyrine.txyz"
-    case (parseOnly parseTXYZ raw) of
+    case (eitherResult $ parse parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = isolateLayer [0 .. 35] Nothing Nothing molInput
@@ -170,7 +171,7 @@ testIsolateLayer2 = goldenVsString
   "Isolate ONIOM layer - fluorine capping, short dinstance (Ru complex with H20 solvent molecules)"
   "goldentests/output/RuKomplex__IsolateLayer2.txyz" $ do
     raw <- T.readFile "goldentests/input/RuKomplex.txyz"
-    case (parseOnly parseTXYZ raw) of
+    case (eitherResult $ parse parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let molResult = isolateLayer
@@ -189,7 +190,7 @@ testFragmentDetection1 = goldenVsString
   "Detect fragments - remove all bonds (sulfate in mixture of H20 and NH3)"
   "goldentests/output/SulfateInSolution__FragmentDetection1.xyz" $ do
     raw <- T.readFile "goldentests/input/SulfateInSolution.txyz"
-    case (parseOnly parseTXYZ raw) of
+    case (eitherResult $ parse parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let fragments =
@@ -204,7 +205,7 @@ testFragmentDetection2 = goldenVsString
   "Detect fragments - new bond guess (sulfate in mixture of H20 and NH3)"
   "goldentests/output/SulfateInSolution__FragmentDetection2.xyz" $ do
     raw <- T.readFile "goldentests/input/SulfateInSolution.txyz"
-    case (parseOnly parseTXYZ raw) of
+    case (eitherResult $ parse parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let fragments =
@@ -219,7 +220,7 @@ testFragmentDetection3 = goldenVsString
   "Detect fragments - keeping supermol bonds (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__FragmentDetection3.txyz" $ do
     raw <- T.readFile "goldentests/input/TolueneCl2.txyz"
-    case (parseOnly parseTXYZ raw) of
+    case (eitherResult $ parse parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let fragments =
@@ -235,7 +236,7 @@ testWrapFragmentsToBox1 = goldenVsString
   "Wrap molecules to unit cell molecule-wise (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__WrapFragmentsToBox1.txyz" $ do
     raw <- T.readFile "goldentests/input/TolueneCl2.txyz"
-    case (parseOnly parseTXYZ raw) of
+    case (eitherResult $ parse parseTXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let superMolFragmented =
@@ -251,7 +252,7 @@ testReplicateSystemAlongAxis1 = goldenVsString
   "Replicate unit cell - x axis (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis1.xyz" $ do
     raw <- T.readFile "goldentests/input/TolueneCl2.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisX molInput
@@ -262,7 +263,7 @@ testReplicateSystemAlongAxis2 = goldenVsString
   "Replicate unit cell - y axis (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis2.xyz" $ do
     raw <- T.readFile "goldentests/input/TolueneCl2.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisY molInput
@@ -273,7 +274,7 @@ testReplicateSystemAlongAxis3 = goldenVsString
   "Replicate unit cell - z axis (toluene Cl2 mixture periodic)"
   "goldentests/output/TolueneCl2__ReplicateSystemAlongAxis3.xyz" $ do
     raw <- T.readFile "goldentests/input/TolueneCl2.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let superCell = replicateSystemAlongAxis (20.0, 20.0, 20.0) AxisZ molInput
@@ -285,7 +286,7 @@ testFindNearestAtom1 = goldenVsString
   "Find nearest atom (toluene Cl2 mixture periodic)"
   "goldentests/output/N2_bonded__FindNearestAtom1.dat" $ do
     raw <- T.readFile "goldentests/input/N2_bonded.xyz"
-    case (parseOnly parseXYZ raw) of
+    case (eitherResult $ parse parseXYZ raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right molInput -> do
         let nearestInfo = findNearestAtom (0.0, 0.0, 0.5499) molInput
@@ -297,7 +298,7 @@ testFilterByCriteria1 = goldenVsString
   "Trajectory filtering - distance criterion (azine and phophinin)"
   "goldentests/output/HeteroTraj__FilterByCriteria1.xyz" $ do
     raw <- T.readFile "goldentests/input/HeteroTraj.xyz"
-    case (parseOnly (many1 parseXYZ) raw) of
+    case (eitherResult $ parse (many1 parseXYZ) raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right trajInput -> do
         let filteredTraj =
@@ -311,7 +312,7 @@ testFilterByCriteria2 = goldenVsString
   "Trajectory filtering - 4 atoms angle criterion (azine and phophinin)"
   "goldentests/output/HeteroTraj__FilterByCriteria2.xyz" $ do
     raw <- T.readFile "goldentests/input/HeteroTraj.xyz"
-    case (parseOnly (many1 parseXYZ) raw) of
+    case (eitherResult $ parse (many1 parseXYZ) raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right trajInput -> do
         let filteredTraj =
@@ -325,7 +326,7 @@ testFilterByCriteria3 = goldenVsString
   "Trajectory filtering - 2 distance criteria (azine and phophinin)"
   "goldentests/output/HeteroTraj__FilterByCriteria3.xyz" $ do
     raw <- T.readFile "goldentests/input/HeteroTraj.xyz"
-    case (parseOnly (many1 parseXYZ) raw) of
+    case (eitherResult $ parse (many1 parseXYZ) raw) of
       Left _ -> return $ LBS.fromString "Failed"
       Right trajInput -> do
         let filteredTraj =
