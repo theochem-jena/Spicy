@@ -18,13 +18,13 @@ module Spicy.MolWriter
 , writeSpicy
 , Molecule(..)
 ) where
-import qualified Data.IntSet           as I
+import qualified Data.Array.Repa             as R
+import qualified Data.IntSet                 as I
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
 import           Data.Tuple
 import           Lens.Micro.Platform
-import           Numeric.LinearAlgebra
 import           Spicy.Types
 import           Text.Printf
 
@@ -162,7 +162,7 @@ writeSpicy m =
     Nothing -> ""
     Just g ->
       "  Gradient / Hartee/Bohr:\n" ++
-      (concat . map ("  " ++) . map writeSafeListToLine . chunksOf 3 . toList $ g)
+      (concat . map ("  " ++) . map writeSafeListToLine . chunksOf 3 . R.toList $ g)
       --( concat . map ((++ "\n") . ("    " ++) . show) . chunksOf 3 . toList $ g )
   ++
   case hessian of

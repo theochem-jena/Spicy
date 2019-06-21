@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 50cd49f3cc888a99e58fb632ebf6e7abcb5502155505175f50c51b3a68682109
+-- hash: 9e151984e2471a208a3b4410f76aaaa7f3436ff6b7c297d958c51f50ea81308e
 
 name:           spicy
 version:        0.0.0.1
@@ -15,8 +17,9 @@ copyright:      2019 Phillip Seeber
 license:        GPL-3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
+    README.md
+    LICENSE
     goldentests/input/FePorphyrine.txyz
     goldentests/input/FePorphyrine.xyz
     goldentests/input/HeteroTraj.xyz
@@ -46,8 +49,6 @@ extra-source-files:
     goldentests/output/TolueneCl2__ReplicateSystemAlongAxis2.xyz
     goldentests/output/TolueneCl2__ReplicateSystemAlongAxis3.xyz
     goldentests/output/TolueneCl2__WrapFragmentsToBox1.txyz
-    LICENSE
-    README.md
 
 source-repository head
   type: git

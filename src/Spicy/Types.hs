@@ -20,7 +20,8 @@ module Spicy.Types
   Element(..)
 , AtomLabel
 , FFType
-, R3Vec
+, Vector
+, Matrix
 , Atom(..)
 , atom_Element
 , atom_Label
@@ -32,6 +33,7 @@ module Spicy.Types
 , Molecule(..)
 , LayerMolecule
 , Trajectory
+, Fragment
 , SuperMolecule
 , molecule_Label
 , molecule_Atoms
@@ -105,10 +107,11 @@ module Spicy.Types
 , methods_qc_CAS
 ) where
 import           Control.DeepSeq
-import           Data.IntSet           (IntSet)
-import           GHC.Generics          (Generic)
+import           Data.Array.Repa             (Array, DIM0, DIM1, DIM2, U, Z)
+import           Data.Array.Repa.Repr.Vector (V)
+import           Data.IntSet                 (IntSet)
+import           GHC.Generics                (Generic)
 import           Lens.Micro.Platform
-import           Numeric.LinearAlgebra hiding (Element)
 import           Text.Printf
 
 
@@ -159,58 +162,75 @@ on the MM software used.
 type FFType = String
 
 {-|
-A vector in the R3 space, used for storing coordinates of atoms (cartesian).
+A vector in REPA.
 -}
-type R3Vec = (Double, Double, Double)
+type Vector = Array U DIM1
 
 {-|
-An Atom in a molecule.
+A matrix in REPA.
+-}
+type Matrix = Array U DIM2
+
+{-|
+An Atom in a 'Molecule'.
 -}
 data Atom = Atom
-  { _atom_Element      :: Element      -- ^ Chemical element of the atom
-  , _atom_Label        :: AtomLabel    -- ^ Label, e.g. from a pdb, just for identification, can be empty
-  , _atom_IsPseudo     :: Bool         -- ^ Boolean, telling if this is a pseudo atom, introduced because a bond was broken
-  , _atom_FFType       :: FFType       -- ^ Label depending on the MM software used, identifying topological atom
-  , _atom_PCharge      :: Maybe Double -- ^ Possibly a partial charge
-  , _atom_Coordinates  :: R3Vec        -- ^ Coordinates of the atom, cartesian in R³
-  , _atom_Connectivity :: IntSet       -- ^ A set of other 'Atom' this one binds to (in the sense of force fields).
-                                       --   This is absolutely meaningless for a single atom, but this is set here
-                                       --   and not in the 'Molecule' layer, because this makes handling with
-                                       --   most MM softwares and chemical formats easier (tinker, mol2, PDB).
-  } deriving (Eq, Ord, Generic, NFData, Show)
+  { _atom_Element      :: Element       -- ^ Chemical 'Element' of the atom.
+  , _atom_Label        :: AtomLabel     -- ^ Label, e.g. from a pdb, just for identification, can be
+                                        --   empty.
+  , _atom_IsPseudo     :: Bool          -- ^ Boolean, telling if this is a pseudo atom, introduced
+                                        --   because a bond was broken.
+  , _atom_FFType       :: FFType        -- ^ Label depending on the MM software used, identifying
+                                        --   topological atom.
+  , _atom_PCharge      :: Maybe Double  -- ^ Possibly a partial charge.
+  , _atom_Coordinates  :: Vector Double -- ^ Coordinates of the atom, cartesian in R³. Relies on the
+                                        --   parser to fill with exactly 3 values.
+  , _atom_Connectivity :: IntSet        -- ^ A set of other 'Atom' this one binds to (in the sense
+                                        --   of force fields). This is absolutely meaningless for a
+                                        --   single atom, but this is set here and not in the
+                                        --   'Molecule' layer, because this makes handling with most
+                                        --   MM softwares and chemical formats easier (tinker,
+                                        --   mol2, PDB).
+  } deriving (Eq, Generic, Show)
 makeLenses ''Atom
 
 {-|
 A molecule (might be the whole system or just an ONIOM layer) and all associated informations.
 -}
 data Molecule = Molecule
-  { _molecule_Label    :: String                -- ^ Comment or identifier of a molecule. Can be empty.
-  , _molecule_Atoms    :: [Atom]                -- ^ A list of Atoms.
-  , _molecule_Energy   :: Maybe Double          -- ^ An energy, that might have been calculated.
-  , _molecule_Gradient :: Maybe (Vector Double) -- ^ A gradient, that might have been calculated.
-  , _molecule_Hessian  :: Maybe (Matrix Double) -- ^ A hessian, that might have been calculated.
-  } deriving (Eq, Generic, NFData)
+  { _molecule_Label    :: String                 -- ^ Comment or identifier of a molecule. Can be
+                                                 --   empty.
+  , _molecule_Atoms    :: [Atom]                 -- ^ A list of Atoms.
+  , _molecule_Energy   :: Maybe Double           -- ^ An energy, that might have been calculated.
+  , _molecule_Gradient :: Maybe (Vector Double)  -- ^ A gradient, that might have been calculated.
+  , _molecule_Hessian  :: Maybe (Matrix Double)  -- ^ A hessian, that might have been calculated.
+  } deriving (Eq, Generic)
 makeLenses ''Molecule
 
 {-|
-A ONIOM layer with "pseudoatoms" (set 2 atoms in https://doi.org/10.1016/S0166-1280(98)00475-8).
+A ONIOM layer with "pseudoatoms" (set 2 atoms in <https://doi.org/10.1016/S0166-1280(98)00475-8>).
 While the molecule is ordinary for Spicy, pseudo atoms need to be handled differently, depending on
 the ONIOM type.
 -}
 type LayerMolecule = (Int, Molecule)
 
 {-|
-Trajectories are simply a list of molecules.
+Trajectories are simply a vector of 'Molecule's.
 -}
-type Trajectory = [Molecule]
+type Trajectory = Array V DIM1 Molecule
 
 {-|
-A supermolecule, which is the whole system (first), and then a list of fragments, treated as
-separate molecules. The whole supermolecule containts all atoms and all bonds, but is optional,
-as the structure can be completely defined using the fragments. The supermolecule on the other
-hand side is suposed to store the results of a calculation (energy, gradient, ...)......
+A fragment is just a 'Molecule' somehow (from user side) distinguished by properties.
 -}
-type SuperMolecule = (Molecule, [Molecule])
+type Fragment = Molecule
+
+{-|
+A supermolecule, which is the whole system (first), and then a 'Vector' of 'Fragment's, treated as
+separate 'Molecule's. The whole supermolecule containts all 'Atom's and all bonds, but is optional,
+as the structure can be completely defined using the 'Fragment's. The supermolecule on the other
+hand side is suposed to store the results of a calculation (energy, gradient, ...).
+-}
+type SuperMolecule = (Molecule, Array V DIM1 Fragment)
 
 
 ----------------------------------------------------------------------------------------------------
