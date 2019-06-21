@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 092a0480e4a1b8180b7dff420ec2d5f3d684c0b13a51fc2235de8ae4b4f95ecb
+-- hash: 50cd49f3cc888a99e58fb632ebf6e7abcb5502155505175f50c51b3a68682109
 
 name:           spicy
 version:        0.0.0.1
@@ -67,7 +67,7 @@ library
       Paths_spicy
   hs-source-dirs:
       src
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds -Wno-type-defaults
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults
   build-depends:
       array >=0.5.2.0
     , attoparsec >=0.13.1.0
@@ -94,7 +94,7 @@ executable benchmarks-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
   build-depends:
       array >=0.5.2.0
     , attoparsec >=0.13.1.0
@@ -123,7 +123,7 @@ executable spicy
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
   build-depends:
       array >=0.5.2.0
     , attoparsec >=0.13.1.0
@@ -151,7 +151,7 @@ executable unittests-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
   build-depends:
       array >=0.5.2.0
     , attoparsec >=0.13.1.0
@@ -183,7 +183,7 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
   build-depends:
       array >=0.5.2.0
     , attoparsec >=0.13.1.0
@@ -215,7 +215,7 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-unused-local-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
+  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
   build-depends:
       array >=0.5.2.0
     , attoparsec >=0.13.1.0

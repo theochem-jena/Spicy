@@ -9,11 +9,6 @@ Portability : POSIX, Windows
 
 The module collects data only used for unit testing, such as the correct answers for unit tests.
 -}
-
-{-
-The module collects data only used for unit testing, such as the correct answers
-for unit tests.
--}
 module Spicy.UnitTests.Data
 ( moleculeEmpty
 , moleculeHFeCNxH2O

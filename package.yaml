@@ -46,7 +46,6 @@ ghc-options:
   - -Wall
   - -Wno-unused-matches
   - -Wno-unused-top-binds
-  - -Wno-unused-local-binds
   - -Wno-type-defaults
 
 library:

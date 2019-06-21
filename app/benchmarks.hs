@@ -22,9 +22,13 @@ main = defaultMain
   ]
 ----------------------------------------------------------------------------------------------------
 -- Generate test data
-----------------------------------------------------------------------------------------------------
--- | Generate a very simple repetitive trajectory in XYZ format
-generateTrajectoryXYZ :: Int -> Int -> Text
+{-|
+Generate a very simple repetitive trajectory in XYZ format.
+-}
+generateTrajectoryXYZ ::
+     Int  -- ^ Number of atoms to generate.
+  -> Int  -- ^ Number of trajectory frames to generate.
+  -> Text -- ^ Trajectory in XYZ format.
 generateTrajectoryXYZ nAtoms nFrames = T.pack frames
   where
     atomLine = "Rb   1.00000  -15.031654 0.00354\n"
@@ -38,8 +42,10 @@ generateTrajectoryXYZ nAtoms nFrames = T.pack frames
       concat $
       replicate nFrames frame
 
--- | Replicate phosphinin n times in space, so that a set of molecules in space is formed, which is
--- | in the shabe of a rectangle
+{-|
+Replicate phosphinin n times in space, so that a set of molecules in space is formed, which is in
+the shape of a rectangle. The molecules will be nonbonded.
+-}
 generateNonbondedMolecules :: Int -> Molecule
 generateNonbondedMolecules nMols = superMolecule
   where
@@ -76,7 +82,7 @@ generateNonbondedMolecules nMols = superMolecule
       , ( 2.15024,  2.59423,  2.50000)
       ]
     atomsPhosphor = zipWith (\a c -> a & atom_Coordinates .~ c & atom_Element .~ P)
-      (replicate 1 templateAtom)
+      (replicate (1 :: Int) templateAtom)
       [ (0.00000,  0.00000,  2.50000)
       ]
     shiftVec =
@@ -94,16 +100,23 @@ generateNonbondedMolecules nMols = superMolecule
       $ zipWith (shiftFragment) (take nMols shiftVec) (repeat molecule)
       )
 
+{-|
+As 'generateNonbondedMolecules' but the result will be bonded 'Molecule's.
+-}
 generateBondedMolecules :: Int -> Molecule
 generateBondedMolecules nMols = guessBonds (Just 1.1) $ generateNonbondedMolecules nMols
 
+{-|
+{-|
+As 'generateNonbondedMolecules' but the result will be split into fragments as a 'SuperMolecule'.
+-}
+-}
 generateFragmentedMolecules :: Int -> Maybe SuperMolecule
 generateFragmentedMolecules nMols = fragmentMolecule RemoveAll $ generateBondedMolecules nMols
 
 
 ----------------------------------------------------------------------------------------------------
 -- Benchmarks for the parsers
-----------------------------------------------------------------------------------------------------
 benchmarkParser :: Benchmark
 benchmarkParser = bgroup
   "Parser"
@@ -123,7 +136,6 @@ benchmarkParserXYZ = bgroup
 
 ----------------------------------------------------------------------------------------------------
 -- Benchmarks MolecularSystem
-----------------------------------------------------------------------------------------------------
 benchmarkMolecularSystem :: Benchmark
 benchmarkMolecularSystem = bgroup
   "Molecular system"

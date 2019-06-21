@@ -210,9 +210,7 @@ isolateLayer nlInd pseudoElement pseudoScaling mol
   where
     olAtoms = mol ^. molecule_Atoms
     olIndRange = [0 .. length olAtoms - 1 ]
-    nlAtoms = [ olAtoms !! i | i <- nlInd ] :: [Atom]
     olAtomicBonds = map (I.toList . (^. atom_Connectivity)) olAtoms             -- atomwise list of bonds to other atoms of the old layer
-    nlAtomicBonds = map (I.toList . (^. atom_Connectivity)) nlAtoms
     pseudoAtomsToOl =                                                           -- the set of pseudo atoms that are added to the outer layer when separating the inner layers
       concat
       [ [ last . _molecule_Atoms <$>                                            -- take the last atom added to the molecule
@@ -399,7 +397,6 @@ findNearestAtom pos m
   | otherwise = Just (distances !! index, index, atoms !! index)
   where
     atoms = m ^. molecule_Atoms
-    nAtoms = length atoms
     posVec = r3Vec2hmVec pos
     distances =
       [ hmVecDistance (posVec, r3Vec2hmVec $ i ^. atom_Coordinates)
@@ -575,7 +572,6 @@ isFragInUnitCell :: R3Vec -> Molecule -> Bool
 isFragInUnitCell (bx, by, bz) m = True `elem` atomsInUnitCell
   where
     atoms = m ^. molecule_Atoms
-    atomCoords = map (^. atom_Coordinates) atoms
     atomsInUnitCell =
       [ (\(ax, ay, az) ->
           (ax / bx) >= 0 && (ax / bx) <= 1.0 &&

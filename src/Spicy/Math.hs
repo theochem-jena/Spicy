@@ -14,11 +14,6 @@ also handles conversion from "R3Vec" to hMatrix's "Vector" type
 
     * lowest level region has index 0 and contains the complete system
 -}
-
-{-
-This module defines basic algebraic operations used throughout the program. It
-also handles conversion from "R3Vec" to hMatrix's "Vector" type
--}
 module Spicy.Math
 ( (∩)
 , r3Vec2hmVec
