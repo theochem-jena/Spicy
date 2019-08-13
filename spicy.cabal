@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9e151984e2471a208a3b4410f76aaaa7f3436ff6b7c297d958c51f50ea81308e
+-- hash: fbe9b7d1783133b0a5034dd7a9ddb92d5858fd8efdc8316082eac93577f80f4d
 
 name:           spicy
 version:        0.0.0.1
@@ -68,25 +68,29 @@ library
       Paths_spicy
   hs-source-dirs:
       src
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults
   build-depends:
-      array >=0.5.2.0
+      accelerate >=1.3.0.0 && <=1.4.0.0
+    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
+    , accelerate-io >=1.3.0.0 && <=1.4.0.0
+    , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
+    , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
+    , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
-    , hmatrix >=0.18.0.0
+    , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
-    , repa >=3.4.1.4
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
-    , vector >=0.12.0.2
+    , vector >=0.12.0.0
   default-language: Haskell2010
 
 executable benchmarks-exe
@@ -95,9 +99,14 @@ executable benchmarks-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
   build-depends:
-      array >=0.5.2.0
+      accelerate >=1.3.0.0 && <=1.4.0.0
+    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
+    , accelerate-io >=1.3.0.0 && <=1.4.0.0
+    , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
+    , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
+    , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -105,17 +114,16 @@ executable benchmarks-exe
     , criterion >=1.4.1.0
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
-    , hmatrix >=0.18.0.0
+    , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
-    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
-    , vector >=0.12.0.2
+    , vector >=0.12.0.0
   default-language: Haskell2010
 
 executable spicy
@@ -124,26 +132,30 @@ executable spicy
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
   build-depends:
-      array >=0.5.2.0
+      accelerate >=1.3.0.0 && <=1.4.0.0
+    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
+    , accelerate-io >=1.3.0.0 && <=1.4.0.0
+    , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
+    , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
+    , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
-    , hmatrix >=0.18.0.0
+    , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
-    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
-    , vector >=0.12.0.2
+    , vector >=0.12.0.0
   default-language: Haskell2010
 
 executable unittests-exe
@@ -152,21 +164,25 @@ executable unittests-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
   build-depends:
-      array >=0.5.2.0
+      accelerate >=1.3.0.0 && <=1.4.0.0
+    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
+    , accelerate-io >=1.3.0.0 && <=1.4.0.0
+    , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
+    , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
+    , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
-    , hmatrix >=0.18.0.0
+    , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
-    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , tasty >=0.11.3
@@ -174,7 +190,7 @@ executable unittests-exe
     , tasty-hunit
     , text >=1.2.2.0
     , utf8-string >=1.0.1
-    , vector >=0.12.0.2
+    , vector >=0.12.0.0
   default-language: Haskell2010
 
 test-suite unittests
@@ -184,21 +200,25 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
   build-depends:
-      array >=0.5.2.0
+      accelerate >=1.3.0.0 && <=1.4.0.0
+    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
+    , accelerate-io >=1.3.0.0 && <=1.4.0.0
+    , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
+    , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
+    , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
     , containers >=0.5.7.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
-    , hmatrix >=0.18.0.0
+    , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
-    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , tasty >=0.11.3
@@ -206,7 +226,7 @@ test-suite unittests
     , tasty-hunit
     , text >=1.2.2.0
     , utf8-string >=1.0.1
-    , vector >=0.12.0.2
+    , vector >=0.12.0.0
   default-language: Haskell2010
 
 benchmark benchmarks
@@ -216,9 +236,14 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -optP-Wno-nonportable-include-path -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
   build-depends:
-      array >=0.5.2.0
+      accelerate >=1.3.0.0 && <=1.4.0.0
+    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
+    , accelerate-io >=1.3.0.0 && <=1.4.0.0
+    , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
+    , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
+    , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -226,15 +251,14 @@ benchmark benchmarks
     , criterion >=1.4.1.0
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
-    , hmatrix >=0.18.0.0
+    , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
-    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
-    , vector >=0.12.0.2
+    , vector >=0.12.0.0
   default-language: Haskell2010

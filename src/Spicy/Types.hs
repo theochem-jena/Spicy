@@ -20,8 +20,6 @@ module Spicy.Types
   Element(..)
 , AtomLabel
 , FFType
-, Vector
-, Matrix
 , Atom(..)
 , atom_Element
 , atom_Label
@@ -107,10 +105,10 @@ module Spicy.Types
 , methods_qc_CAS
 ) where
 import           Control.DeepSeq
-import           Data.Array.Repa             (Array, DIM0, DIM1, DIM2, U, Z)
-import           Data.Array.Repa.Repr.Vector (V)
-import           Data.IntSet                 (IntSet)
-import           GHC.Generics                (Generic)
+import           Data.Array.Accelerate (Matrix, Vector)
+import           Data.IntSet           (IntSet)
+import qualified Data.Vector           as V
+import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import           Text.Printf
 
@@ -162,16 +160,6 @@ on the MM software used.
 type FFType = String
 
 {-|
-A vector in REPA.
--}
-type Vector = Array U DIM1
-
-{-|
-A matrix in REPA.
--}
-type Matrix = Array U DIM2
-
-{-|
 An Atom in a 'Molecule'.
 -}
 data Atom = Atom
@@ -198,12 +186,12 @@ makeLenses ''Atom
 A molecule (might be the whole system or just an ONIOM layer) and all associated informations.
 -}
 data Molecule = Molecule
-  { _molecule_Label    :: String                 -- ^ Comment or identifier of a molecule. Can be
-                                                 --   empty.
-  , _molecule_Atoms    :: [Atom]                 -- ^ A list of Atoms.
-  , _molecule_Energy   :: Maybe Double           -- ^ An energy, that might have been calculated.
-  , _molecule_Gradient :: Maybe (Vector Double)  -- ^ A gradient, that might have been calculated.
-  , _molecule_Hessian  :: Maybe (Matrix Double)  -- ^ A hessian, that might have been calculated.
+  { _molecule_Label    :: String                -- ^ Comment or identifier of a molecule. Can be
+                                                --   empty.
+  , _molecule_Atoms    :: V.Vector Atom         -- ^ A 'V.Vector' of Atoms.
+  , _molecule_Energy   :: Maybe Double          -- ^ An energy, that might have been calculated.
+  , _molecule_Gradient :: Maybe (Vector Double) -- ^ A gradient, that might have been calculated.
+  , _molecule_Hessian  :: Maybe (Matrix Double) -- ^ A hessian, that might have been calculated.
   } deriving (Eq, Generic)
 makeLenses ''Molecule
 
@@ -217,7 +205,7 @@ type LayerMolecule = (Int, Molecule)
 {-|
 Trajectories are simply a vector of 'Molecule's.
 -}
-type Trajectory = Array V DIM1 Molecule
+type Trajectory = V.Vector Molecule
 
 {-|
 A fragment is just a 'Molecule' somehow (from user side) distinguished by properties.
@@ -225,12 +213,12 @@ A fragment is just a 'Molecule' somehow (from user side) distinguished by proper
 type Fragment = Molecule
 
 {-|
-A supermolecule, which is the whole system (first), and then a 'Vector' of 'Fragment's, treated as
+A supermolecule, which is the whole system (first), and then a 'V.Vector' of 'Fragment's, treated as
 separate 'Molecule's. The whole supermolecule containts all 'Atom's and all bonds, but is optional,
 as the structure can be completely defined using the 'Fragment's. The supermolecule on the other
 hand side is suposed to store the results of a calculation (energy, gradient, ...).
 -}
-type SuperMolecule = (Molecule, Array V DIM1 Fragment)
+type SuperMolecule = (Molecule, V.Vector Fragment)
 
 
 ----------------------------------------------------------------------------------------------------

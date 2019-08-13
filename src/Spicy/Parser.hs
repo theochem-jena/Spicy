@@ -19,14 +19,15 @@ module Spicy.Parser
 , parseHMatrix
 ) where
 import           Control.Applicative
+import qualified Data.Array.Repa             as R
+import qualified Data.Array.Repa.Eval        as R
 import           Data.Attoparsec.Text.Lazy
-import qualified Data.IntSet               as I
+import qualified Data.IntSet                 as I
 import           Data.Maybe
-import qualified Data.Text                 as TS
-import qualified Data.Text.Lazy            as T
+import qualified Data.Text                   as TS
+import qualified Data.Text.Lazy              as T
 import           Data.Tuple
 import           Lens.Micro.Platform
-import           Numeric.LinearAlgebra     hiding (double, rows)
 import           Spicy.MolWriter
 import           Spicy.Types
 
@@ -50,7 +51,7 @@ parseXYZ = do
   atoms <- count nAtoms xyzLineParser
   return Molecule
     { _molecule_Label    = comment
-    , _molecule_Atoms    = atoms
+    , _molecule_Atoms    = R.fromList (R.Z R.:. (length atoms)) atoms
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -73,7 +74,7 @@ parseXYZ = do
         , _atom_IsPseudo     = False
         , _atom_FFType       = ""
         , _atom_PCharge      = Nothing
-        , _atom_Coordinates  = (x, y, z)
+        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
         , _atom_Connectivity = I.empty
         }
 
@@ -90,7 +91,7 @@ parseTXYZ = do
   atoms <- many1 txyzLineParser
   return Molecule
     { _molecule_Label    = comment
-    , _molecule_Atoms    = atoms
+    , _molecule_Atoms    = R.fromList (R.Z R.:. (length atoms :: Int)) atoms
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -122,7 +123,7 @@ parseTXYZ = do
               Nothing -> ""
               Just x' -> show x'
         , _atom_PCharge      = Nothing
-        , _atom_Coordinates  = (x, y, z)
+        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
         , _atom_Connectivity = I.fromList $ map (+ (-1)) connectivityRaw
         }
     columnDecimal :: Parser Int
@@ -148,7 +149,7 @@ parseMOL2 = do
         ]
   return Molecule
     { _molecule_Label    = label
-    , _molecule_Atoms    = updatedAtoms
+    , _molecule_Atoms    = R.fromList (R.Z R.:. (length updatedAtoms :: Int)) updatedAtoms
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -206,7 +207,7 @@ parseMOL2 = do
             , _atom_IsPseudo     = False
             , _atom_FFType       = ffType
             , _atom_PCharge      = Just partialCharge
-            , _atom_Coordinates  = (x, y, z)
+            , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) [x, y, z]
             , _atom_Connectivity = I.empty
             }
     bondParser :: Int -> Parser [[Int]]
@@ -261,7 +262,7 @@ parseSpicy = do
   mAtoms <- many1 parseAtoms
   return Molecule
     { _molecule_Label    = TS.unpack mLabel
-    , _molecule_Atoms    = mAtoms
+    , _molecule_Atoms    = R.fromList (R.Z R.:. length mAtoms) mAtoms
     , _molecule_Energy   = mEnergy
     , _molecule_Gradient = mGradient
     , _molecule_Hessian  = mHessian
@@ -279,7 +280,7 @@ parseSpicy = do
         skipSpace
         gVal <- double
         return gVal
-      return $ fromList gradient
+      return $ R.fromListUnboxed (R.Z R.:. (length gradient)) gradient
     parseHessian = do
       _ <- manyTill anyChar (string "Hessian / a.u.:")
       skipSpace
@@ -328,7 +329,7 @@ parseSpicy = do
         , _atom_IsPseudo     = if pseudo == 'P' then True else False
         , _atom_FFType       = T.unpack . T.strip . T.pack $ ffType
         , _atom_PCharge      = pCharge
-        , _atom_Coordinates  = (\[x, y, z] -> (x, y, z)) coordVec
+        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) coordVec
         , _atom_Connectivity = I.fromList connectivity
         }
 
@@ -355,7 +356,8 @@ parseHMatrix = do
       skipSpace
       return singleRow
   _ <- char ']'
-  return $ fromRows . map fromList $ rows
+  --return $ fromRows . map fromList $ rows
+  return $ R.fromListUnboxed (R.Z R.:. dimX R.:. dimY) . concat $ rows
   where
     parseElement :: Parser Double
     parseElement = do

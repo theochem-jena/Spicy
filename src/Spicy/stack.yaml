@@ -11,11 +11,13 @@
 # resolver: lts-3.5
 # resolver: nightly-2015-09-21
 # resolver: ghc-7.10.2
-# resolver: ghcjs-0.1.0_ghc-7.10.2
-# resolver:
-#  name: custom-snapshot
-#  location: "./custom-snapshot.yaml"
-resolver: lts-13.26
+#
+# The location of a snapshot can be provided as a file or url. Stack assumes
+# a snapshot provided as a file might change, whereas a url resource does not.
+#
+# resolver: ./custom-snapshot.yaml
+# resolver: https://example.com/snapshots/2018-01-01.yaml
+resolver: lts-12.26
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -27,55 +29,43 @@ resolver: lts-13.26
 #    git: https://github.com/commercialhaskell/stack.git
 #    commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 # - location: https://github.com/commercialhaskell/stack/commit/e7b331f14bcffb8367cd58fbfc8b40ec7642100a
-#   extra-dep: true
 #  subdirs:
 #  - auto-update
 #  - wai
-#
-# A package marked 'extra-dep: true' will only be built if demanded by a
-# non-dependency (i.e. a user package), and its test suites and benchmarks
-# will not be run. This is useful for tweaking upstream packages.
 packages:
-- .
+  - .
+
 # Dependency packages to be pulled from upstream that are not in the resolver
+# using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
 extra-deps:
-  # Accelerate
-  - github: tmcdonell/accelerate
-    commit: 27a13986d4fc87eaea853b8517475e19bd11fc94
-
-  - github: tmcdonell/accelerate-llvm
-    commit: 5e2decb4a80bf4b60a4fa6018fc172d66764b7d2
-    subdirs:
-      - accelerate-llvm
-      - accelerate-llvm-native
-      - accelerate-llvm-ptx
-
-  # Lens-Accelerate
-  - git:    https://github.com/tmcdonell/lens-accelerate.git
-    commit: b74eb8098735b1ad6cff3c5655af03d3f29b9f8e
-
-  # Accelerate BLAS and LAPACK
-  - git:    https://github.com/tmcdonell/accelerate-blas.git
-    commit: d6c6d0e0d3b882fcadc8e0565e5d6325c1b1c71c
-
-  # Accelerate-IO
-  - git:    https://github.com/AccelerateHS/accelerate-io
-    commit: b909e3e225fff5f6eadeddc8668ef65677b19f9f
-    subdirs:
-      - accelerate-io
-      - accelerate-io-vector
-
-  - hedgehog-1.0
-  - llvm-hs-8.0.0
-  - llvm-hs-pure-8.0.0
-  - tasty-hedgehog-1.0.0.1
+  - accelerate-1.2.0.1
+  - llvm-hs-6.0.0
+  - llvm-hs-pure-6.0.0
+  - accelerate-llvm-1.2.0.0
+  - accelerate-llvm-native-1.2.0.0
+  - accelerate-llvm-ptx-1.2.0.0
+  - accelerate-blas-0.2.0.0
+  - accelerate-fft-1.2.0.0
+  - cufft-0.9.0.1
+  - lens-accelerate-0.2.0.0
+  - tasty-hedgehog-0.2.0.0
+  - cuda-0.9.0.3
+  - cublas-0.5.0.0
+  - nvvm-0.8.0.3
 
 # Override default flag values for local packages and extra-deps
 flags:
+  llvm-hs:
+    shared-llvm: true
   accelerate-blas:
-   llvm-ptx: false
-   llvm-cpu: true
+    llvm-ptx: true
+    llvm-cpu: false
+  accelerate-fft:
+    llvm-ptx: true
+    llvm-cpu: false
+  accelerate-llvm-ptx:
+    nvvm: false
 
 # Extra package databases containing global packages
 # extra-package-dbs: []
@@ -85,15 +75,24 @@ flags:
 #
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
-# require-stack-version: ">=1.6"
+# require-stack-version: ">=1.9"
 #
 # Override the architecture used by stack, especially useful on Windows
 # arch: i386
 # arch: x86_64
 #
 # Extra directories used by stack for building
-# extra-include-dirs: [/path/to/dir]
-# extra-lib-dirs: [/path/to/dir]
+extra-include-dirs:
+  [/usr/local/cuda/include
+  , /data/software/llvm/6.0.1/include
+  ]
+extra-lib-dirs:
+  [/usr/local/cuda-10.0/lib64
+  , /data/software/llvm/6.0.1/lib
+  , /usr/local/cuda-10.0/nvvm/lib64
+  , /usr/local/cuda-10.0/targets/x86_64-linux/lib
+  , .
+  ]
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor

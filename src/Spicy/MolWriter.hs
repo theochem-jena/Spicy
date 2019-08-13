@@ -11,6 +11,7 @@ A module which converts the internal Molecule representation to a string, which 
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
+{-# LANGUAGE TypeOperators #-}
 module Spicy.MolWriter
 ( writeXYZ
 , writeTXYZ
@@ -18,15 +19,30 @@ module Spicy.MolWriter
 , writeSpicy
 , Molecule(..)
 ) where
-import qualified Data.Array.Repa             as R
-import qualified Data.IntSet                 as I
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.LLVM.Native as A
+import qualified Data.Array.Accelerate.IO.Data.Vector.Generic as A
+import qualified Data.IntSet                       as I
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
+import           Data.Text.Lazy                    (Text)
+import qualified Data.Text.Lazy                    as T
 import           Data.Tuple
+import qualified Data.Vector                       as V
 import           Lens.Micro.Platform
 import           Spicy.Types
 import           Text.Printf
+import Spicy.Math
+
+indexAtomCoordinates :: A.Vector Double -> (A.Scalar Double, A.Scalar Double, A.Scalar Double)
+indexAtomCoordinates c =
+  ( A.runQ $ A.unit $ c A.!! 0
+  , A.runQ $ A.unit $ c A.!! 1
+  , A.runQ $ A.unit $ c A.!! 2
+  )
+  where
+    getElemFromIndex
 
 {-|
 Write a .xyz file from a molecule.
@@ -36,14 +52,19 @@ writeXYZ mol =
   show nAtoms ++ "\n" ++
   comment ++ "\n" ++
   concat
-    ( map ( \a -> printf "%-4s    "   (show (a ^. atom_Element)) ++
-                  printf "%12.8F    " (a ^. atom_Coordinates . _1) ++
-                  printf "%12.8F    " (a ^. atom_Coordinates . _2) ++
-                  printf "%12.8F\n"   (a ^. atom_Coordinates . _3)
-          ) (mol ^.  molecule_Atoms)
+    ( map ( \a ->
+        printf "%-4s    "   (show (a ^. atom_Element)) ++
+        (\(x, y, z) -> printf "%12.8F    %12.8F    %12.8F\n" x y z)
+          (indexAtomCoordinates $ a ^. atom_Coordinates)
+        {-
+        printf "%12.8F    " ((a ^. atom_Coordinates) ! (A.Z A.:. 0)) ++
+        printf "%12.8F    " ((a ^. atom_Coordinates) ! (A.Z A.:. 1)) ++
+        printf "%12.8F\n"   ((a ^. atom_Coordinates) ! (A.Z A.:. 2))
+        -}
+      ) $ V.toList (mol ^.  molecule_Atoms)
     )
   where
-    nAtoms = length (mol ^. molecule_Atoms)
+    nAtoms = V.length $ mol ^. molecule_Atoms
     comment = mol ^. molecule_Label
 
 {-|
@@ -56,28 +77,26 @@ writeTXYZ :: Molecule -> String
 writeTXYZ mol =
   show nAtoms ++ "  " ++ comment ++ "\n" ++
   concat
-    ( map (\(n, a) -> printf "%-6d  "         n ++
-                      printf "%-4s    "       (show (a ^. atom_Element)) ++
-                      printf "%12.8F    "     (a ^. atom_Coordinates . _1) ++
-                      printf "%12.8F    "     (a ^. atom_Coordinates . _2) ++
-                      printf "%12.8F        " (a ^. atom_Coordinates . _3) ++
-                      printf "%6s      "
-                        (if a ^. atom_FFType == ""
-                          then "0"
-                          else a ^. atom_FFType
-                        ) ++
-                      concat
-                        ( map (printf "%6d  " . (+ 1)) (I.toList $ a ^. atom_Connectivity)
-                        ) ++ "\n"
-          ) numberedAtoms
+    ( map (\(n, a) ->
+        printf "%-6d  "         n ++
+        printf "%-4s    "       (show (a ^. atom_Element)) ++
+        (\(x, y, z) -> printf "%12.8F    %12.8F    %12.8F        " x y z)
+          (indexAtomCoordinates $ a ^. atom_Coordinates) ++
+        printf "%6s      "
+          (if a ^. atom_FFType == ""
+            then "0"
+            else a ^. atom_FFType
+          ) ++
+        concat
+          ( map (printf "%6d  " . (+ 1)) (I.toList $ a ^. atom_Connectivity)
+          ) ++ "\n"
+      ) $ V.toList numberedAtoms
     )
-
   where
-    nAtoms = length (mol ^. molecule_Atoms)
+    nAtoms = V.length $ mol ^. molecule_Atoms
     comment = head . lines $ mol ^. molecule_Label
     atoms = mol ^. molecule_Atoms
-    atomIndexList = [ 1 .. length atoms ]
-    numberedAtoms = zip atomIndexList atoms
+    numberedAtoms = V.generate nAtoms (\i -> (i, atoms V.! i))
 
 {-|
 Write a simplified .mol2 file (Tripos SYBYL) from a 'Molecule', containing the atoms, connectivities
@@ -96,22 +115,22 @@ writeMOL2 mol =
 
   "@<TRIPOS>ATOM" ++ "\n" ++
   concat
-    ( map (\(n, a) -> printf "%6d    " n ++
-                      printf "%-4s    " (show $ a ^. atom_Element) ++
-                      printf "%12.8F    " (a ^. atom_Coordinates . _1) ++
-                      printf "%12.8F    " (a ^. atom_Coordinates . _2) ++
-                      printf "%12.8F        " (a ^. atom_Coordinates . _3) ++
-                      printf "%-8s    "
-                        (if a ^. atom_FFType == ""
-                           then show (a ^. atom_Element) ++
-                                "." ++
-                                show (length . I.toList $ a ^. atom_Connectivity)
-                           else a ^. atom_FFType
-                        ) ++
-                      printf "%2d    " (1 :: Int) ++
-                      printf "%4s    " "UNL1" ++
-                      printf "%12.8F\n" (fromMaybe 0.0 $ a ^. atom_PCharge)
-          ) numberedAtoms
+    ( map (\(n, a) ->
+        printf "%6d    "        n ++
+        printf "%-4s    "       (show $ a ^. atom_Element) ++
+        (\(x, y, z) -> printf "%12.8F    %12.8F    %12.8F        " x y z)
+          (indexAtomCoordinates $ a ^. atom_Coordinates) ++
+        printf "%-8s    "
+          (if a ^. atom_FFType == ""
+             then show (a ^. atom_Element) ++
+                  "." ++
+                  show (length . I.toList $ a ^. atom_Connectivity)
+             else a ^. atom_FFType
+          ) ++
+        printf "%2d    " (1 :: Int) ++
+        printf "%4s    " "UNL1" ++
+        printf "%12.8F\n" (fromMaybe 0.0 $ a ^. atom_PCharge)
+      ) numberedAtoms
     ) ++ "\n" ++
     "@<TRIPOS>BOND" ++ "\n" ++
     concat
@@ -123,10 +142,9 @@ writeMOL2 mol =
       )
   where
     atoms = mol ^. molecule_Atoms
-    atomIndexList = [ 1 .. nAtoms ]
-    numberedAtoms = zip atomIndexList atoms
-    nAtoms = length atoms
-    bonds = map (I.toList . (^. atom_Connectivity)) atoms
+    nAtoms = V.length atoms
+    numberedAtoms = V.generate nAtoms (\i -> (i, atoms V.! i))
+    bonds = map (I.toList . (^. atom_Connectivity)) $ V.toList atoms
     pairBondsRedundant =
       concat
       [ map (\a -> (i + 1, a + 1)) (bonds !! i)
@@ -139,7 +157,7 @@ writeMOL2 mol =
             ) pairBondsRedundant pairBondsRedundant
     nBonds = length pairBonds
     bondIndexList = [ 1 .. nBonds]
-    numberedBonds = zip bondIndexList pairBonds
+    numberedBonds = V.generate nBonds (\i -> (i, pairBonds !! i))
 
 {-|
 Write Spicy format, which is a custom format (not stable yet), containing all informations, that are
@@ -162,7 +180,7 @@ writeSpicy m =
     Nothing -> ""
     Just g ->
       "  Gradient / Hartee/Bohr:\n" ++
-      (concat . map ("  " ++) . map writeSafeListToLine . chunksOf 3 . R.toList $ g)
+      (concat . map ("  " ++) . map writeSafeListToLine . chunksOf 3 . V.toList $ g)
       --( concat . map ((++ "\n") . ("    " ++) . show) . chunksOf 3 . toList $ g )
   ++
   case hessian of
@@ -184,13 +202,11 @@ writeSpicy m =
                 Nothing -> "No"
                 Just c  -> printf "%8.5f" c
             ) ++
-          printf "  %16.10f  %16.10f  %16.10f  "
-            (a ^. atom_Coordinates ^. _1)
-            (a ^. atom_Coordinates ^. _2)
-            (a ^. atom_Coordinates ^. _3) ++
+          (\(x, y, z) -> printf "  %16.10f  %16.10f  %16.10f  " x y z)
+            (indexAtomCoordinates $ a ^. atom_Coordinates) ++
           (concat . map (printf "  %6d  ") . I.toList $ a ^. atom_Connectivity) ++
           "\n"
-      ) $ atoms
+      ) $ V.toList atoms
     )
   where
     atoms = m ^. molecule_Atoms
