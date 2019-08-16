@@ -15,102 +15,14 @@ computations on molecules in different software packages.
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Spicy.Types
-( -- * Molecule Types
-  -- $moleculeTypes
-  Element(..)
-, AtomLabel
-, FFType
-, Atom(..)
-, atom_Element
-, atom_Label
-, atom_IsPseudo
-, atom_FFType
-, atom_PCharge
-, atom_Coordinates
-, atom_Connectivity
-, Molecule(..)
-, LayerMolecule
-, Trajectory
-, Fragment
-, SuperMolecule
-, molecule_Label
-, molecule_Atoms
-, molecule_Energy
-, molecule_Gradient
-, molecule_Hessian
-  -- * Computational Chemistry Types
-  -- $compChemTypes
-, Task(..)
-, Software(..)
-, Basis(..)
-, Charge
-, Multiplicity
-, RefWF(..)
-, DType(..)
-, Efficiency(..)
-, has_Gradient
-, has_SolventGradient
-, has_Hessian
-, has_SolventHessian
-, SE_Method(..)
-, HF_Approx(..)
-, DFT_Functional(..)
-, DFT_Approx(..)
-, MP_Order(..)
-, MP_Flavour(..)
-, MP_Approx(..)
-, CC_Order(..)
-, CC_Flavour(..)
-, CC_Approx(..)
-, CAS_Space(..)
-, cas_Space_nElec
-, cas_Space_Orbs
-, CAS_Roots
-, CAS_Weights
-, CAS_Approx(..)
-, QC_SE(..)
-, se_method
-, se_ref
-, se_efficiency
-, QC_HF(..)
-, hf_approx
-, hf_ref
-, hf_efficiency
-, QC_DFT(..)
-, dft_functional
-, dft_ref
-, dft_approx
-, dft_efficiency
-, QC_MPN(..)
-, mpn_flavour
-, mpn_order
-, mpn_approx
-, mpn_ref
-, mpn_efficiency
-, QC_CC(..)
-, cc_order
-, cc_flavour
-, cc_ref
-, cc_approx
-, cc_efficiency
-, QC_CAS(..)
-, cas_approx
-, cas_efficiency
-, Methods(..)
-, methods_qc_SE
-, methods_qc_HF
-, methods_qc_DFT
-, methods_qc_MPN
-, methods_qc_CC
-, methods_qc_CAS
-) where
+where
 import           Control.DeepSeq
 import           Data.Array.Accelerate (Matrix, Vector)
-import           Data.IntSet           (IntSet)
 import qualified Data.Vector           as V
 import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import           Text.Printf
+import Data.IntMap.Lazy (IntMap)
 
 
 {-|
@@ -173,12 +85,6 @@ data Atom = Atom
   , _atom_PCharge      :: Maybe Double  -- ^ Possibly a partial charge.
   , _atom_Coordinates  :: Vector Double -- ^ Coordinates of the atom, cartesian in R³. Relies on the
                                         --   parser to fill with exactly 3 values.
-  , _atom_Connectivity :: IntSet        -- ^ A set of other 'Atom' this one binds to (in the sense
-                                        --   of force fields). This is absolutely meaningless for a
-                                        --   single atom, but this is set here and not in the
-                                        --   'Molecule' layer, because this makes handling with most
-                                        --   MM softwares and chemical formats easier (tinker,
-                                        --   mol2, PDB).
   } deriving (Eq, Generic, Show)
 makeLenses ''Atom
 
@@ -189,6 +95,9 @@ data Molecule = Molecule
   { _molecule_Label    :: String                -- ^ Comment or identifier of a molecule. Can be
                                                 --   empty.
   , _molecule_Atoms    :: V.Vector Atom         -- ^ A 'V.Vector' of Atoms.
+  , _molecule_Bonds    :: IntMap Int            -- ^ An IntMap, mapping the index of an 'Atom' in
+                                                --   the 'Molecule' to the indices of all 'Atom's,
+                                                --   to which it binds.
   , _molecule_Energy   :: Maybe Double          -- ^ An energy, that might have been calculated.
   , _molecule_Gradient :: Maybe (Vector Double) -- ^ A gradient, that might have been calculated.
   , _molecule_Hessian  :: Maybe (Matrix Double) -- ^ A hessian, that might have been calculated.
@@ -227,7 +136,7 @@ Data types to describe the calculation niveau. They are hierarchically organised
 everything, so that Spicy is fully aware of the calculation niveau. This has the advantage, that
 users basically do not need to know the input of a specific program to perform a Spicy calculation.
 -}
-
+{-
 {-|
 Define commonon tasks for quantum chemistry software.
 -}
@@ -542,7 +451,7 @@ instance Show MP_Order where
   show MP_N2_5 = "2.5"
   show MP_N3   = "3"
   show MP_N4   = "4"
-  show MP_N5   = "6"
+  show MP_N5   = "5"
 
 {-|
 The type of the Møller-Plesset calculation.
@@ -734,3 +643,4 @@ data Methods = Methods
   , _methods_qc_CAS :: [QC_CAS] -- ^ CASSCF.
   } deriving (Eq, Show)
 makeLenses ''Methods
+-}

@@ -6,11 +6,18 @@ author:              "Phillip Seeber"
 maintainer:          "phillip.seeber@uni-jena.de"
 copyright:           "2019 Phillip Seeber"
 
+build-type: Custom
+custom-setup:
+  dependencies:
+    - base
+    - Cabal
+    - accelerate-llvm-native
+
 extra-source-files:
   - README.md
   - LICENSE
   - goldentests/input/*
-  - goldentests/output/*
+  #- goldentests/output/*
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -57,9 +64,11 @@ ghc-options:
 
 library:
   source-dirs: src
-  default-exentsions:
+  default-extensions:
     - TypeOperators
     - TemplateHaskell
+  ghc-options:
+    - -fplugin=Data.Array.Accelerate.LLVM.Native.Plugin
 
 executables:
   spicy:

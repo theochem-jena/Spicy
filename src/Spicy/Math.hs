@@ -18,12 +18,12 @@ also handles conversion from "R3Vec" to hMatrix's "Vector" type
 module Spicy.Math
 ( (∩)
 ) where
-import           Data.List
-import qualified Data.Array.Accelerate as A
-import qualified Data.Array.Accelerate.LLVM.Native as A
+import qualified Data.Array.Accelerate                       as A
+import qualified Data.Array.Accelerate.LLVM.Native           as A
 import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
-
-import           Spicy.Types
+import           Data.List
+--import           Spicy.MathHelper
+--import           Spicy.Types
 
 {-
 (<!!>) :: (A.Shape sh, A.Elt e) => A.Array sh e -> Int -> e
@@ -95,3 +95,6 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
     p1Normal = r3VecNormalVecOfPlane3Points (a, b, c)
     p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
 -}
+
+-- vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
+-- vectorProduct = $( A.runQ vectorProduct' )

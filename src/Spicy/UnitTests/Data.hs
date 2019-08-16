@@ -20,11 +20,13 @@ module Spicy.UnitTests.Data
 , testHFeCNxH2OMOL2
 , testHFeCNxH2OSpicy
 ) where
-import qualified Data.IntSet           as I
 import           Data.Text.Lazy        (Text)
+import Data.IntMap.Lazy (IntMap)
+import qualified Data.Array.Accelerate                       as A
+import qualified Data.IntMap.Lazy as I
 import qualified Data.Text.Lazy        as T
 import           Lens.Micro.Platform
-import           Numeric.LinearAlgebra
+import qualified Data.Vector           as V
 import           Spicy.Types
 
 ----------------------------------------------------------------------------------------------------
@@ -36,7 +38,8 @@ Empty molecule.
 moleculeEmpty :: Molecule
 moleculeEmpty = Molecule
   { _molecule_Label = ""
-  , _molecule_Atoms = []
+  , _molecule_Atoms = V.empty
+  , _molecule_Bonds = I.empty
   , _molecule_Energy = Nothing
   , _molecule_Gradient = Nothing
   , _molecule_Hessian = Nothing
@@ -53,8 +56,7 @@ atomC0 = Atom
   , _atom_IsPseudo = False
   , _atom_FFType = "6"
   , _atom_PCharge = Just 0.5
-  , _atom_Coordinates = ( 0.000960, -0.001240, 0.281420)
-  , _atom_Connectivity = I.fromList [1, 2]
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [0.000960, -0.001240, 0.281420]
   }
 
 atomN1 :: Atom
@@ -64,8 +66,7 @@ atomN1 = Atom
   , _atom_IsPseudo = False
   , _atom_FFType = "7"
   , _atom_PCharge = Just (-0.5)
-  , _atom_Coordinates = ( 0.000960, -0.001240,-0.875780)
-  , _atom_Connectivity = I.fromList [0]
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [0.000960, -0.001240,-0.875780]
   }
 
 atomFe2 :: Atom
@@ -75,8 +76,7 @@ atomFe2 = Atom
   , _atom_IsPseudo = False
   , _atom_FFType = "26"
   , _atom_PCharge = Just 1.4
-  , _atom_Coordinates = ( 0.000450, -0.000610, 2.307300)
-  , _atom_Connectivity = I.fromList [0, 3]
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [0.000450, -0.000610, 2.307300]
   }
 
 atomH3 :: Atom
@@ -86,8 +86,7 @@ atomH3 = Atom
   , _atom_IsPseudo = True
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.4
-  , _atom_Coordinates = (-0.002370,  0.003010, 4.869300)
-  , _atom_Connectivity = I.fromList [2]
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [0.002370,  0.003010, 4.869300]
   }
 
 atomO4 :: Atom
@@ -97,8 +96,7 @@ atomO4 = Atom
   , _atom_IsPseudo = False
   , _atom_FFType = "8"
   , _atom_PCharge = Just (-0.8)
-  , _atom_Coordinates = ( 2.059230, -2.830320, 3.280180)
-  , _atom_Connectivity = I.fromList [5]
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [2.059230, -2.830320, 3.280180]
   }
 
 atomH5 :: Atom
@@ -108,8 +106,7 @@ atomH5 = Atom
   , _atom_IsPseudo = False
   , _atom_FFType = "1"
   , _atom_PCharge = Nothing
-  , _atom_Coordinates = ( 2.096560, -2.818240, 2.290710)
-  , _atom_Connectivity = I.fromList [4]
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [2.096560, -2.818240, 2.290710]
   }
 
 atomH6 :: Atom
@@ -119,8 +116,7 @@ atomH6 = Atom
   , _atom_IsPseudo = True
   , _atom_FFType = "1"
   , _atom_PCharge = Just 0.4
-  , _atom_Coordinates = ( 2.708520, -2.137580, 3.561450)
-  , _atom_Connectivity = I.empty
+  , _atom_Coordinates = A.fromList (A.Z A.:. 3) [2.708520, -2.137580, 3.561450]
   }
 
 {-|
@@ -129,7 +125,7 @@ Test 'Molecule' with all information a 'Molecule' could have.
 moleculeHFeCNxH2O :: Molecule
 moleculeHFeCNxH2O = Molecule
   { _molecule_Label = "HFe(CN)xH2O"
-  , _molecule_Atoms =
+  , _molecule_Atoms = V.fromList
       [ atomC0
       , atomN1
       , atomFe2
@@ -139,8 +135,8 @@ moleculeHFeCNxH2O = Molecule
       , atomH6
       ]
   , _molecule_Energy = Just (-1000.0)
-  , _molecule_Gradient = Just $ fromList . map fromInteger $ [1 .. 21]
-  , _molecule_Hessian = Just $ diagRect 21.0 (fromList [1.0 .. 6.0]) 6 6
+  , _molecule_Gradient = Just $ A.fromList (A.Z A.:. 21) . map fromInteger $ [1 .. 21]
+  , _molecule_Hessian = Just $ A.fromList (A.Z A.:. 21 A.:. 21) . map fromInteger $ [1 .. 441]
   }
 
 {-|
@@ -154,7 +150,7 @@ moleculeHFeCNxH2OTXYZ = moleculeHFeCNxH2O
   & molecule_Hessian .~ Nothing
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
-    newAtoms = map
+    newAtoms = V.map
       ( (& atom_Label .~ "")
       . (& atom_PCharge .~ Nothing)
       . (& atom_IsPseudo .~ False)
@@ -171,10 +167,9 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
   & molecule_Hessian .~ Nothing
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
-    newAtoms = map
+    newAtoms = V.map
       ( (& atom_Label .~ "")
       . (& atom_FFType .~ "")
-      . (& atom_Connectivity .~ I.empty)
       . (& atom_PCharge .~ Nothing)
       . (& atom_IsPseudo .~ False)
       ) oldAtoms
@@ -191,10 +186,10 @@ moleculeHFeCNxH2OMOL2 = moleculeHFeCNxH2O
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
     newFFTypes =
-      [ "C.1", "N.pl3", "Fe", "H", "O.3", "H", "H" ]
+      V.fromList [ "C.1", "N.pl3", "Fe", "H", "O.3", "H", "H" ]
     newAtoms'' =
-      zipWith (\a ft -> a & atom_FFType .~ ft) oldAtoms newFFTypes
-    newAtoms' = map
+      V.zipWith (\a ft -> a & atom_FFType .~ ft) oldAtoms newFFTypes
+    newAtoms' = V.map
       ( (& atom_IsPseudo .~ False)
       ) newAtoms''
     newAtoms = newAtoms' & (ix 5 . atom_PCharge) .~ Just 0.5

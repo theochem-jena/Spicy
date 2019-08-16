@@ -19,8 +19,6 @@ module Spicy.Parser
 , parseHMatrix
 ) where
 import           Control.Applicative
-import qualified Data.Array.Repa             as R
-import qualified Data.Array.Repa.Eval        as R
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.IntSet                 as I
 import           Data.Maybe
@@ -30,6 +28,7 @@ import           Data.Tuple
 import           Lens.Micro.Platform
 import           Spicy.MolWriter
 import           Spicy.Types
+import qualified Data.Array.Accelerate                       as A
 
 
 {-|
@@ -43,7 +42,7 @@ maybeOption p = option Nothing (Just <$> p)
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
-parseXYZ = do
+parseXYZ = undefined {-do
   skipSpace
   nAtoms <- decimal
   skipSpace
@@ -75,15 +74,15 @@ parseXYZ = do
         , _atom_FFType       = ""
         , _atom_PCharge      = Nothing
         , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
-        , _atom_Connectivity = I.empty
         }
+-}
 
 {-|
 Parse a .txyz file (Tinkers xyz format). It has coordinates and might have connectivity and atom
 types.
 -}
 parseTXYZ :: Parser Molecule
-parseTXYZ = do
+parseTXYZ = undefined {-do
   skipSpace
   nAtoms <- decimal
   _ <- many' (char ' ' <|> char '\t')
@@ -132,6 +131,7 @@ parseTXYZ = do
       i <- decimal
       _ <- many' (char ' ' <|> char '\t')
       return i
+-}
 
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
@@ -139,7 +139,7 @@ connectivity. There is no special understanding for the atom types, that are ava
 files. They will simply be treated as the force field string.
 -}
 parseMOL2 :: Parser Molecule
-parseMOL2 = do
+parseMOL2 = undefined {- do
   (label, nAtoms, nBonds) <- moleculeParser
   atoms <- atomParser
   bonds <- bondParser nAtoms
@@ -236,13 +236,14 @@ parseMOL2 = do
           _ <- many' (char ' ' <|> char '\t')
           endOfLine
           return (originAtom - 1, targetAtom - 1)
+-}
 
 {-|
 Parser for the Spicy format used in this program. Represents fully all informations stored in the
 'Molecule' type.
 -}
 parseSpicy :: Parser Molecule
-parseSpicy = do
+parseSpicy = undefined {- do
   _ <- string "#Spicy-Format v0.2"
   endOfLine
   skipSpace
@@ -332,14 +333,14 @@ parseSpicy = do
         , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) coordVec
         , _atom_Connectivity = I.fromList connectivity
         }
-
+-}
 
 ----------------------------------------------------------------------------------------------------
 {-|
 Parse the "show" instance output for HMatrix' matrix Type, including the dimension infos
 -}
-parseHMatrix :: Parser (Matrix Double)
-parseHMatrix = do
+parseHMatrix :: Parser (A.Matrix Double)
+parseHMatrix = undefined {- do
   skipSpace
   _ <- char '('
   dimX <- decimal
@@ -369,3 +370,4 @@ parseHMatrix = do
       _ <- option ',' (char ',')
       _ <- many' (char ' ' <|> char '\t')
       return element
+-}

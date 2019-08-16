@@ -33,22 +33,13 @@ import qualified Data.Vector                       as V
 import           Lens.Micro.Platform
 import           Spicy.Types
 import           Text.Printf
-import Spicy.Math
-
-indexAtomCoordinates :: A.Vector Double -> (A.Scalar Double, A.Scalar Double, A.Scalar Double)
-indexAtomCoordinates c =
-  ( A.runQ $ A.unit $ c A.!! 0
-  , A.runQ $ A.unit $ c A.!! 1
-  , A.runQ $ A.unit $ c A.!! 2
-  )
-  where
-    getElemFromIndex
 
 {-|
 Write a .xyz file from a molecule.
 -}
 writeXYZ :: Molecule -> String
-writeXYZ mol =
+writeXYZ mol = undefined
+{-
   show nAtoms ++ "\n" ++
   comment ++ "\n" ++
   concat
@@ -66,6 +57,7 @@ writeXYZ mol =
   where
     nAtoms = V.length $ mol ^. molecule_Atoms
     comment = mol ^. molecule_Label
+-}
 
 {-|
 Write a .txyz (Tinkers xyz format) from a 'Molecule'. The writer trusts the '_atom_FFType' to be
@@ -74,7 +66,8 @@ be written. If they are not set, the writer will simply equalise all atom types 
 for visualisation but obviously not for MM.
 -}
 writeTXYZ :: Molecule -> String
-writeTXYZ mol =
+writeTXYZ mol = undefined
+{-
   show nAtoms ++ "  " ++ comment ++ "\n" ++
   concat
     ( map (\(n, a) ->
@@ -97,6 +90,7 @@ writeTXYZ mol =
     comment = head . lines $ mol ^. molecule_Label
     atoms = mol ^. molecule_Atoms
     numberedAtoms = V.generate nAtoms (\i -> (i, atoms V.! i))
+-}
 
 {-|
 Write a simplified .mol2 file (Tripos SYBYL) from a 'Molecule', containing the atoms, connectivities
@@ -106,7 +100,8 @@ files that have correct topology and geometry, but visualisation programs wont b
 correct elements.
 -}
 writeMOL2 :: Molecule -> String
-writeMOL2 mol =
+writeMOL2 mol = undefined
+{-
   "@<TRIPOS>MOLECULE" ++ "\n" ++
   mol ^. molecule_Label ++ "\n" ++
   show nAtoms ++ " " ++ show nBonds ++ " 0 0 0" ++ "\n" ++
@@ -158,13 +153,15 @@ writeMOL2 mol =
     nBonds = length pairBonds
     bondIndexList = [ 1 .. nBonds]
     numberedBonds = V.generate nBonds (\i -> (i, pairBonds !! i))
+-}
 
 {-|
 Write Spicy format, which is a custom format (not stable yet), containing all informations, that are
 internally used to represent a molecule.
 -}
 writeSpicy :: Molecule -> String
-writeSpicy m =
+writeSpicy m = undefined
+{-
   "#Spicy-Format v0.2\n" ++
   "\n" ++
   "#Spicy-Molecule\n" ++
@@ -219,3 +216,4 @@ writeSpicy m =
     writeSafeListToLine (x:xs) =
       printf "  %8.5f  " x ++
       writeSafeListToLine xs
+-}
