@@ -22,7 +22,7 @@ import qualified Data.Array.Accelerate                       as A
 import qualified Data.Array.Accelerate.LLVM.Native           as A
 import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
 import           Data.List
---import           Spicy.MathHelper
+import           Spicy.MathHelper
 --import           Spicy.Types
 
 {-
@@ -96,5 +96,5 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
     p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
 -}
 
--- vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
--- vectorProduct = $( A.runQ vectorProduct' )
+vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
+vectorProduct = $( A.runQ vectorProduct' )

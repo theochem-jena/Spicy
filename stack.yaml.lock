@@ -5,67 +5,67 @@
 
 packages:
 - completed:
-    size: 439256
-    url: https://github.com/tmcdonell/accelerate/archive/27a13986d4fc87eaea853b8517475e19bd11fc94.tar.gz
+    size: 441067
+    url: https://github.com/tmcdonell/accelerate/archive/1010d97f8cc8cbecff28200cf6e176455769c644.tar.gz
     cabal-file:
-      size: 19886
-      sha256: 8493e1e0086449bd9ff65c46994cb803e750be6d6d8c70e9fb9cfbf455d38369
+      size: 20000
+      sha256: f7c3770f2069a2e498b1f02fb221f3b127940cc9053825c82c986da200fcec10
     name: accelerate
     version: 1.3.0.0
-    sha256: 491217950708df097b9aed75b3a6bcd8f2843a1ce383f8770a1b38f8e7dddf69
+    sha256: b62ea5fa4b5eada466f2333d8eacda359bfe331dc2a836ceeb24f3a9aca2d987
     pantry-tree:
-      size: 13239
-      sha256: e8576424eb1295c3b2ec22873a8d8ca2764ceb181d0ab99a23758991393c3ecc
+      size: 13309
+      sha256: 0f68dac4329f4a7612deabd5c607dd852573cec7177d45f27718991b345d30de
   original:
-    url: https://github.com/tmcdonell/accelerate/archive/27a13986d4fc87eaea853b8517475e19bd11fc94.tar.gz
+    url: https://github.com/tmcdonell/accelerate/archive/1010d97f8cc8cbecff28200cf6e176455769c644.tar.gz
 - completed:
-    size: 263209
+    size: 263139
     subdir: accelerate-llvm
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/5e2decb4a80bf4b60a4fa6018fc172d66764b7d2.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
     cabal-file:
       size: 5983
       sha256: 37156026a7faa14865e5b20798e1966b587ea47208dc9d7e3ee4cb695ad7e844
     name: accelerate-llvm
     version: 1.3.0.0
-    sha256: 4217536d907c7bdcc9070c96932da58be84eb486198c8cae5dfa83ae51cd7c9d
+    sha256: 9d641763cd2049f449ef711920783d2dc5865ffbcef177008500f8e160b4a09f
     pantry-tree:
       size: 5454
-      sha256: b56c8a513bef2972403738b84c2cdf0db36c67b2127131e18a752fbb75e98390
+      sha256: a6b0d5aea254254aebaaa7229898c46faf99b9495aa0d47336c99e1e708dbc99
   original:
     subdir: accelerate-llvm
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/5e2decb4a80bf4b60a4fa6018fc172d66764b7d2.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
 - completed:
-    size: 263209
+    size: 263139
     subdir: accelerate-llvm-native
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/5e2decb4a80bf4b60a4fa6018fc172d66764b7d2.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
     cabal-file:
-      size: 6620
-      sha256: 9312b33facd568e6689adb2d97c0304055f654bb190e7083435aea3853cb883c
+      size: 6317
+      sha256: 9d6ec705a29a568d7c74855bfcd3a83bf7a1fb3d7a37e875ed88d0d91ce48b4a
     name: accelerate-llvm-native
     version: 1.3.0.0
-    sha256: 4217536d907c7bdcc9070c96932da58be84eb486198c8cae5dfa83ae51cd7c9d
+    sha256: 9d641763cd2049f449ef711920783d2dc5865ffbcef177008500f8e160b4a09f
     pantry-tree:
-      size: 4711
-      sha256: 041a55585d23b522e9cad7173d8874497abbbd9c9e4e3cebbcea06cfab242903
+      size: 4693
+      sha256: 85f9e2a615f857b188fbc07bf10083ff47d51c757147a24f50293f7a172b9bf8
   original:
     subdir: accelerate-llvm-native
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/5e2decb4a80bf4b60a4fa6018fc172d66764b7d2.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
 - completed:
-    size: 263209
+    size: 263139
     subdir: accelerate-llvm-ptx
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/5e2decb4a80bf4b60a4fa6018fc172d66764b7d2.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
     cabal-file:
       size: 6641
       sha256: c3da24f7a3dc2cadd48b6a1e8b70689e63fd1ce05bf0a4caca5c22e27fff7bea
     name: accelerate-llvm-ptx
     version: 1.3.0.0
-    sha256: 4217536d907c7bdcc9070c96932da58be84eb486198c8cae5dfa83ae51cd7c9d
+    sha256: 9d641763cd2049f449ef711920783d2dc5865ffbcef177008500f8e160b4a09f
     pantry-tree:
       size: 4775
-      sha256: a568ca7be113a3aecef1091c9b12b7f5036baeda8ac49c732fbf2931da03fcfe
+      sha256: f262e3da46e51eb2e439f2fdf830e656981c6e5c5269b7593966f6cd1dd4d7a0
   original:
     subdir: accelerate-llvm-ptx
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/5e2decb4a80bf4b60a4fa6018fc172d66764b7d2.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
 - completed:
     cabal-file:
       size: 1422
