@@ -4,7 +4,7 @@ cabal-version: 1.24
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d13803f55a672a9458166a3dec4dc94965882b11d6d28638cfed70ed24ab020a
+-- hash: 7642bb926d9bd937416ac7151f4bd2c12508006b6194067608a28dd9dd41a510
 
 name:           spicy
 version:        0.0.0.1
@@ -58,7 +58,7 @@ library
   hs-source-dirs:
       src
   default-extensions: TypeOperators TemplateHaskell
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -fplugin=Data.Array.Accelerate.LLVM.Native.Plugin
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -fplugin=Data.Array.Accelerate.LLVM.Native.Plugin -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -89,7 +89,7 @@ executable benchmarks-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -122,7 +122,7 @@ executable spicy
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -154,7 +154,7 @@ executable unittests-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -190,7 +190,7 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -226,7 +226,7 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa"
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
