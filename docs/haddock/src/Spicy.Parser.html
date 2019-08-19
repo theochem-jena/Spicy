@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Spicy.Parser
+Description : Parsers for chemical data formats and computational chemistry output files.
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
+-}</span><span>
+</span><a name="line-11"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><a name="line-12"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Spicy.Parser</span><span>
+</span><a name="line-13"></a><span class="hs-special">(</span><span> </span><span class="hs-comment">-- * Chemical Data Formats</span><span>
+</span><a name="line-14"></a><span>  </span><a href="Spicy.Parser.html#parseXYZ"><span class="hs-identifier hs-var">parseXYZ</span></a><span>
+</span><a name="line-15"></a><span class="hs-special">,</span><span> </span><a href="Spicy.Parser.html#parseTXYZ"><span class="hs-identifier hs-var">parseTXYZ</span></a><span>
+</span><a name="line-16"></a><span class="hs-special">,</span><span> </span><a href="Spicy.Parser.html#parseMOL2"><span class="hs-identifier hs-var">parseMOL2</span></a><span>
+</span><a name="line-17"></a><span class="hs-special">,</span><span> </span><a href="Spicy.Parser.html#parseSpicy"><span class="hs-identifier hs-var">parseSpicy</span></a><span>
+</span><a name="line-18"></a><span class="hs-comment">-- * Generic formats</span><span>
+</span><a name="line-19"></a><span class="hs-special">,</span><span> </span><a href="Spicy.Parser.html#parseHMatrix"><span class="hs-identifier hs-var">parseHMatrix</span></a><span>
+</span><a name="line-20"></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-21"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Control.Applicative</span><span>
+</span><a name="line-22"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data.Attoparsec.Text.Lazy</span><span>
+</span><a name="line-23"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.IntSet</span><span>                 </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">I</span><span>
+</span><a name="line-24"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data.Maybe</span><span>
+</span><a name="line-25"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.Text</span><span>                   </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">TS</span><span>
+</span><a name="line-26"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.Text.Lazy</span><span>              </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">T</span><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data.Tuple</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Lens.Micro.Platform</span><span>
+</span><a name="line-29"></a><span class="hs-keyword">import</span><span>           </span><a href="Spicy.MolWriter.html"><span class="hs-identifier">Spicy.MolWriter</span></a><span>
+</span><a name="line-30"></a><span class="hs-keyword">import</span><span>           </span><a href="Spicy.Types.html"><span class="hs-identifier">Spicy.Types</span></a><span>
+</span><a name="line-31"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.Array.Accelerate</span><span>                       </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">A</span><span>
+</span><a name="line-32"></a><span>
+</span><a name="line-33"></a><span>
+</span><a name="line-34"></a><span class="hs-comment">{-|
+Make a parser optional and wrap it in a 'Maybe'.
+-}</span><span>
+</span><a name="line-37"></a><span class="hs-identifier">maybeOption</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><a href="#local-6989586621679283965"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Maybe</span><span> </span><a href="#local-6989586621679283965"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span>
+</span><a name="line-38"></a><a name="maybeOption"><a href="Spicy.Parser.html#maybeOption"><span class="hs-identifier">maybeOption</span></a></a><span> </span><a name="local-6989586621679283966"><a href="#local-6989586621679283966"><span class="hs-identifier">p</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">option</span><span> </span><span class="hs-identifier hs-var">Nothing</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Just</span><span> </span><span class="hs-operator hs-var">&lt;$&gt;</span><span> </span><a href="#local-6989586621679283966"><span class="hs-identifier hs-var">p</span></a><span class="hs-special">)</span><span>
+</span><a name="line-39"></a><span>
+</span><a name="line-40"></a><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><a name="line-41"></a><span class="hs-comment">{-|
+Parse a .xyz file (has no connectivity, atom types or partioal charges).
+-}</span><span>
+</span><a name="line-44"></a><span class="hs-identifier">parseXYZ</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>
+</span><a name="line-45"></a><a name="parseXYZ"><a href="Spicy.Parser.html#parseXYZ"><span class="hs-identifier">parseXYZ</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span> </span><span class="hs-comment">{-do
+  skipSpace
+  nAtoms &lt;- decimal
+  skipSpace
+  comment &lt;- manyTill anyChar endOfLine
+  atoms &lt;- count nAtoms xyzLineParser
+  return Molecule
+    { _molecule_Label    = comment
+    , _molecule_Atoms    = R.fromList (R.Z R.:. (length atoms)) atoms
+    , _molecule_Energy   = Nothing
+    , _molecule_Gradient = Nothing
+    , _molecule_Hessian  = Nothing
+    }
+  where
+    xyzLineParser :: Parser Atom
+    xyzLineParser = do
+      skipSpace
+      cElement &lt;- many1 letter
+      skipSpace
+      x &lt;- double
+      skipSpace
+      y &lt;- double
+      skipSpace
+      z &lt;- double
+      skipSpace
+      return Atom
+        { _atom_Element      = read cElement
+        , _atom_Label        = &quot;&quot;
+        , _atom_IsPseudo     = False
+        , _atom_FFType       = &quot;&quot;
+        , _atom_PCharge      = Nothing
+        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
+        }
+-}</span><span>
+</span><a name="line-79"></a><span>
+</span><a name="line-80"></a><span class="hs-comment">{-|
+Parse a .txyz file (Tinkers xyz format). It has coordinates and might have connectivity and atom
+types.
+-}</span><span>
+</span><a name="line-84"></a><span class="hs-identifier">parseTXYZ</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>
+</span><a name="line-85"></a><a name="parseTXYZ"><a href="Spicy.Parser.html#parseTXYZ"><span class="hs-identifier">parseTXYZ</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span> </span><span class="hs-comment">{-do
+  skipSpace
+  nAtoms &lt;- decimal
+  _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+  comment &lt;- manyTill anyChar endOfLine
+  atoms &lt;- many1 txyzLineParser
+  return Molecule
+    { _molecule_Label    = comment
+    , _molecule_Atoms    = R.fromList (R.Z R.:. (length atoms :: Int)) atoms
+    , _molecule_Energy   = Nothing
+    , _molecule_Gradient = Nothing
+    , _molecule_Hessian  = Nothing
+    }
+  where
+    txyzLineParser :: Parser Atom
+    txyzLineParser = do
+      skipSpace
+      _ &lt;- decimal
+      skipSpace
+      cElement &lt;- many1 letter
+      skipSpace
+      x &lt;- double
+      skipSpace
+      y &lt;- double
+      skipSpace
+      z &lt;- double
+      skipSpace
+      mFFType &lt;- maybeOption decimal
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      connectivityRaw &lt;- many' columnDecimal
+      endOfLine
+      return Atom
+        { _atom_Element      = read cElement
+        , _atom_Label        = &quot;&quot;
+        , _atom_IsPseudo     = False
+        , _atom_FFType       =
+            case mFFType of
+              Nothing -&gt; &quot;&quot;
+              Just x' -&gt; show x'
+        , _atom_PCharge      = Nothing
+        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
+        , _atom_Connectivity = I.fromList $ map (+ (-1)) connectivityRaw
+        }
+    columnDecimal :: Parser Int
+    columnDecimal = do
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      i &lt;- decimal
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      return i
+-}</span><span>
+</span><a name="line-135"></a><span>
+</span><a name="line-136"></a><span class="hs-comment">{-|
+Parse the &quot;interesting&quot; fields of a MOL2 file. This contains partial charges as well as
+connectivity. There is no special understanding for the atom types, that are available in MOL2
+files. They will simply be treated as the force field string.
+-}</span><span>
+</span><a name="line-141"></a><span class="hs-identifier">parseMOL2</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>
+</span><a name="line-142"></a><a name="parseMOL2"><a href="Spicy.Parser.html#parseMOL2"><span class="hs-identifier">parseMOL2</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span> </span><span class="hs-comment">{- do
+  (label, nAtoms, nBonds) &lt;- moleculeParser
+  atoms &lt;- atomParser
+  bonds &lt;- bondParser nAtoms
+  let updatedAtoms =
+        [ (atoms !! i) &amp; atom_Connectivity .~ I.fromList (bonds !! i)
+        | i &lt;- [ 0 .. length atoms - 1 ]
+        ]
+  return Molecule
+    { _molecule_Label    = label
+    , _molecule_Atoms    = R.fromList (R.Z R.:. (length updatedAtoms :: Int)) updatedAtoms
+    , _molecule_Energy   = Nothing
+    , _molecule_Gradient = Nothing
+    , _molecule_Hessian  = Nothing
+    }
+  where
+    moleculeParser :: Parser (String, Int, Int)
+    moleculeParser = do
+      _ &lt;- manyTill anyChar (string &quot;@&lt;TRIPOS&gt;MOLECULE&quot;)
+      endOfLine
+      label &lt;- manyTill anyChar endOfLine
+      skipSpace
+      nAtoms &lt;- decimal
+      _ &lt;- many1 $ char ' '
+      nBonds &lt;- decimal
+      _ &lt;- manyTill anyChar endOfLine
+      return (label, nAtoms, nBonds)
+    atomParser :: Parser [Atom]
+    atomParser = do
+      _ &lt;- manyTill anyChar (string &quot;@&lt;TRIPOS&gt;ATOM&quot;)
+      endOfLine
+      atoms &lt;- many1 atomLineParser
+      return atoms
+      where
+        atomLineParser :: Parser Atom
+        atomLineParser = do
+          skipSpace
+          _ &lt;- decimal
+          skipSpace
+          label &lt;- manyTill anyChar (char ' ' &lt;|&gt; char '\t')
+          skipSpace
+          x &lt;- double
+          skipSpace
+          y &lt;- double
+          skipSpace
+          z &lt;- double
+          skipSpace
+          cElement &lt;- many1 letter
+          ffDot &lt;- maybeOption $ char '.'
+          ffType2 &lt;- maybeOption $ manyTill anyChar (char ' ' &lt;|&gt; char '\t')
+          skipSpace
+          nSubstructure &lt;- decimal
+          skipSpace
+          nameSubstructure &lt;- manyTill anyChar (char ' ' &lt;|&gt; char '\t')
+          skipSpace
+          partialCharge &lt;- double
+          _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+          endOfLine
+          let ffType =
+                if isNothing ffDot || isNothing ffType2
+                  then cElement
+                  else cElement ++ &quot;.&quot; ++ fromJust ffType2
+          return Atom
+            { _atom_Element      = read cElement
+            , _atom_Label        = label
+            , _atom_IsPseudo     = False
+            , _atom_FFType       = ffType
+            , _atom_PCharge      = Just partialCharge
+            , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) [x, y, z]
+            , _atom_Connectivity = I.empty
+            }
+    bondParser :: Int -&gt; Parser [[Int]]
+    bondParser nAtoms = do
+      _ &lt;- manyTill anyChar (string &quot;@&lt;TRIPOS&gt;BOND&quot;)
+      endOfLine
+      rawBonds &lt;- many1 bondLineParser
+      let rawBondsSwaped = map swap rawBonds
+          rawBondsComplete = rawBonds ++ rawBondsSwaped
+          sortedBonds =
+            [ foldr (\(o, t) acc -&gt; if o == i then t : acc else acc) [] rawBondsComplete
+            | i &lt;- [ 0 .. nAtoms - 1]
+            ]
+      return sortedBonds
+      where
+        bondLineParser :: Parser (Int, Int)
+        bondLineParser = do
+          skipSpace
+          _ &lt;- decimal
+          skipSpace
+          originAtom &lt;- decimal
+          skipSpace
+          targetAtom &lt;- decimal
+          skipSpace
+          _ &lt;- (show &lt;$&gt; decimal) &lt;|&gt; many1 letter
+          _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+          endOfLine
+          return (originAtom - 1, targetAtom - 1)
+-}</span><span>
+</span><a name="line-240"></a><span>
+</span><a name="line-241"></a><span class="hs-comment">{-|
+Parser for the Spicy format used in this program. Represents fully all informations stored in the
+'Molecule' type.
+-}</span><span>
+</span><a name="line-245"></a><span class="hs-identifier">parseSpicy</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>
+</span><a name="line-246"></a><a name="parseSpicy"><a href="Spicy.Parser.html#parseSpicy"><span class="hs-identifier">parseSpicy</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span> </span><span class="hs-comment">{- do
+  _ &lt;- string &quot;#Spicy-Format v0.2&quot;
+  endOfLine
+  skipSpace
+  _ &lt;- string &quot;#Spicy-Molecule&quot;
+  endOfLine
+  _ &lt;- string &quot;  Label:&quot;
+  endOfLine
+  _ &lt;- string &quot;    &quot;
+  mLabel &lt;- takeTill isEndOfLine
+  skipSpace
+  mEnergy &lt;- maybeOption parseEnergy
+  mGradient &lt;- maybeOption parseGradient
+  mHessian &lt;- maybeOption parseHessian
+  skipSpace
+  _ &lt;- string &quot;#Spicy-Atoms&quot;
+  skipSpace
+  mAtoms &lt;- many1 parseAtoms
+  return Molecule
+    { _molecule_Label    = TS.unpack mLabel
+    , _molecule_Atoms    = R.fromList (R.Z R.:. length mAtoms) mAtoms
+    , _molecule_Energy   = mEnergy
+    , _molecule_Gradient = mGradient
+    , _molecule_Hessian  = mHessian
+    }
+  where
+    parseEnergy = do
+      _ &lt;- manyTill anyChar (string &quot;Energy / Hartree:&quot;)
+      skipSpace
+      energy &lt;- double
+      return energy
+    parseGradient = do
+      _ &lt;- manyTill anyChar (string &quot;Gradient / Hartee/Bohr:&quot;)
+      skipSpace
+      gradient &lt;- many1 $ do
+        skipSpace
+        gVal &lt;- double
+        return gVal
+      return $ R.fromListUnboxed (R.Z R.:. (length gradient)) gradient
+    parseHessian = do
+      _ &lt;- manyTill anyChar (string &quot;Hessian / a.u.:&quot;)
+      skipSpace
+      hessian &lt;- parseHMatrix
+      return hessian
+    parseAtoms = do
+      -- indendation
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      -- chemical element
+      cElement &lt;- many1 letter
+      --
+      _ &lt;- count 4 (char ' ')
+      -- label of the atom
+      label &lt;- count 6 anyChar
+
+      --
+      _ &lt;- count 4 (char ' ')
+      -- pseudo label
+      pseudo &lt;- anyChar
+      --
+      _ &lt;- count 4 (char ' ')
+      -- FFType
+      ffType &lt;- count 6 anyChar
+      pChargeTest &lt;- maybeOption $ do
+        skipSpace
+        (string &quot;No&quot;)
+      pCharge &lt;- if pChargeTest == Nothing
+        then Just &lt;$&gt; do
+          _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+          double
+        else return Nothing
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      coordVec &lt;- count 3 $ do
+        coordComponent &lt;- double
+        _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+        return coordComponent
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      connectivity &lt;- many' $ do
+        conAtom &lt;- decimal
+        _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+        return conAtom
+      endOfLine
+      return Atom
+        { _atom_Element      = read cElement
+        , _atom_Label        = T.unpack . T.strip . T.pack $ label
+        , _atom_IsPseudo     = if pseudo == 'P' then True else False
+        , _atom_FFType       = T.unpack . T.strip . T.pack $ ffType
+        , _atom_PCharge      = pCharge
+        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) coordVec
+        , _atom_Connectivity = I.fromList connectivity
+        }
+-}</span><span>
+</span><a name="line-337"></a><span>
+</span><a name="line-338"></a><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><a name="line-339"></a><span class="hs-comment">{-|
+Parse the &quot;show&quot; instance output for HMatrix' matrix Type, including the dimension infos
+-}</span><span>
+</span><a name="line-342"></a><span class="hs-identifier">parseHMatrix</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Parser</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">A.Matrix</span><span> </span><span class="hs-identifier hs-type">Double</span><span class="hs-special">)</span><span>
+</span><a name="line-343"></a><a name="parseHMatrix"><a href="Spicy.Parser.html#parseHMatrix"><span class="hs-identifier">parseHMatrix</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span> </span><span class="hs-comment">{- do
+  skipSpace
+  _ &lt;- char '('
+  dimX &lt;- decimal
+  _ &lt;- char '&gt;'
+  _ &lt;- char '&lt;'
+  dimY &lt;- decimal
+  _ &lt;- char ')'
+  skipSpace
+  _ &lt;- char '['
+  _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+  rows &lt;- do
+    count dimX $ do
+      singleRow &lt;- count dimY parseElement
+      skipSpace
+      return singleRow
+  _ &lt;- char ']'
+  --return $ fromRows . map fromList $ rows
+  return $ R.fromListUnboxed (R.Z R.:. dimX R.:. dimY) . concat $ rows
+  where
+    parseElement :: Parser Double
+    parseElement = do
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      _ &lt;- option ',' (char ',')
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      element &lt;- double
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      _ &lt;- option ',' (char ',')
+      _ &lt;- many' (char ' ' &lt;|&gt; char '\t')
+      return element
+-}</span><span>
+</span><a name="line-374"></a></pre></body></html>
