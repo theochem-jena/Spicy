@@ -7,23 +7,21 @@ Maintainer  : phillip.seeber@uni-jena.de
 Stability   : experimental
 Portability : POSIX, Windows
 
-This module defines basic algebraic operations used throughout the program. It
-also handles conversion from "R3Vec" to hMatrix's "Vector" type
-
-    * highest level region has highest index
-
-    * lowest level region has index 0 and contains the complete system
+This module defines basic algebraic operations used throughout the program. Numerical heavy and most
+other operations are implemented using Accelerate, to provide parallel operations. Note that all
+'A.runQ' provided functions must be typed without typeclasses but by concrete types.
 -}
 {-# LANGUAGE TemplateHaskell #-}
 module Spicy.Math
 ( (∩)
+, (<.>)
 ) where
 import qualified Data.Array.Accelerate                       as A
 import qualified Data.Array.Accelerate.LLVM.Native           as A
 import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
 import           Data.List
-import           Spicy.MathHelper
---import           Spicy.Types
+import           Spicy.Math.Helper
+import Prelude hiding ((<>))
 
 {-
 (<!!>) :: (A.Shape sh, A.Elt e) => A.Array sh e -> Int -> e
@@ -43,9 +41,36 @@ a ∩ b = a `intersect` b
 {-|
 Dot product of two 'A.Vector's.
 -}
-(<.>) :: A.Numeric a => A.Vector a -> A.Vector a ->  a
-a <.> b = head . A.toList $ (A.runN (A.<.>)) a b
+(<.>) :: A.Vector Double -> A.Vector Double -> Double
+a <.> b = head . A.toList $ vvP' a b
+  where
+    vvP' = $( A.runQ vvP )
 
+{-|
+'A.Matrix' 'A.Vector' product.
+-}
+(#>) :: A.Matrix Double -> A.Vector Double -> A.Vector Double
+m #> v = mvP' m v
+  where
+    mvP' = $( A.runQ mvP )
+
+{-|
+'A.Vector' 'A.Matrix' product.
+-}
+(<#) :: A.Vector Double -> A.Matrix Double -> A.Vector Double
+v <# m = vmP' v m
+  where
+    vmP' = $( A.runQ vmP )
+
+{-|
+'A.Matrix' 'A.Matrix' product.
+-}
+(<>) :: A.Matrix Double -> A.Matrix Double -> A.Matrix Double
+a <> b = mmP' a b
+  where
+    mmP' = $( A.runQ mmP )
+
+{-
 {-|
 Length of a 'A.Vector'.
 -}
@@ -96,5 +121,6 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
     p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
 -}
 
-vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
-vectorProduct = $( A.runQ vectorProduct' )
+-- vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
+-- vectorProduct = $( A.runQ vectorProduct' )
+-}

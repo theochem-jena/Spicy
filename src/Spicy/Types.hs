@@ -23,6 +23,7 @@ import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import           Text.Printf
 import Data.IntMap.Lazy (IntMap)
+import Data.IntSet (IntSet)
 
 
 {-|
@@ -95,7 +96,7 @@ data Molecule = Molecule
   { _molecule_Label    :: String                -- ^ Comment or identifier of a molecule. Can be
                                                 --   empty.
   , _molecule_Atoms    :: V.Vector Atom         -- ^ A 'V.Vector' of Atoms.
-  , _molecule_Bonds    :: IntMap Int            -- ^ An IntMap, mapping the index of an 'Atom' in
+  , _molecule_Bonds    :: IntMap IntSet         -- ^ An IntMap, mapping the index of an 'Atom' in
                                                 --   the 'Molecule' to the indices of all 'Atom's,
                                                 --   to which it binds.
   , _molecule_Energy   :: Maybe Double          -- ^ An energy, that might have been calculated.

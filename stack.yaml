@@ -75,7 +75,7 @@ extra-deps:
 flags:
   accelerate-blas:
    llvm-ptx: false
-   llvm-cpu: true
+   llvm-cpu: false
 
 # Extra package databases containing global packages
 # extra-package-dbs: []

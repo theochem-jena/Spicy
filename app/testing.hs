@@ -16,22 +16,47 @@ import           Spicy.UnitTests.Data
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
+import Spicy.Math
+import qualified Data.Array.Accelerate                       as A
 
-instance Show Molecule where
-  show = writeSpicy
 
+-- instance Show Molecule where
+--   show = writeSpicy
 
 main :: IO ()
-main = return ()
-{-
 main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "All tests"
-  [ testParser
-  , testMolecularSystem
+  [ testAccelerate
+  -- , testParser
+  -- , testMolecularSystem
   ]
 
+----------------------------------------------------------------------------------------------------
+-- Test cases for Accelerate math routines
+{-|
+These test are unit tests for Accelerate parallel computations. They are embedded by TemplateHaskell
+as compiled LLVM code by means of 'A.runQ'. This serves also as a test for a correct build, as the
+system is somewhat sensitive with all its dependencies.
+-}
+testAccelerate :: TestTree
+testAccelerate = testGroup "Accelerate"
+  [ testDotProduct
+  ]
+
+{-|
+Dot product of 2 simple vectors by Accelerate.
+-}
+testDotProduct :: TestTree
+testDotProduct =
+  let vecA = A.fromList (A.Z A.:. 3) [1, 2 ,3]
+      vecB = A.fromList (A.Z A.:. 3) [-7, 8, 9]
+      dotProduct = 36
+  in  testCase "Accelerate Dot Product" $
+        vecA <.> vecB @?= dotProduct
+
+{-
 ----------------------------------------------------------------------------------------------------
 -- Test cases for Parser
 

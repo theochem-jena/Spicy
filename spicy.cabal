@@ -1,10 +1,10 @@
-cabal-version: 1.24
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7642bb926d9bd937416ac7151f4bd2c12508006b6194067608a28dd9dd41a510
+-- hash: d735393ff7337ac6899b82e1f10d7b9b40c7f3f1ddf876842a99cbd4885a6400
 
 name:           spicy
 version:        0.0.0.1
@@ -16,7 +16,7 @@ maintainer:     phillip.seeber@uni-jena.de
 copyright:      2019 Phillip Seeber
 license:        GPL-3
 license-file:   LICENSE
-build-type:     Custom
+build-type:     Simple
 extra-source-files:
     README.md
     LICENSE
@@ -35,17 +35,11 @@ source-repository head
   type: git
   location: https://github.com/sheepforce/Spicy
 
-custom-setup
-  setup-depends:
-      Cabal
-    , accelerate-llvm-native
-    , base
-
 library
   exposed-modules:
       Spicy.Data
       Spicy.Math
-      Spicy.MathHelper
+      Spicy.Math.Helper
       Spicy.MolecularSystem
       Spicy.MolWriter
       Spicy.Parser
@@ -58,7 +52,7 @@ library
   hs-source-dirs:
       src
   default-extensions: TypeOperators TemplateHaskell
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -fplugin=Data.Array.Accelerate.LLVM.Native.Plugin -fllvm
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -190,7 +184,7 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa" -fllvm
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -226,7 +220,7 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N1 -qa" -fllvm
+  ghc-options: -O2 -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts "-with-rtsopts=-N -qa" -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
