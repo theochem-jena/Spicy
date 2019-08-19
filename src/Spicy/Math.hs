@@ -10,6 +10,10 @@ Portability : POSIX, Windows
 This module defines basic algebraic operations used throughout the program. Numerical heavy and most
 other operations are implemented using Accelerate, to provide parallel operations. Note that all
 'A.runQ' provided functions must be typed without typeclasses but by concrete types.
+
+The operations here accept some insecurities (like not checking if both vectors of a dot product
+have equal lenght) and trust the caller.
+
 -}
 {-# LANGUAGE TemplateHaskell, TypeOperators #-}
 module Spicy.Math
