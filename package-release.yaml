@@ -61,8 +61,8 @@ ghc-options:
   - -Wno-type-defaults
   - -threaded
   - -rtsopts
-  - -optl-static
-  - -optl-pthread
+  #- -optl-static
+  #- -optl-pthread
   - -fllvm
 
 library:

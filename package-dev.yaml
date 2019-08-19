@@ -60,8 +60,8 @@ ghc-options:
   - -Wno-type-defaults
   - -threaded
   - -rtsopts
-  - -optl-static
-  - -optl-pthread
+  #- -optl-static
+  #- -optl-pthread
 
 library:
   source-dirs: src

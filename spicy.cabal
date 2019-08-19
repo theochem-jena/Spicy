@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d42506973bc50f4dc30ade9fc3fa362c24a072212dbecfe5f3b7b2f02602e6cc
+-- hash: 9c7408549c4f2a4dfb9b47924d973d2a8c9b351569c860ad3871b2296b54b983
 
 name:           spicy
 version:        0.0.0.1
@@ -52,7 +52,7 @@ library
   hs-source-dirs:
       src
   default-extensions: TypeOperators TemplateHaskell
-  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts -optl-static -optl-pthread
+  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -83,7 +83,7 @@ executable benchmarks-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts -optl-static -optl-pthread
+  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -116,7 +116,7 @@ executable spicy
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts -optl-static -optl-pthread
+  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -148,7 +148,7 @@ executable unittests-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts -optl-static -optl-pthread
+  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -184,7 +184,7 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts -optl-static -optl-pthread
+  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
@@ -220,7 +220,7 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts -optl-static -optl-pthread
+  ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-blas >=0.3.0.0 && <=0.4.0.0
