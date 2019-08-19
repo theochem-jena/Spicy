@@ -16,32 +16,77 @@ module Spicy.Math.Helper
 , vmP
 , mvP
 , mmP
+, vLength
+, vDistance
+, vAngle
+, vCross
 ) where
-import Data.Array.Accelerate
--- import qualified Data.Array.Accelerate.LLVM.Native           as A
-import Data.Array.Accelerate.Numeric.LinearAlgebra
-import Prelude hiding ((<>))
+import           Data.Array.Accelerate                       as A
+import           Data.Array.Accelerate.Numeric.LinearAlgebra as A
+
 
 {-|
-Vector vector dot product.
+'A.Vector' 'A.Vector' dot product.
 -}
-vvP :: Acc (Vector Double) -> Acc (Vector Double) -> Acc (Scalar Double)
-vvP a b = a <.> b
+vvP :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (Scalar Double)
+vvP a b = a A.<.> b
 
 {-|
-Vector matrix product.
+'A.Vector' 'A.Matrix' product.
 -}
-vmP :: Acc (Vector Double) -> Acc (Matrix Double) -> Acc (Vector Double)
-vmP v m = v <# m
+vmP :: A.Acc (A.Vector Double) -> A.Acc (A.Matrix Double) -> A.Acc (A.Vector Double)
+vmP v m = v A.<# m
 
 {-|
-Matrix vector product.
+'A.Matrix' 'A.Vector' product.
 -}
-mvP :: Acc (Matrix Double) -> Acc (Vector Double) -> Acc (Vector Double)
-mvP m v = m #> v
+mvP :: A.Acc (A.Matrix Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Vector Double)
+mvP m v = m A.#> v
 
 {-|
-Matrix matrix product.
+'A.Matrix' 'A.Matrix' product.
 -}
-mmP :: Acc (Matrix Double) -> Acc (Matrix Double) -> Acc (Matrix Double)
-mmP a b = a <> b
+mmP :: A.Acc (A.Matrix Double) -> A.Acc (A.Matrix Double) -> A.Acc (A.Matrix Double)
+mmP a b = a A.<> b
+
+{-|
+Length of a 'A.Vector'.
+-}
+vLength :: A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
+vLength a = A.map sqrt $ a <.> a
+
+{-|
+Distance between 2 'A.Vector's.
+-}
+vDistance :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
+vDistance a b = vLength $ A.zipWith (-) a b
+
+{-|
+Angle in radian between 2 'A.Vector's.
+-}
+vAngle :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
+vAngle a b =
+  let dividend = a A.<.> b
+      divisor  = A.zipWith (*) (vLength a) (vLength b)
+  in  A.map A.acos $ A.zipWith (/) dividend divisor
+
+vCross :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Vector Double)
+vCross a b =
+  let a1 = a A.!! 0
+      a2 = a A.!! 1
+      a3 = a A.!! 2
+      b1 = b A.!! 0
+      b2 = b A.!! 1
+      b3 = b A.!! 2
+      c1 = a2 * b3 - a3 * b2
+      c2 = a3 * b1 - a1 * b3
+      c3 = a1 * b2 - a2 * b1
+  in  A.generate (A.index1 3) (\ix ->
+        let i = A.unindex1 ix
+        in  A.caseof i
+              [ ((\j -> j A.== 0), c1)
+              , ((\j -> j A.== 1), c2)
+              , ((\j -> j A.== 2), c3)
+              ]
+              0
+      )

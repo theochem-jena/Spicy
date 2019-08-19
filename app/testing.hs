@@ -43,10 +43,14 @@ system is somewhat sensitive with all its dependencies.
 testAccelerate :: TestTree
 testAccelerate = testGroup "Accelerate"
   [ testDotProduct
+  , testVLength
+  , testVDistance
+  , testVAngle
+  , testVCross
   ]
 
 {-|
-Dot product of 2 simple vectors by Accelerate.
+Dot product of 2 simple 'A.Vector's by Accelerate.
 -}
 testDotProduct :: TestTree
 testDotProduct =
@@ -55,6 +59,50 @@ testDotProduct =
       dotProduct = 36
   in  testCase "Accelerate Dot Product" $
         vecA <.> vecB @?= dotProduct
+
+{-|
+Length of a 'A.Vector' by Accelerate.
+-}
+testVLength :: TestTree
+testVLength =
+  let vecA = A.fromList (A.Z A.:. 3) [2, 4, 4]
+      len  = 6
+  in  testCase "Accelerate Length" $
+        vLength vecA @?= len
+
+{-|
+Distance between 2 points, represented by 'A.Vector's.
+-}
+testVDistance :: TestTree
+testVDistance =
+  let vecA = A.fromList (A.Z A.:. 3) [0, 0, 10]
+      vecB = A.fromList (A.Z A.:. 3) [0, 0, 0]
+      dist = 10
+  in  testCase "Accelerate Distance" $
+        vDistance vecA vecB @?= dist
+
+{-|
+Anlge between two 'A.Vector's by Accelerate.
+-}
+testVAngle :: TestTree
+testVAngle =
+  let vecA  = A.fromList (A.Z A.:. 3) [0, 0, 1]
+      vecB  = A.fromList (A.Z A.:. 3) [0, 1, 0]
+      angle = 0.5 * pi
+  in  testCase "Accelerate Angle" $
+        vAngle vecA vecB @?= angle
+
+{-|
+Cross product between two 'A.Vector's by Accelerate.
+-}
+testVCross :: TestTree
+testVCross =
+  let vecA = A.fromList (A.Z A.:. 3) [0, 0, 1]
+      vecB = A.fromList (A.Z A.:. 3) [0, 1, 0]
+      vecC = A.fromList (A.Z A.:. 3) [-1, 0, 0]
+  in  testCase "Accelerate Cross Product" $
+        vCross vecA vecB @?= vecC
+
 
 {-
 ----------------------------------------------------------------------------------------------------

@@ -11,16 +11,23 @@ This module defines basic algebraic operations used throughout the program. Nume
 other operations are implemented using Accelerate, to provide parallel operations. Note that all
 'A.runQ' provided functions must be typed without typeclasses but by concrete types.
 -}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, TypeOperators #-}
 module Spicy.Math
 ( (∩)
 , (<.>)
+, (#>)
+, (<#)
+, (<>)
+, vLength
+, vDistance
+, vAngle
+, vCross
 ) where
 import qualified Data.Array.Accelerate                       as A
 import qualified Data.Array.Accelerate.LLVM.Native           as A
 import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
 import           Data.List
-import           Spicy.Math.Helper
+import qualified Spicy.Math.Helper as M
 import Prelude hiding ((<>))
 
 {-
@@ -30,6 +37,7 @@ arr <!!> ix =
       atIx = head . A.toList $ accAtIx
   in  atIx
   -}
+
 
 
 {-|
@@ -42,70 +50,65 @@ a ∩ b = a `intersect` b
 Dot product of two 'A.Vector's.
 -}
 (<.>) :: A.Vector Double -> A.Vector Double -> Double
-a <.> b = head . A.toList $ vvP' a b
+a <.> b = head . A.toList $ vvP a b
   where
-    vvP' = $( A.runQ vvP )
+    vvP = $( A.runQ M.vvP )
 
 {-|
 'A.Matrix' 'A.Vector' product.
 -}
 (#>) :: A.Matrix Double -> A.Vector Double -> A.Vector Double
-m #> v = mvP' m v
+m #> v = mvP m v
   where
-    mvP' = $( A.runQ mvP )
+    mvP = $( A.runQ M.mvP )
 
 {-|
 'A.Vector' 'A.Matrix' product.
 -}
 (<#) :: A.Vector Double -> A.Matrix Double -> A.Vector Double
-v <# m = vmP' v m
+v <# m = vmP v m
   where
-    vmP' = $( A.runQ vmP )
+    vmP = $( A.runQ M.vmP )
 
 {-|
 'A.Matrix' 'A.Matrix' product.
 -}
 (<>) :: A.Matrix Double -> A.Matrix Double -> A.Matrix Double
-a <> b = mmP' a b
+a <> b = mmP a b
   where
-    mmP' = $( A.runQ mmP )
+    mmP = $( A.runQ M.mmP )
 
-{-
 {-|
 Length of a 'A.Vector'.
 -}
-vLength :: (A.Numeric a, Floating a) => A.Vector a -> a
-vLength a = sqrt (a <.> a)
+vLength :: A.Vector Double -> Double
+vLength a = head . A.toList $ vL a
+  where
+    vL = $( A.runQ M.vLength )
 
 {-|
 Distance between 2 points ('A.Vector's).
 -}
--- For Accelerate's fusion, don't call 'vLength' here.
-vDistance :: (A.Numeric a, Floating a) => A.Vector a -> A.Vector a -> a
-vDistance a b = sqrt . head . A.toList $ (A.runN f) a b
+vDistance :: A.Vector Double -> A.Vector Double -> Double
+vDistance a b = head . A.toList $ vD a b
   where
-    f :: (A.Numeric a, Floating a) => A.Acc (A.Vector a) -> A.Acc (A.Vector a) -> A.Acc (A.Scalar a)
-    f v1 v2 = (\x -> x A.<.> x) $ A.zipWith (-) v1 v2
-
+    vD = $( A.runQ M.vDistance )
 
 {-|
-Angle between to 'A.Vector's in radian.
+Angle in radian between 2 'A.Vector's.
 -}
--- For Accelerate's fusion, don't call other 'Spicy.Math' functions here.
 vAngle :: A.Vector Double -> A.Vector Double -> Double
-vAngle a b = head . A.toList $ (A.runN f) a b
+vAngle a b = head . A.toList $ vA a b
   where
-    f :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
-    f x y = A.zipWith (/) (dividend x y) (divisor x y)-- (\x -> x A.<.> x) $ A.zipWith (-) v1 v2
-    --
-    dividend :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
-    dividend x y = x A.<.> y
-    --
-    divisor :: A.Acc (A.Vector Double) -> A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
-    divisor x y = A.zipWith (*) (vLength' x) (vLength' y)
-    --
-    vLength' :: A.Acc (A.Vector Double) -> A.Acc (A.Scalar Double)
-    vLength' x = A.map A.sqrt $ (x A.<.> x)
+    vA = $( A.runQ M.vAngle )
+
+{-|
+3D cross product of 2 'A.Vectors'
+-}
+vCross :: A.Vector Double -> A.Vector Double -> A.Vector Double
+vCross a b = vC' a b
+  where
+    vC' = $( A.runQ M.vCross )
 
 
 {-
@@ -119,8 +122,17 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
   where
     p1Normal = r3VecNormalVecOfPlane3Points (a, b, c)
     p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
--}
 
 -- vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
 -- vectorProduct = $( A.runQ vectorProduct' )
 -}
+
+----------------------------------------------------------------------------------------------------
+-- Helper functions, not to be exported
+{-|
+Dimension of a 'A.Vector'.
+-}
+vDim :: A.Elt a => A.Vector a -> Int
+vDim a =
+  let A.Z A.:. dim = A.arrayShape a
+  in  dim
