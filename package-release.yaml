@@ -61,6 +61,7 @@ ghc-options:
   - -Wno-type-defaults
   #- -optl-static
   #- -optl-pthread
+  - -optlc=-mcpu=haswell
   - -fllvm
 
 library:
