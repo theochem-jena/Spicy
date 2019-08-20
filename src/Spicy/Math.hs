@@ -3,13 +3,13 @@ Module      : Spicy.Math
 Description : Basic mathematical operations
 Copyright   : Phillip Seeber, 2019
 License     : GPL-3
-Maintainer  : phillip.seeber@uni-jena.de
+Maintainer  : phillip.seeber@uni-jenVS.de
 Stability   : experimental
 Portability : POSIX, Windows
 
 This module defines basic algebraic operations used throughout the program. Numerical heavy and most
 other operations are implemented using Accelerate, to provide parallel operations. Note that all
-'A.runQ' provided functions must be typed without typeclasses but by concrete types.
+'VS.runQ' provided functions must be typed without typeclasses but by concrete types.
 
 The operations here accept some insecurities (like not checking if both vectors of a dot product
 have equal lenght) and trust the caller.
@@ -18,9 +18,6 @@ have equal lenght) and trust the caller.
 module Spicy.Math
 ( (∩)
 , (<.>)
-, (#>)
-, (<#)
-, (<>)
 , vLength
 , vDistance
 , vAngle
@@ -32,16 +29,14 @@ import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
 import           Data.List
 import           Prelude                                     hiding ((<>))
 import qualified Spicy.Math.Internal                         as M
-import Control.Parallel.Strategies
-import Control.Parallel
-import Control.DeepSeq (NFData)
-import qualified Data.Vector as V
+import qualified Data.Vector           as VB
+import qualified Data.Vector.Storable  as VS
 
 {-
-(<!!>) :: (A.Shape sh, A.Elt e) => A.Array sh e -> Int -> e
+(<!!>) :: (VS.Shape sh, VS.Elt e) => VS.Array sh e -> Int -> e
 arr <!!> ix =
-  let accAtIx = A.runQ $ A.unit $ arr A.!! ix :: A.Scalar e
-      atIx = head . A.toList $ accAtIx
+  let accAtIx = VS.runQ $ VS.unit $ arr VS.!! ix :: VS.Scalar e
+      atIx = head . VS.toList $ accAtIx
   in  atIx
   -}
 
@@ -54,68 +49,45 @@ Intersection (subset) of two lists a and b.
 a ∩ b = a `intersect` b
 
 {-|
-Dot product of two 'A.Vector's.
+Dot product of two 'VS.Vector's.
 -}
-(<.>) :: A.Vector Double -> A.Vector Double -> Double
-a <.> b = head . A.toList $ vvP a b
-  where
-    vvP = $( A.runQ M.vvP )
+(<.>) :: (VS.Storable a, Num a) => VS.Vector a -> VS.Vector a -> a
+a <.> b = VS.sum $ VS.zipWith (*) a b
 
 {-|
-'A.Matrix' 'A.Vector' product.
+Length of a 'VS.Vector'.
 -}
-(#>) :: A.Matrix Double -> A.Vector Double -> A.Vector Double
-m #> v = mvP m v
-  where
-    mvP = $( A.runQ M.mvP )
+vLength :: (VS.Storable a, Floating a) => VS.Vector a -> a
+vLength a = sqrt $ a <.> a
 
 {-|
-'A.Vector' 'A.Matrix' product.
+Distance between 2 points ('VS.Vector's).
 -}
-(<#) :: A.Vector Double -> A.Matrix Double -> A.Vector Double
-v <# m = vmP v m
-  where
-    vmP = $( A.runQ M.vmP )
+vDistance :: (VS.Storable a, Floating a) => VS.Vector a -> VS.Vector a -> a
+vDistance a b = vLength $ VS.zipWith (-) a b
 
 {-|
-'A.Matrix' 'A.Matrix' product.
+Angle in radian between 2 'VS.Vector's.
 -}
-(<>) :: A.Matrix Double -> A.Matrix Double -> A.Matrix Double
-a <> b = mmP a b
-  where
-    mmP = $( A.runQ M.mmP )
+vAngle :: (VS.Storable a, Floating a) => VS.Vector a -> VS.Vector a -> a
+vAngle a b = acos $ (a <.> b) / ((vLength a) * (vLength b))
 
 {-|
-Length of a 'A.Vector'.
+3D cross product of 2 'VS.Vectors'
 -}
-vLength :: A.Vector Double -> Double
-vLength a = head . A.toList $ vL a
-  where
-    vL = $( A.runQ M.vLength )
+vCross :: VS.Vector Double -> VS.Vector Double -> VS.Vector Double
+vCross a b =
+  let a1 = a VS.! 0
+      a2 = a VS.! 1
+      a3 = a VS.! 2
+      b1 = b VS.! 0
+      b2 = b VS.! 1
+      b3 = b VS.! 2
+      c1 = a2 * b3 - a3 * b2
+      c2 = a3 * b1 - a1 * b3
+      c3 = a1 * b2 - a2 * b1
+  in  VS.fromList [c1, c2, c3]
 
-{-|
-Distance between 2 points ('A.Vector's).
--}
-vDistance :: A.Vector Double -> A.Vector Double -> Double
-vDistance a b = head . A.toList $ vD a b
-  where
-    vD = $( A.runQ M.vDistance )
-
-{-|
-Angle in radian between 2 'A.Vector's.
--}
-vAngle :: A.Vector Double -> A.Vector Double -> Double
-vAngle a b = head . A.toList $ vA a b
-  where
-    vA = $( A.runQ M.vAngle )
-
-{-|
-3D cross product of 2 'A.Vectors'
--}
-vCross :: A.Vector Double -> A.Vector Double -> A.Vector Double
-vCross a b = vC' a b
-  where
-    vC' = $( A.runQ M.vCross )
 
 
 
@@ -136,20 +108,12 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
     p1Normal = r3VecNormalVecOfPlane3Points (a, b, c)
     p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
 
--- vectorProduct :: A.Vector Double -> A.Vector Double -> A.Scalar Double
--- vectorProduct = $( A.runQ vectorProduct' )
+-- vectorProduct :: VS.Vector Double -> VS.Vector Double -> VS.Scalar Double
+-- vectorProduct = $( VS.runQ vectorProduct' )
 -}
 
 ----------------------------------------------------------------------------------------------------
 -- Helper functions, not to be exported
-{-|
-Dimension of a 'A.Vector'.
--}
-vDim :: A.Elt a => A.Vector a -> Int
-vDim a =
-  let A.Z A.:. dim = A.arrayShape a
-  in  dim
-
 
 {-|
 Convert

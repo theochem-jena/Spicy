@@ -58,8 +58,6 @@ ghc-options:
   - -Wno-unused-matches
   - -Wno-unused-top-binds
   - -Wno-type-defaults
-  - -threaded
-  - -rtsopts
   #- -optl-static
   #- -optl-pthread
 
@@ -77,6 +75,7 @@ executables:
       - spicy
     ghc-options:
       - -threaded
+      - -rtsopts
 
   benchmarks-exe:
     main: benchmarks.hs
@@ -86,6 +85,7 @@ executables:
       - criterion >= 1.4.1.0
     ghc-options:
       - -threaded
+      - -rtsopts
 
   unittests-exe:
     main: testing.hs
@@ -97,6 +97,7 @@ executables:
       - tasty-golden >= 2.3.1
     ghc-options:
       - -threaded
+      - -rtsopts
 
 tests:
   unittests:
@@ -109,6 +110,7 @@ tests:
       - tasty-golden >= 2.3.1
     ghc-options:
       - -threaded
+      - -rtsopts
 
 benchmarks:
   benchmarks:
@@ -119,3 +121,4 @@ benchmarks:
       - criterion >= 1.4.1.0
     ghc-options:
       - -threaded
+      - -rtsopts

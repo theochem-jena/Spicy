@@ -4,10 +4,14 @@ parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
 {-# LANGUAGE OverloadedStrings #-}
+import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.ByteString.Lazy.UTF8 as LBS
 import           Data.Maybe
 import qualified Data.Text.Lazy.IO         as T
+import qualified Data.Vector               as VB
+import qualified Data.Vector.Storable      as VS
+import           Spicy.Math
 import           Spicy.MolecularSystem
 import           Spicy.MolWriter
 import           Spicy.Parser
@@ -16,8 +20,6 @@ import           Spicy.UnitTests.Data
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
-import Spicy.Math
-import qualified Data.Array.Accelerate                       as A
 
 
 -- instance Show Molecule where
@@ -28,20 +30,20 @@ main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "All tests"
-  [ testAccelerate
+  [ testMath
   -- , testParser
   -- , testMolecularSystem
   ]
 
 ----------------------------------------------------------------------------------------------------
--- Test cases for Accelerate math routines
+-- Test cases for math routines
 {-|
-These test are unit tests for Accelerate parallel computations. They are embedded by TemplateHaskell
-as compiled LLVM code by means of 'A.runQ'. This serves also as a test for a correct build, as the
-system is somewhat sensitive with all its dependencies.
+These test are unit tests for Math parallel and serial computations. Parallel accelerate
+calculations are embedded by TemplateHaskell as compiled LLVM code by means of 'A.runQ'. This serves
+also as a test for a correct build, as the system is somewhat sensitive with all its dependencies.
 -}
-testAccelerate :: TestTree
-testAccelerate = testGroup "Accelerate"
+testMath :: TestTree
+testMath = testGroup "Math"
   [ testDotProduct
   , testVLength
   , testVDistance
@@ -54,10 +56,10 @@ Dot product of 2 simple 'A.Vector's by Accelerate.
 -}
 testDotProduct :: TestTree
 testDotProduct =
-  let vecA = A.fromList (A.Z A.:. 3) [1, 2 ,3]
-      vecB = A.fromList (A.Z A.:. 3) [-7, 8, 9]
+  let vecA = VS.fromList [1, 2 ,3]  :: VS.Vector Double
+      vecB = VS.fromList [-7, 8, 9] :: VS.Vector Double
       dotProduct = 36
-  in  testCase "Accelerate Dot Product" $
+  in  testCase "Math Dot Product" $
         vecA <.> vecB @?= dotProduct
 
 {-|
@@ -65,9 +67,9 @@ Length of a 'A.Vector' by Accelerate.
 -}
 testVLength :: TestTree
 testVLength =
-  let vecA = A.fromList (A.Z A.:. 3) [2, 4, 4]
+  let vecA = VS.fromList [2, 4, 4] :: VS.Vector Double
       len  = 6
-  in  testCase "Accelerate Length" $
+  in  testCase "Vector Length" $
         vLength vecA @?= len
 
 {-|
@@ -75,10 +77,10 @@ Distance between 2 points, represented by 'A.Vector's.
 -}
 testVDistance :: TestTree
 testVDistance =
-  let vecA = A.fromList (A.Z A.:. 3) [0, 0, 10]
-      vecB = A.fromList (A.Z A.:. 3) [0, 0, 0]
+  let vecA = VS.fromList [0, 0, 10] :: VS.Vector Double
+      vecB = VS.fromList [0, 0, 0]  :: VS.Vector Double
       dist = 10
-  in  testCase "Accelerate Distance" $
+  in  testCase "Vectors Distance" $
         vDistance vecA vecB @?= dist
 
 {-|
@@ -86,10 +88,10 @@ Anlge between two 'A.Vector's by Accelerate.
 -}
 testVAngle :: TestTree
 testVAngle =
-  let vecA  = A.fromList (A.Z A.:. 3) [0, 0, 1]
-      vecB  = A.fromList (A.Z A.:. 3) [0, 1, 0]
+  let vecA  = VS.fromList [0, 0, 1] :: VS.Vector Double
+      vecB  = VS.fromList [0, 1, 0] :: VS.Vector Double
       angle = 0.5 * pi
-  in  testCase "Accelerate Angle" $
+  in  testCase "Vectors Angle" $
         vAngle vecA vecB @?= angle
 
 {-|
@@ -97,12 +99,11 @@ Cross product between two 'A.Vector's by Accelerate.
 -}
 testVCross :: TestTree
 testVCross =
-  let vecA = A.fromList (A.Z A.:. 3) [0, 0, 1]
-      vecB = A.fromList (A.Z A.:. 3) [0, 1, 0]
-      vecC = A.fromList (A.Z A.:. 3) [-1, 0, 0]
-  in  testCase "Accelerate Cross Product" $
+  let vecA = VS.fromList [0, 0, 1]  :: VS.Vector Double
+      vecB = VS.fromList [0, 1, 0]  :: VS.Vector Double
+      vecC = VS.fromList [-1, 0, 0] :: VS.Vector Double
+  in  testCase "Vectors Cross Product" $
         vCross vecA vecB @?= vecC
-
 
 {-
 ----------------------------------------------------------------------------------------------------

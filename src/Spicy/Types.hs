@@ -13,14 +13,14 @@ computations on molecules in different software packages.
 -}
 {-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Spicy.Types
 where
 import           Control.DeepSeq
-import           Data.Array.Accelerate (Matrix, Vector)
+import qualified Data.Array.Accelerate as A
 import           Data.IntMap.Lazy      (IntMap)
 import           Data.IntSet           (IntSet)
-import qualified Data.Vector           as V
+import qualified Data.Vector           as VB
+import qualified Data.Vector.Storable  as VS
 import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import           Text.Printf
@@ -76,16 +76,16 @@ type FFType = String
 An Atom in a 'Molecule'.
 -}
 data Atom = Atom
-  { _atom_Element     :: Element       -- ^ Chemical 'Element' of the atom.
-  , _atom_Label       :: AtomLabel     -- ^ Label, e.g. from a pdb, just for identification, can be
-                                       --   empty.
-  , _atom_IsPseudo    :: Bool          -- ^ Boolean, telling if this is a pseudo atom, introduced
-                                       --   because a bond was broken.
-  , _atom_FFType      :: FFType        -- ^ Label depending on the MM software used, identifying
-                                       --   topological atom.
-  , _atom_PCharge     :: Maybe Double  -- ^ Possibly a partial charge.
-  , _atom_Coordinates :: Vector Double -- ^ Coordinates of the atom, cartesian in R³. Relies on the
-                                       --   parser to fill with exactly 3 values.
+  { _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
+  , _atom_Label       :: AtomLabel        -- ^ Label, e.g. from a pdb, just for identification, can
+                                          --   be empty.
+  , _atom_IsPseudo    :: Bool             -- ^ Boolean, telling if this is a pseudo atom, introduced
+                                          --   because a bond was broken.
+  , _atom_FFType      :: FFType           -- ^ Label depending on the MM software used, identifying
+                                          --   topological atom.
+  , _atom_PCharge     :: Maybe Double     -- ^ Possibly a partial charge.
+  , _atom_Coordinates :: VS.Vector Double -- ^ Coordinates of the atom, cartesian in R³. Relies on
+                                          --   the parser to fill with exactly 3 values.
   } deriving (Eq, Generic, Show)
 makeLenses ''Atom
 
@@ -93,15 +93,15 @@ makeLenses ''Atom
 A molecule (might be the whole system or just an ONIOM layer) and all associated informations.
 -}
 data Molecule = Molecule
-  { _molecule_Label    :: String                -- ^ Comment or identifier of a molecule. Can be
-                                                --   empty.
-  , _molecule_Atoms    :: V.Vector Atom         -- ^ A 'V.Vector' of Atoms.
-  , _molecule_Bonds    :: IntMap IntSet         -- ^ An IntMap, mapping the index of an 'Atom' in
-                                                --   the 'Molecule' to the indices of all 'Atom's,
-                                                --   to which it binds.
-  , _molecule_Energy   :: Maybe Double          -- ^ An energy, that might have been calculated.
-  , _molecule_Gradient :: Maybe (Vector Double) -- ^ A gradient, that might have been calculated.
-  , _molecule_Hessian  :: Maybe (Matrix Double) -- ^ A hessian, that might have been calculated.
+  { _molecule_Label    :: String                  -- ^ Comment or identifier of a molecule. Can be
+                                                  --   empty.
+  , _molecule_Atoms    :: VB.Vector Atom          -- ^ A 'VB.Vector' of Atoms.
+  , _molecule_Bonds    :: IntMap IntSet           -- ^ An IntMap, mapping the index of an 'Atom' in
+                                                  --   the 'Molecule' to the indices of all 'Atom's,
+                                                  --   to which it binds.
+  , _molecule_Energy   :: Maybe Double            -- ^ An energy, that might have been calculated.
+  , _molecule_Gradient :: Maybe (A.Vector Double) -- ^ A gradient, that might have been calculated.
+  , _molecule_Hessian  :: Maybe (A.Matrix Double) -- ^ A hessian, that might have been calculated.
   } deriving (Eq, Generic)
 makeLenses ''Molecule
 
@@ -115,7 +115,7 @@ type LayerMolecule = (Int, Molecule)
 {-|
 Trajectories are simply a vector of 'Molecule's.
 -}
-type Trajectory = V.Vector Molecule
+type Trajectory = VB.Vector Molecule
 
 {-|
 A fragment is just a 'Molecule' somehow (from user side) distinguished by properties.
@@ -123,12 +123,12 @@ A fragment is just a 'Molecule' somehow (from user side) distinguished by proper
 type Fragment = Molecule
 
 {-|
-A supermolecule, which is the whole system (first), and then a 'V.Vector' of 'Fragment's, treated as
-separate 'Molecule's. The whole supermolecule containts all 'Atom's and all bonds, but is optional,
-as the structure can be completely defined using the 'Fragment's. The supermolecule on the other
-hand side is suposed to store the results of a calculation (energy, gradient, ...).
+A supermolecule, which is the whole system (first), and then a 'VB.Vector' of 'Fragment's, treated
+as separate 'Molecule's. The whole supermolecule containts all 'Atom's and all bonds, but is
+optional, as the structure can be completely defined using the 'Fragment's. The supermolecule on the
+other hand side is suposed to store the results of a calculation (energy, gradient, ...).
 -}
-type SuperMolecule = (Molecule, V.Vector Fragment)
+type SuperMolecule = (Molecule, VB.Vector Fragment)
 
 
 ----------------------------------------------------------------------------------------------------
