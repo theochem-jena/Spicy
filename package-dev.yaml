@@ -75,12 +75,18 @@ executables:
     source-dirs: app
     dependencies:
       - spicy
+    ghc-options:
+      - -threaded
+
   benchmarks-exe:
     main: benchmarks.hs
     source-dirs: app
     dependencies:
       - spicy
       - criterion >= 1.4.1.0
+    ghc-options:
+      - -threaded
+
   unittests-exe:
     main: testing.hs
     source-dirs: app
@@ -89,6 +95,8 @@ executables:
       - tasty >= 0.11.3
       - tasty-hunit -any
       - tasty-golden >= 2.3.1
+    ghc-options:
+      - -threaded
 
 tests:
   unittests:
@@ -99,6 +107,8 @@ tests:
       - tasty >= 0.11.3
       - tasty-hunit -any
       - tasty-golden >= 2.3.1
+    ghc-options:
+      - -threaded
 
 benchmarks:
   benchmarks:
@@ -107,3 +117,5 @@ benchmarks:
     dependencies:
       - spicy
       - criterion >= 1.4.1.0
+    ghc-options:
+      - -threaded

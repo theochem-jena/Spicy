@@ -15,7 +15,6 @@ The operations here accept some insecurities (like not checking if both vectors 
 have equal lenght) and trust the caller.
 
 -}
-{-# LANGUAGE TemplateHaskell, TypeOperators #-}
 module Spicy.Math
 ( (∩)
 , (<.>)
@@ -31,8 +30,12 @@ import qualified Data.Array.Accelerate                       as A
 import qualified Data.Array.Accelerate.LLVM.Native           as A
 import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
 import           Data.List
-import qualified Spicy.Math.Helper as M
-import Prelude hiding ((<>))
+import           Prelude                                     hiding ((<>))
+import qualified Spicy.Math.Internal                         as M
+import Control.Parallel.Strategies
+import Control.Parallel
+import Control.DeepSeq (NFData)
+import qualified Data.Vector as V
 
 {-
 (<!!>) :: (A.Shape sh, A.Elt e) => A.Array sh e -> Int -> e
@@ -115,6 +118,12 @@ vCross a b = vC' a b
     vC' = $( A.runQ M.vCross )
 
 
+
+{-|
+
+-}
+
+
 {-
 -- | Defines the normal vector of a plane, defined by 3 points
 r3VecNormalVecOfPlane3Points :: (Vector R, Vector R, Vector R) -> Vector R
@@ -140,3 +149,29 @@ vDim :: A.Elt a => A.Vector a -> Int
 vDim a =
   let A.Z A.:. dim = A.arrayShape a
   in  dim
+
+
+{-|
+Convert
+-}
+
+{-
+parVector :: NFData a => Strategy (V.Vector a)
+parVector vec =
+  let vLen = V.length vec
+      half = vLen `div` 2
+      minChunk = 10
+  in  if vLen > minChunk
+      then do
+        let v1 = V.unsafeSlice 0 half vec
+            v2 = V.unsafeSlice half (vLen - half) vec
+        parVector v1
+        parVector v2
+        return vec
+      else
+        evalChunk (vLen-1) >>
+        return vec
+  where
+  evalChunk 0 = rpar (rdeepseq (vec V.! 0)) >> return vec
+  evalChunk i = rpar (rdeepseq (vec V.! i)) >> evalChunk (i-1)
+-}

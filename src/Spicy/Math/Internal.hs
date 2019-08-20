@@ -11,7 +11,7 @@ Definitions of auxiliary functions to deal with the GHC bug, making it necessary
 'A.runQ' expressions as untyped slices. Functions in this module are not meant for direct use, but
 wrapped in the 'Spicy.Math' module.
 -}
-module Spicy.Math.Helper
+module Spicy.Math.Internal
 ( vvP
 , vmP
 , mvP

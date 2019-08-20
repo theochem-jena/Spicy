@@ -59,7 +59,6 @@ ghc-options:
   - -Wno-unused-matches
   - -Wno-unused-top-binds
   - -Wno-type-defaults
-  - -threaded
   - -rtsopts
   #- -optl-static
   #- -optl-pthread
@@ -77,6 +76,8 @@ executables:
     source-dirs: app
     dependencies:
       - spicy
+    ghc-options:
+      - -threaded
 
   benchmarks-exe:
     main: benchmarks.hs
@@ -84,6 +85,8 @@ executables:
     dependencies:
       - spicy
       - criterion >= 1.4.1.0
+    ghc-options:
+      - -threaded
 
   unittests-exe:
     main: testing.hs
@@ -93,6 +96,8 @@ executables:
       - tasty >= 0.11.3
       - tasty-hunit -any
       - tasty-golden >= 2.3.1
+    ghc-options:
+      - -threaded
 
 tests:
   unittests:
@@ -103,6 +108,8 @@ tests:
       - tasty >= 0.11.3
       - tasty-hunit -any
       - tasty-golden >= 2.3.1
+    ghc-options:
+      - -threaded
 
 benchmarks:
   benchmarks:
@@ -111,3 +118,5 @@ benchmarks:
     dependencies:
       - spicy
       - criterion >= 1.4.1.0
+    ghc-options:
+      - -threaded
