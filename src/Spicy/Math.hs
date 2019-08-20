@@ -89,13 +89,6 @@ vCross a b =
   in  VS.fromList [c1, c2, c3]
 
 
-
-
-{-|
-
--}
-
-
 {-
 -- | Defines the normal vector of a plane, defined by 3 points
 r3VecNormalVecOfPlane3Points :: (Vector R, Vector R, Vector R) -> Vector R

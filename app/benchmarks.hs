@@ -19,7 +19,8 @@ main :: IO ()
 main = return ()
 {-
 main = defaultMain
-  [ benchmarkParser
+  [ benchmarkMath
+  , benchmarkParser
   , benchmarkMolecularSystem
   ]
 ----------------------------------------------------------------------------------------------------
@@ -115,9 +116,15 @@ As 'generateNonbondedMolecules' but the result will be split into fragments as a
 -}
 generateFragmentedMolecules :: Int -> Maybe SuperMolecule
 generateFragmentedMolecules nMols = fragmentMolecule RemoveAll $ generateBondedMolecules nMols
-
+-}
+----------------------------------------------------------------------------------------------------
+{-
+-- Benchmark for math
+benchmarkMath :: Benchmark
+-}
 
 ----------------------------------------------------------------------------------------------------
+{-
 -- Benchmarks for the parsers
 benchmarkParser :: Benchmark
 benchmarkParser = bgroup

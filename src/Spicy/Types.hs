@@ -35,6 +35,12 @@ class NiceShow a where
   niceComplex :: a -> String -- ^ Printing the object in the complex form,
                              --   where everything is meant to be printed at once as overview
 
+{-|
+Use serial or parallel processing for large data structures. This helps deciding on a per use base,
+if to evaluate in serial or parallel, to avoid nested parallelism. Every method employing parallel
+operations by Control.Parallel.Strategies should provide this switch in Spicy.
+-}
+data Strat = Serial | Parallel deriving Eq
 
 ----------------------------------------------------------------------------------------------------
 {- $moleculeTypes
