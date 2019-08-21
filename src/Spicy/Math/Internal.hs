@@ -16,7 +16,6 @@ module Spicy.Math.Internal
 , getCoordinates2
 ) where
 import qualified Data.Array.Accelerate                       as A
-import qualified Data.Array.Accelerate.Numeric.LinearAlgebra as A
 import           Lens.Micro.Platform
 import           Spicy.Types
 import qualified Data.Vector           as VB

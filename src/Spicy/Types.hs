@@ -108,7 +108,7 @@ data Molecule = Molecule
   , _molecule_Energy   :: Maybe Double            -- ^ An energy, that might have been calculated.
   , _molecule_Gradient :: Maybe (A.Vector Double) -- ^ A gradient, that might have been calculated.
   , _molecule_Hessian  :: Maybe (A.Matrix Double) -- ^ A hessian, that might have been calculated.
-  } deriving (Eq, Generic)
+  } deriving (Eq, Generic, Show)
 makeLenses ''Molecule
 
 {-|
