@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fa184dce7842bf9f9a31f5fba0b61167dcb6f70776feaea195069f8210968b78
+-- hash: 589f58edec3677d99a9f5fcd292a4efc0e9d504ca51c8cfe118a4a008bbb88ee
 
 name:           spicy
 version:        0.0.0.1
@@ -41,6 +41,7 @@ library
       Spicy.Math
       Spicy.Math.Internal
       Spicy.Molecule
+      Spicy.Molecule.Util
       Spicy.MolWriter
       Spicy.Parser
       Spicy.Types
