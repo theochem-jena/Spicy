@@ -19,20 +19,22 @@ module Spicy.Parser
 , parseHMatrix
 ) where
 import           Control.Applicative
+import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
-import qualified Data.IntSet                 as I
+import           Data.IntMap.Lazy          (IntMap)
+import qualified Data.IntMap.Lazy          as IM
+import           Data.IntSet               (IntSet)
+import qualified Data.IntSet               as I
+import qualified Data.IntSet               as IS
 import           Data.Maybe
-import qualified Data.Text                   as TS
-import qualified Data.Text.Lazy              as T
+import qualified Data.Text                 as TS
+import qualified Data.Text.Lazy            as T
 import           Data.Tuple
+import qualified Data.Vector               as VB
+import qualified Data.Vector.Storable      as VS
 import           Lens.Micro.Platform
 import           Spicy.MolWriter
 import           Spicy.Types
-import qualified Data.Array.Accelerate                       as A
-import qualified Data.Vector           as VB
-import qualified Data.Vector.Storable  as VS
-import qualified  Data.IntMap.Lazy     as IM
-import qualified  Data.IntSet          as IS
 
 
 {-|
@@ -88,24 +90,27 @@ Parse a .txyz file (Tinkers xyz format). It has coordinates and might have conne
 types.
 -}
 parseTXYZ :: Parser Molecule
-parseTXYZ = undefined {-do
+parseTXYZ = do
   skipSpace
   nAtoms <- decimal
   _ <- many' (char ' ' <|> char '\t')
   comment <- manyTill anyChar endOfLine
-  atoms <- many1 txyzLineParser
+  conAndAtoms <- many1 txyzLineParser
   return Molecule
     { _molecule_Label    = comment
-    , _molecule_Atoms    = R.fromList (R.Z R.:. (length atoms :: Int)) atoms
+    , _molecule_Atoms    = VB.fromList . map snd $ conAndAtoms
+    , _molecule_Bonds    = IM.fromList . map fst $ conAndAtoms
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
     }
   where
-    txyzLineParser :: Parser Atom
+    -- Parsing a single line of atoms. Tinker's format keeps bonds associated with atoms. So a tuple
+    -- suitable to construct the 'IntMap' is returned additional to the pure atoms.
+    txyzLineParser :: Parser ((Int, IntSet), Atom)
     txyzLineParser = do
       skipSpace
-      _ <- decimal
+      index <- (\a -> a - 1) <$> decimal
       skipSpace
       cElement <- many1 letter
       skipSpace
@@ -119,25 +124,28 @@ parseTXYZ = undefined {-do
       _ <- many' (char ' ' <|> char '\t')
       connectivityRaw <- many' columnDecimal
       endOfLine
-      return Atom
-        { _atom_Element      = read cElement
-        , _atom_Label        = ""
-        , _atom_IsPseudo     = False
-        , _atom_FFType       =
-            case mFFType of
-              Nothing -> ""
-              Just x' -> show x'
-        , _atom_PCharge      = Nothing
-        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
-        , _atom_Connectivity = I.fromList $ map (+ (-1)) connectivityRaw
-        }
+      return
+        ( (index, IS.fromList connectivityRaw)
+        , Atom
+            { _atom_Index        = Just index
+            , _atom_Element      = read cElement
+            , _atom_Label        = ""
+            , _atom_IsPseudo     = False
+            , _atom_FFType       =
+                case mFFType of
+                  Nothing -> ""
+                  Just x' -> show x'
+            , _atom_PCharge      = Nothing
+            , _atom_Coordinates  = VS.fromList [x, y, z]
+            }
+          )
+    -- Parse multiple non-line-breaking whitespace separated decimals.
     columnDecimal :: Parser Int
     columnDecimal = do
       _ <- many' (char ' ' <|> char '\t')
       i <- decimal
       _ <- many' (char ' ' <|> char '\t')
       return i
--}
 
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
