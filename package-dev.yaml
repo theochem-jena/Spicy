@@ -55,7 +55,6 @@ dependencies:
   - accelerate-io-vector >= 0.1.0.0 && <= 0.2.0.0
 
 ghc-options:
-  - -O2
   - -Wall
   - -Wno-unused-matches
   - -Wno-unused-top-binds

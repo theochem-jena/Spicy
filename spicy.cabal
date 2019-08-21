@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 85f86d7b633d1b130c6411417f4845bec060d8f359c70c123d0fb927a7db01a4
+-- hash: 1ca4abbc9b8a476d27d7d165e46e4b1dff140e7a2ed25b4a901007bbd974ad21
 
 name:           spicy
 version:        0.0.0.1
@@ -55,11 +55,11 @@ library
   ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
-    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -71,6 +71,7 @@ library
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , split >=0.2.3.2
     , text >=1.2.2.0
     , utf8-string >=1.0.1
@@ -86,11 +87,11 @@ executable benchmarks-exe
   ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
-    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -103,6 +104,7 @@ executable benchmarks-exe
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
@@ -119,11 +121,11 @@ executable spicy
   ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
-    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -135,6 +137,7 @@ executable spicy
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
@@ -151,11 +154,11 @@ executable unittests-exe
   ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
-    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -167,6 +170,7 @@ executable unittests-exe
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , tasty >=0.11.3
@@ -187,11 +191,11 @@ test-suite unittests
   ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
-    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -203,6 +207,7 @@ test-suite unittests
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , tasty >=0.11.3
@@ -223,11 +228,11 @@ benchmark benchmarks
   ghc-options: -Wall -Wno-unused-matches -Wno-unused-top-binds -Wno-type-defaults -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
-    , accelerate-blas >=0.3.0.0 && <=0.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
     , bytestring >=0.10.8
@@ -240,6 +245,7 @@ benchmark benchmarks
     , parallel >=3.2.1.0
     , process >=1.4.3.0
     , random >=1.1
+    , repa >=3.4.1.4
     , spicy
     , split >=0.2.3.2
     , text >=1.2.2.0
