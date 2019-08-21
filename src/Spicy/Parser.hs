@@ -29,6 +29,10 @@ import           Lens.Micro.Platform
 import           Spicy.MolWriter
 import           Spicy.Types
 import qualified Data.Array.Accelerate                       as A
+import qualified Data.Vector           as VB
+import qualified Data.Vector.Storable  as VS
+import qualified  Data.IntMap.Lazy     as IM
+import qualified  Data.IntSet          as IS
 
 
 {-|
@@ -42,7 +46,7 @@ maybeOption p = option Nothing (Just <$> p)
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
-parseXYZ = undefined {-do
+parseXYZ = do
   skipSpace
   nAtoms <- decimal
   skipSpace
@@ -50,7 +54,8 @@ parseXYZ = undefined {-do
   atoms <- count nAtoms xyzLineParser
   return Molecule
     { _molecule_Label    = comment
-    , _molecule_Atoms    = R.fromList (R.Z R.:. (length atoms)) atoms
+    , _molecule_Atoms    = VB.fromList atoms
+    , _molecule_Bonds    = IM.empty
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -73,9 +78,9 @@ parseXYZ = undefined {-do
         , _atom_IsPseudo     = False
         , _atom_FFType       = ""
         , _atom_PCharge      = Nothing
-        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. (3 :: Int)) [x, y, z]
+        , _atom_Coordinates  = VS.fromList [x, y, z]
         }
--}
+
 
 {-|
 Parse a .txyz file (Tinkers xyz format). It has coordinates and might have connectivity and atom
