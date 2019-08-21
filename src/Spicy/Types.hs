@@ -41,6 +41,15 @@ operations by Control.Parallel.Strategies should provide this switch in Spicy.
 -}
 data Strat = Serial | Parallel deriving Eq
 
+{-|
+Indexing type for recursive molecule structures. Count all layers with a global index range
+('Global') or by fragment specific index range ('Individual').
+-}
+data IndType =
+    Global
+  | Individual
+  deriving (Eq, Show)
+
 ----------------------------------------------------------------------------------------------------
 {- $moleculeTypes
 Types to describe a molecule from a computational geometry point of view. The representation of a
@@ -81,7 +90,8 @@ type FFType = String
 An Atom in a 'Molecule'.
 -}
 data Atom = Atom
-  { _atom_Index       :: Maybe Int        -- ^ The index of an atom in a molecule
+  { _atom_Index       :: Int              -- ^ The index of an atom in a molecule. For counting
+                                          --   conventions refer to 'Molecule' and 'IndType'.
   , _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
   , _atom_Label       :: AtomLabel        -- ^ Label, e.g. from a pdb, just for identification, can
                                           --   be empty.
@@ -99,6 +109,19 @@ makeLenses ''Atom
 A molecule, which might be the whole system, an ONIOM layer or a fragment of the system, each
 containing possibly even higher layers for ONIOM or fragments. Stores all associated informations of
 a layer.
+
+Starting from a top level molecule, all atoms and bonds of the system are expected to be in the in
+this top layer (except pseudoatoms of deeper layers). Therefore if atoms are in a deeper layers of
+the recursion, their information is not used to describe a higher layer. Instead, all atoms of
+deeper layers (except pseudoatoms) must be also replicated in a higher layer.
+
+Two possible types of index countings are possible:
+  - *'Global'*: All atoms in the system (which should be present at the top layer molecule) except
+    pseudoatoms are counted in the top layer. The fragments might therefore not start at atom with
+    index 0, but depending on where they are in a higher level with higher numbers. Pseudoatoms are
+    counted after all other atoms are counted.
+  - *'Individual'*: Counting happens for each molecule individually. In this counting scheme,
+    pseudoatoms do not need any special treatment.
 -}
 data Molecule = Molecule
   { _molecule_Label    :: String                  -- ^ Comment or identifier of a molecule. Can be
@@ -110,6 +133,9 @@ data Molecule = Molecule
   , _molecule_SubMol   :: VB.Vector Molecule      -- ^ A Molecule might contain other molecules.
                                                   --   These might be fragments or higher level
                                                   --   ONIOM layers.
+  , _molecule_IndType  :: IndType                 -- ^ Which counting scheme for atoms is used in
+                                                  --   this representation. Must be same for all
+                                                  --   layers.
   , _molecule_Energy   :: Maybe Double            -- ^ An energy, that might have been calculated.
   , _molecule_Gradient :: Maybe (A.Vector Double) -- ^ A gradient, that might have been calculated.
   , _molecule_Hessian  :: Maybe (A.Matrix Double) -- ^ A hessian, that might have been calculated.
@@ -117,29 +143,9 @@ data Molecule = Molecule
 makeLenses ''Molecule
 
 {-|
-A ONIOM layer with "pseudoatoms" (set 2 atoms in <https://doi.org/10.1016/S0166-1280(98)00475-8>).
-While the molecule is ordinary for Spicy, pseudo atoms need to be handled differently, depending on
-the ONIOM type.
--}
-type LayerMolecule = (Int, Molecule)
-
-{-|
 Trajectories are simply a vector of 'Molecule's.
 -}
 type Trajectory = VB.Vector Molecule
-
-{-|
-A fragment is just a 'Molecule' somehow (from user side) distinguished by properties.
--}
-type Fragment = Molecule
-
-{-|
-A supermolecule, which is the whole system (first), and then a 'VB.Vector' of 'Fragment's, treated
-as separate 'Molecule's. The whole supermolecule containts all 'Atom's and all bonds, but is
-optional, as the structure can be completely defined using the 'Fragment's. The supermolecule on the
-other hand side is suposed to store the results of a calculation (energy, gradient, ...).
--}
-type SuperMolecule = (Molecule, VB.Vector Fragment)
 
 
 ----------------------------------------------------------------------------------------------------
