@@ -73,7 +73,8 @@ parseXYZ = do
       z <- double
       skipSpace
       return Atom
-        { _atom_Element      = read cElement
+        { _atom_Index        = Nothing
+        , _atom_Element      = read cElement
         , _atom_Label        = ""
         , _atom_IsPseudo     = False
         , _atom_FFType       = ""
