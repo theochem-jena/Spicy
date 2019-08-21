@@ -1,5 +1,5 @@
 {-|
-Module      : Spicy.MolecularSystem
+Module      : Spicy.Molecule
 Description : Handling molecular informations
 Copyright   : Phillip Seeber, 2019
 License     : GPL-3
@@ -14,6 +14,6 @@ substructeres to layers and creation of ghost atoms. Following conventions shall
 
     * lowest level region has index 0 and contains the complete system
 -}
-module Spicy.MolecularSystem
+module Spicy.Molecule
 (
 ) where
