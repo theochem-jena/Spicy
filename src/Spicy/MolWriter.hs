@@ -19,18 +19,20 @@ module Spicy.MolWriter
 , writeSpicy
 , Molecule(..)
 ) where
-import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.LLVM.Native as A
+import qualified Data.Array.Accelerate                        as A
 import qualified Data.Array.Accelerate.IO.Data.Vector.Generic as A
-import qualified Data.IntSet                       as I
+import qualified Data.Array.Accelerate.LLVM.Native            as A
+import qualified Data.IntMap.Lazy                             as IM
+import qualified Data.IntSet                                  as I
+import qualified Data.IntSet                                  as IS
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
-import           Data.Text.Lazy                    (Text)
-import qualified Data.Text.Lazy                    as T
+import           Data.Text.Lazy                               (Text)
+import qualified Data.Text.Lazy                               as T
 import           Data.Tuple
-import qualified Data.Vector                       as VB
-import qualified Data.Vector.Storable as VS
+import qualified Data.Vector                                  as VB
+import qualified Data.Vector.Storable                         as VS
 import           Lens.Micro.Platform
 import           Spicy.Types
 import           Text.Printf
@@ -42,27 +44,40 @@ nL :: Text
 nL = T.unlines [""]
 
 {-|
+'T.unlines' like behaviour for 'VB.Vector's of 'Text'. Every single element of the 'VB.Vector' will
+have its own line.
+-}
+vUnlines :: VB.Vector Text -> Text
+vUnlines a = VB.foldl' (\acc x -> acc `T.append` x `T.append` nL) "" a
+
+{-|
+'T.concat' like behaviour for 'VB.Vector's of 'Text'. No new line characters will be added, but
+already existing ones will be used.
+-}
+vConcat :: VB.Vector Text -> Text
+vConcat a = VB.foldl' T.append "" a
+
+{-|
 Write a .xyz file from a molecule.
 -}
 writeXYZ :: Molecule -> Text
-writeXYZ m =
+writeXYZ mol =
   -- Header section with number of atoms and comment
   T.unlines (
-    [ T.pack . show $ (VB.length $ m ^. molecule_Atoms)
-    , T.pack $ m ^. molecule_Label
+    [ T.pack . show $ (VB.length $ mol ^. molecule_Atoms)
+    , T.pack $ mol ^. molecule_Label
     ]
   )
   `T.append`
   -- Body with element symbols and XYZ coordinates
-  (VB.foldl' (\acc x -> acc `T.append` x `T.append` nL) "" $ VB.map a2xyz $ m ^. molecule_Atoms)
+  (vUnlines . VB.map a2xyz $ mol ^. molecule_Atoms)
   where
     -- Write informations about a single atom to a line
     a2xyz :: Atom -> Text
     a2xyz a =
       (T.pack . printf "%-4s" . show $ a ^. atom_Element)
       `T.append`
-      VB.foldl' (T.append) ""
-        (VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
+      (vConcat . VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
 
 {-|
 Write a .txyz (Tinkers xyz format) from a 'Molecule'. The writer trusts the '_atom_FFType' to be
@@ -71,15 +86,51 @@ be written. If they are not set, the writer will simply equalise all atom types 
 for visualisation but obviously not for MM.
 -}
 writeTXYZ :: Molecule -> Text
-writeTXYZ m = undefined
-  {-
-  T.pack $ show (VB.length (m ^. molecule_Atoms)) ++ "  " ++ (m ^. molecule_Label)
-  `T.append`
-  (VB.foldl' (\acc x -> acc `T.append` x `T.append` nL)) "" $ VB.map a2txyz m
+writeTXYZ mol =
+  let atoms        = mol ^. molecule_Atoms
+      nAtoms       = VB.length atoms
+      atomsIndexed = VB.zip (VB.generate nAtoms (\i -> i)) atoms
+  in  -- Header line with number of atoms and comment
+      ( (T.pack $ show nAtoms ++ "  " ++ (mol ^. molecule_Label))
+        `T.append`
+         nL
+      )
+      `T.append`
+      -- Body with one atom per line
+      ( vUnlines . VB.map (\(i, a) ->
+          (T.pack . printf "%-6d  " $ i + 1)
+          `T.append`
+          a2txyz a
+          `T.append`
+          m2txyz mol i
+        ) $ atomsIndexed
+      )
   where
-    a2txyz :: Molecule -> Text
+    -- Write element, XYZ coordinates and force field type of an atom.
+    a2txyz :: Atom -> Text
     a2txyz a =
-  -}
+      (T.pack . printf "%-4s" . show $ a ^. atom_Element)
+      `T.append`
+      (vConcat . VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
+      `T.append`
+      "      "
+      `T.append`
+      ( if a ^. atom_FFType == ""
+          then T.pack . printf "%10s     " $ ("0" :: String)
+          else T.pack . printf "%10s     " $ a ^. atom_FFType
+      )
+    -- Write connectivity of an atom (specified by its index). If no bonding informations can be
+    -- found, do not write them.
+    m2txyz :: Molecule -> Int -> Text
+    m2txyz m i =
+      let iBonds = i `IM.lookup` (m ^. molecule_Bonds)
+      in  case iBonds of
+            Just b  ->
+              IS.foldl' (\acc x -> acc `T.append` (T.pack $ printf "%6d  " x)) "" (IS.map (+1) b)
+            Nothing -> ""
+
+
+
 {-
   show nAtoms ++ "  " ++ comment ++ "\n" ++
   concat
