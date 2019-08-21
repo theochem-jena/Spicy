@@ -129,33 +129,6 @@ writeTXYZ mol =
               IS.foldl' (\acc x -> acc `T.append` (T.pack $ printf "%6d  " x)) "" (IS.map (+1) b)
             Nothing -> ""
 
-
-
-{-
-  show nAtoms ++ "  " ++ comment ++ "\n" ++
-  concat
-    ( map (\(n, a) ->
-        printf "%-6d  "         n ++
-        printf "%-4s    "       (show (a ^. atom_Element)) ++
-        (\(x, y, z) -> printf "%12.8F    %12.8F    %12.8F        " x y z)
-          (indexAtomCoordinates $ a ^. atom_Coordinates) ++
-        printf "%6s      "
-          (if a ^. atom_FFType == ""
-            then "0"
-            else a ^. atom_FFType
-          ) ++
-        concat
-          ( map (printf "%6d  " . (+ 1)) (I.toList $ a ^. atom_Connectivity)
-          ) ++ "\n"
-      ) $ V.toList numberedAtoms
-    )
-  where
-    nAtoms = V.length $ mol ^. molecule_Atoms
-    comment = head . lines $ mol ^. molecule_Label
-    atoms = mol ^. molecule_Atoms
-    numberedAtoms = V.generate nAtoms (\i -> (i, atoms V.! i))
--}
-
 {-|
 Write a simplified .mol2 file (Tripos SYBYL) from a 'Molecule', containing the atoms, connectivities
 (single bonds only) and partial charges. The writer is not fool proof and will happily accept any
