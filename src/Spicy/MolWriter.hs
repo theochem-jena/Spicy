@@ -58,16 +58,15 @@ vConcat :: VB.Vector Text -> Text
 vConcat a = VB.foldl' T.append "" a
 
 {-|
-Write a .xyz file from a molecule.
+Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
 -}
 writeXYZ :: Molecule -> Text
 writeXYZ mol =
   -- Header section with number of atoms and comment
-  T.unlines (
+  T.unlines
     [ T.pack . show $ (VB.length $ mol ^. molecule_Atoms)
     , T.pack $ mol ^. molecule_Label
     ]
-  )
   `T.append`
   -- Body with element symbols and XYZ coordinates
   (vUnlines . VB.map a2xyz $ mol ^. molecule_Atoms)
@@ -80,15 +79,18 @@ writeXYZ mol =
       (vConcat . VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
 
 {-|
-Write a .txyz (Tinkers xyz format) from a 'Molecule'. The writer trusts the '_atom_FFType' to be
+Write a Tinker XYZ from a 'Molecule'. The writer trusts the '_atom_FFType' to be
 correct (if set) and will simply write them out. Therefore it is possible, that wrong atom types can
 be written. If they are not set, the writer will simply equalise all atom types to 0, which is OK
 for visualisation but obviously not for MM.
+
+This format ingores all deeper level layers of a molecule.
 -}
 writeTXYZ :: Molecule -> Text
 writeTXYZ mol =
   let atoms        = mol ^. molecule_Atoms
       nAtoms       = VB.length atoms
+      -- Index the atoms. Ignore higher
       atomsIndexed = VB.zip (VB.generate nAtoms (\i -> i)) atoms
   in  -- Header line with number of atoms and comment
       ( (T.pack $ show nAtoms ++ "  " ++ (mol ^. molecule_Label))
@@ -136,8 +138,32 @@ Write a simplified .mol2 file (Tripos SYBYL) from a 'Molecule', containing the a
 files that have correct topology and geometry, but visualisation programs wont be able to assign
 correct elements.
 -}
-writeMOL2 :: Molecule -> String
+writeMOL2 :: Molecule -> Text
 writeMOL2 mol = undefined
+{-
+  let atoms  = mol ^. molecule_Atoms
+      nAtoms = VB.length atoms
+      bonds  = mol ^. molecule_Bonds
+      nBonds = IM.size bonds
+  in  -- Header of the MOL2.
+      T.unlines
+        [ "@<TRIPOS>MOLECULE"
+        , T.pack $ mol ^. molecule_Label
+        , T.pack $ show nAtoms ++ " " ++ show nBonds ++ " 0 0 0"
+        , "SMALL"
+        , "GASTEIGER"
+        , ""
+        ]
+      `T.append`
+      -- Atoms section containing indices, chemical element, XYZ coordinates, force field type
+      "@<TRIPOS>ATOM"
+      `T.append`
+  where
+    a2mol :: Atom -> Text
+    a2mol a
+-}
+
+
 {-
   "@<TRIPOS>MOLECULE" ++ "\n" ++
   mol ^. molecule_Label ++ "\n" ++

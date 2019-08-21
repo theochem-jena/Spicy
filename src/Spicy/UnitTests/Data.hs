@@ -53,7 +53,7 @@ covalent radii of H and Fe.
 -}
 atomC0 :: Atom
 atomC0 = Atom
-  { _atom_Index       = Just 0
+  { _atom_Index       = 0
   , _atom_Element     = C
   , _atom_Label       = "C0"
   , _atom_IsPseudo    = False
@@ -64,7 +64,7 @@ atomC0 = Atom
 
 atomN1 :: Atom
 atomN1 = Atom
-  { _atom_Index       = Just 1
+  { _atom_Index       = 1
   , _atom_Element     = N
   , _atom_Label       = "N1"
   , _atom_IsPseudo    = False
@@ -75,7 +75,7 @@ atomN1 = Atom
 
 atomFe2 :: Atom
 atomFe2 = Atom
-  { _atom_Index       = Just 2
+  { _atom_Index       = 2
   , _atom_Element     = Fe
   , _atom_Label       = "Fe2"
   , _atom_IsPseudo    = False
@@ -86,7 +86,7 @@ atomFe2 = Atom
 
 atomH3 :: Atom
 atomH3 = Atom
-  { _atom_Index       = Just 3
+  { _atom_Index       = 3
   , _atom_Element     = H
   , _atom_Label       = "H3"
   , _atom_IsPseudo    = True
@@ -97,7 +97,7 @@ atomH3 = Atom
 
 atomO4 :: Atom
 atomO4 = Atom
-  { _atom_Index       = Just 4
+  { _atom_Index       = 4
   , _atom_Element     = O
   , _atom_Label       = "O4"
   , _atom_IsPseudo    = False
@@ -108,7 +108,7 @@ atomO4 = Atom
 
 atomH5 :: Atom
 atomH5 = Atom
-  { _atom_Index       = Just 5
+  { _atom_Index       = 5
   , _atom_Element     = H
   , _atom_Label       = "H5"
   , _atom_IsPseudo    = False
@@ -119,7 +119,7 @@ atomH5 = Atom
 
 atomH6 :: Atom
 atomH6 = Atom
-  { _atom_Index       = Just 6
+  { _atom_Index       = 6
   , _atom_Element     = H
   , _atom_Label       = "H6"
   , _atom_IsPseudo    = True
@@ -187,8 +187,7 @@ moleculeHFeCNxH2OXYZ = moleculeHFeCNxH2O
   where
     oldAtoms = moleculeHFeCNxH2O ^. molecule_Atoms
     newAtoms = VB.map
-      ( (& atom_Index   .~ Nothing)
-      . (& atom_Label    .~ "")
+      ( (& atom_Label    .~ "")
       . (& atom_FFType   .~ "")
       . (& atom_PCharge  .~ Nothing)
       . (& atom_IsPseudo .~ False)

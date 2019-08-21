@@ -75,7 +75,7 @@ parseXYZ = do
       z <- double
       skipSpace
       return Atom
-        { _atom_Index        = Nothing
+        { _atom_Index        = 0
         , _atom_Element      = read cElement
         , _atom_Label        = ""
         , _atom_IsPseudo     = False
@@ -86,8 +86,8 @@ parseXYZ = do
 
 
 {-|
-Parse a .txyz file (Tinkers xyz format). It has coordinates and might have connectivity and atom
-types.
+Parse a Tinker XYZ formatted file. It has coordinates and might have connectivity and atom types.
+This format and therefore parser are not using any layers (recursions of 'Molecule').
 -}
 parseTXYZ :: Parser Molecule
 parseTXYZ = do
@@ -127,7 +127,7 @@ parseTXYZ = do
       return
         ( (index, IS.fromList connectivityRaw)
         , Atom
-            { _atom_Index        = Just index
+            { _atom_Index        = index
             , _atom_Element      = read cElement
             , _atom_Label        = ""
             , _atom_IsPseudo     = False
