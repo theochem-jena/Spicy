@@ -61,26 +61,8 @@ writeXYZ m =
     a2xyz a =
       (T.pack . printf "%-4s" . show $ a ^. atom_Element)
       `T.append`
-      VB.foldl' (T.append) "" (VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
-{-
-  show nAtoms ++ "\n" ++
-  comment ++ "\n" ++
-  concat
-    ( map ( \a ->
-        printf "%-4s    "   (show (a ^. atom_Element)) ++
-        (\(x, y, z) -> printf "%12.8F    %12.8F    %12.8F\n" x y z)
-          (indexAtomCoordinates $ a ^. atom_Coordinates)
-        {-
-        printf "%12.8F    " ((a ^. atom_Coordinates) ! (A.Z A.:. 0)) ++
-        printf "%12.8F    " ((a ^. atom_Coordinates) ! (A.Z A.:. 1)) ++
-        printf "%12.8F\n"   ((a ^. atom_Coordinates) ! (A.Z A.:. 2))
-        -}
-      ) $ V.toList (mol ^.  molecule_Atoms)
-    )
-  where
-    nAtoms = V.length $ mol ^. molecule_Atoms
-    comment = mol ^. molecule_Label
--}
+      VB.foldl' (T.append) ""
+        (VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
 
 {-|
 Write a .txyz (Tinkers xyz format) from a 'Molecule'. The writer trusts the '_atom_FFType' to be
@@ -88,8 +70,16 @@ correct (if set) and will simply write them out. Therefore it is possible, that 
 be written. If they are not set, the writer will simply equalise all atom types to 0, which is OK
 for visualisation but obviously not for MM.
 -}
-writeTXYZ :: Molecule -> String
-writeTXYZ mol = undefined
+writeTXYZ :: Molecule -> Text
+writeTXYZ m = undefined
+  {-
+  T.pack $ show (VB.length (m ^. molecule_Atoms)) ++ "  " ++ (m ^. molecule_Label)
+  `T.append`
+  (VB.foldl' (\acc x -> acc `T.append` x `T.append` nL)) "" $ VB.map a2txyz m
+  where
+    a2txyz :: Molecule -> Text
+    a2txyz a =
+  -}
 {-
   show nAtoms ++ "  " ++ comment ++ "\n" ++
   concat
