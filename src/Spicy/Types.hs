@@ -96,7 +96,9 @@ data Atom = Atom
 makeLenses ''Atom
 
 {-|
-A molecule (might be the whole system or just an ONIOM layer) and all associated informations.
+A molecule, which might be the whole system, an ONIOM layer or a fragment of the system, each
+containing possibly even higher layers for ONIOM or fragments. Stores all associated informations of
+a layer.
 -}
 data Molecule = Molecule
   { _molecule_Label    :: String                  -- ^ Comment or identifier of a molecule. Can be
@@ -105,6 +107,9 @@ data Molecule = Molecule
   , _molecule_Bonds    :: IntMap IntSet           -- ^ An IntMap, mapping the index of an 'Atom' in
                                                   --   the 'Molecule' to the indices of all 'Atom's,
                                                   --   to which it binds.
+  , _molecule_SubMol   :: VB.Vector Molecule      -- ^ A Molecule might contain other molecules.
+                                                  --   These might be fragments or higher level
+                                                  --   ONIOM layers.
   , _molecule_Energy   :: Maybe Double            -- ^ An energy, that might have been calculated.
   , _molecule_Gradient :: Maybe (A.Vector Double) -- ^ A gradient, that might have been calculated.
   , _molecule_Hessian  :: Maybe (A.Matrix Double) -- ^ A hessian, that might have been calculated.
