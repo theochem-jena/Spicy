@@ -31,7 +31,7 @@ main = defaultMain tests
 tests :: TestTree
 tests = testGroup "All tests"
   [ testMath
-  -- , testParser
+  , testParser
   -- , testMolecularSystem
   ]
 
@@ -105,7 +105,7 @@ testVCross =
   in  testCase "Vectors Cross Product" $
         vCross vecA vecB @?= vecC
 
-{-
+
 ----------------------------------------------------------------------------------------------------
 -- Test cases for Parser
 
@@ -117,20 +117,24 @@ Tests instead of UnitTests.
 -}
 testParser :: TestTree
 testParser = testGroup "Parser"
+  [testParserXYZ1]
+{-
   [ testParserTXYZ1
   , testParserXYZ1
   , testParserMOL21
   , testParserSpicy
   ]
-
+-}
+{-
 testParserTXYZ1 :: TestTree
 testParserTXYZ1 = testCase "Tinker XYZ (1)" $
   (maybeResult $ parse parseTXYZ textHFeCNxH2OTXYZ) @?= Just moleculeHFeCNxH2OTXYZ
+-}
 
 testParserXYZ1 :: TestTree
 testParserXYZ1 = testCase "Molden XYZ (1)" $
   (maybeResult $ parse parseXYZ testHFeCNxH2OXYZ) @?= Just moleculeHFeCNxH2OXYZ
-
+{-
 testParserMOL21 :: TestTree
 testParserMOL21 = testCase "SyByl MOL2 (1)" $
  (maybeResult $ parse parseMOL2 testHFeCNxH2OMOL2) @?= Just moleculeHFeCNxH2OMOL2
