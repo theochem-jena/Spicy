@@ -23,7 +23,6 @@ import qualified Data.Vector           as VB
 import qualified Data.Vector.Storable  as VS
 import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
-import           Text.Printf
 
 
 {-|
@@ -82,7 +81,8 @@ type FFType = String
 An Atom in a 'Molecule'.
 -}
 data Atom = Atom
-  { _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
+  { _atom_Index       :: Maybe Int        -- ^ The index of an atom in a molecule
+  , _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
   , _atom_Label       :: AtomLabel        -- ^ Label, e.g. from a pdb, just for identification, can
                                           --   be empty.
   , _atom_IsPseudo    :: Bool             -- ^ Boolean, telling if this is a pseudo atom, introduced
