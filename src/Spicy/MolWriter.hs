@@ -11,7 +11,7 @@ A module which converts the internal Molecule representation to a string, which 
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Spicy.MolWriter
 ( writeXYZ
 , writeTXYZ
@@ -29,16 +29,39 @@ import           Data.Maybe
 import           Data.Text.Lazy                    (Text)
 import qualified Data.Text.Lazy                    as T
 import           Data.Tuple
-import qualified Data.Vector                       as V
+import qualified Data.Vector                       as VB
+import qualified Data.Vector.Storable as VS
 import           Lens.Micro.Platform
 import           Spicy.Types
 import           Text.Printf
 
 {-|
+Portable new line character.
+-}
+nL :: Text
+nL = T.unlines [""]
+
+{-|
 Write a .xyz file from a molecule.
 -}
-writeXYZ :: Molecule -> String
-writeXYZ mol = undefined
+writeXYZ :: Molecule -> Text
+writeXYZ m =
+  -- Header section with number of atoms and comment
+  T.unlines (
+    [ T.pack . show $ (VB.length $ m ^. molecule_Atoms)
+    , T.pack $ m ^. molecule_Label
+    ]
+  )
+  `T.append`
+  -- Body with element symbols and XYZ coordinates
+  (VB.foldl' (\acc x -> acc `T.append` x `T.append` nL) "" $ VB.map a2xyz $ m ^. molecule_Atoms)
+  where
+    -- Write informations about a single atom to a line
+    a2xyz :: Atom -> Text
+    a2xyz a =
+      (T.pack . printf "%-4s" . show $ a ^. atom_Element)
+      `T.append`
+      VB.foldl' (T.append) "" (VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
 {-
   show nAtoms ++ "\n" ++
   comment ++ "\n" ++
