@@ -50,7 +50,6 @@ dependencies:
   - accelerate >= 1.3.0.0 && <= 1.4.0.0
   - accelerate-llvm >= 1.3.0.0 && <= 1.4.0.0
   - accelerate-llvm-native >= 1.3.0.0 && <= 1.4.0.0
-  - accelerate-blas >= 0.3.0.0 && <= 0.4.0.0
   - lens-accelerate >= 0.3.0.0 && <= 0.4.0.0
   - accelerate-io >= 1.3.0.0 && <= 1.4.0.0
   - accelerate-io-vector >= 0.1.0.0 && <= 0.2.0.0
@@ -71,6 +70,7 @@ library:
   default-extensions:
     - TypeOperators
     - TemplateHaskell
+    - BangPatterns
 
 executables:
   spicy:

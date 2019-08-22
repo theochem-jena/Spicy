@@ -67,6 +67,7 @@ library:
   default-extensions:
     - TypeOperators
     - TemplateHaskell
+    - BangPatterns
 
 executables:
   spicy:
