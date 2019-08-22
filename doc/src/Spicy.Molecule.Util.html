@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Spicy.Molecule.Util
+Description : Utilities to manipulate basic molecular data structures.
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
+This module provides functions to manipulate basic data structures of 'Molecule's, such as indexing.
+-}</span><span>
+</span><a name="line-12"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Spicy.Molecule.Util</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-13"></a><span class="hs-keyword">import</span><span> </span><a href="Spicy.Types.html"><span class="hs-identifier">Spicy.Types</span></a><span>
+</span><a name="line-14"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.IntMap</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">IM</span><span>
+</span><a name="line-15"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data.IntMap</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">IntMap</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">!?</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-16"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.IntSet</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">IS</span><span>
+</span><a name="line-17"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data.IntSet</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">IntSet</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">\\</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-18"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data.Vector</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">VB</span><span>
+</span><a name="line-19"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Lens.Micro.Platform</span><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-comment">{-|
+Calculate new indices for 'Molecule's in the 'Individual' scheme, where each fragment is counted by
+itself without awareness for other molecules. This relies on sane bonds in the 'Molecule'. If
+somewhere bonds are defined to non existing atoms, these bonds will be lost.
+-}</span><span>
+</span><a name="line-26"></a><span class="hs-comment">-- &quot;RI&quot; = Replaced Indices</span><span>
+</span><a name="line-27"></a><span class="hs-comment">{-
+reIndexLocal :: Molecule -&gt; Either String Molecule
+reIndexLocal mol =
+  let molRI        = reIndFrag mol
+      molRISubMols = molRI ^. molecule_SubMol
+  in  if molRISubMols == VB.empty
+        then molRI &amp; molecule_SubMol .~ (VB.map reIndexLocal molRISubMols)
+        else molRI
+  where
+-}</span><span>
+</span><a name="line-37"></a><span>
+</span><a name="line-38"></a><span class="hs-comment">{-|
+Reindex a single layer of a molecule (topmost) but ignore its deeper layers. Reindexing is done
+based on a replacement map, which must not have any holes. So Every index that appears in the
+molecule must also appear in the replacement list, even if this maps to the same value. Otherwise a
+'Left' error 'String' will result.
+-}</span><span>
+</span><a name="line-44"></a><span class="hs-comment">{-
+reIndFrag ::
+     IntMap Int             -- ^ Replacement 'IntMap' for indices from old to new.
+  -&gt; Molecule               -- ^ A molecule, whose current layer will be reindexed.
+  -&gt; Either String Molecule -- ^ Either a 'Left' error 'String' or a reindexed 'Right' 'Molecule'.
+reIndFrag repMap mol =
+  let
+-}</span><span>
+</span><a name="line-52"></a><span>
+</span><a name="line-53"></a><span class="hs-comment">{-|
+Substitute all indices in the bonding style 'IntMap' by replacements given in a 'IntMap' 'Int'. If
+keys of the old bonding map do not appear in the replacement map, a 'Left' error 'String' will be
+given. Therefore the replacement map must be complete and no holes are allowed.
+-}</span><span>
+</span><a name="line-58"></a><span class="hs-identifier">reIndexBonds</span><span> </span><span class="hs-glyph">::</span><span>
+</span><a name="line-59"></a><span>     </span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">Int</span><span>                    </span><span class="hs-comment">-- ^ Substitution patterns with original as key and new as Value.</span><span>
+</span><a name="line-60"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>                 </span><span class="hs-comment">-- ^ Original '_molecule_Bonds' styled 'IntMap'.</span><span>
+</span><a name="line-61"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Either</span><span> </span><span class="hs-identifier hs-type">String</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- ^ New bonds after replacements. Results in a 'Left' 'String'</span><span>
+</span><a name="line-62"></a><span>                                   </span><span class="hs-comment">--   as error, if not all old indices can be mapped to new</span><span>
+</span><a name="line-63"></a><span>                                   </span><span class="hs-comment">--   indices.</span><span>
+</span><a name="line-64"></a><a name="reIndexBonds"><a href="Spicy.Molecule.Util.html#reIndexBonds"><span class="hs-identifier">reIndexBonds</span></a></a><span> </span><a name="local-6989586621679227834"><a href="#local-6989586621679227834"><span class="hs-identifier">repMap</span></a></a><span> </span><a name="local-6989586621679227835"><a href="#local-6989586621679227835"><span class="hs-identifier">bondsMap</span></a></a><span>
+</span><a name="line-65"></a><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-identifier hs-var">IS.null</span><span> </span><a href="#local-6989586621679227839"><span class="hs-identifier hs-var">lostKeysIM</span></a><span> </span><span class="hs-operator hs-var">&amp;&amp;</span><span> </span><span class="hs-identifier hs-var">IS.null</span><span> </span><a href="#local-6989586621679227840"><span class="hs-identifier hs-var">lostKeysIS</span></a><span> </span><span class="hs-glyph">=</span><span>
+</span><a name="line-66"></a><span>      </span><span class="hs-identifier hs-var">Right</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">IM.map</span><span> </span><span class="hs-special">(</span><a href="Spicy.Molecule.Util.html#updateIntSet"><span class="hs-identifier hs-var">updateIntSet</span></a><span> </span><a href="#local-6989586621679227834"><span class="hs-identifier hs-var">repMap</span></a><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-special">(</span><a href="Spicy.Molecule.Util.html#updateKeys"><span class="hs-identifier hs-var">updateKeys</span></a><span> </span><a href="#local-6989586621679227834"><span class="hs-identifier hs-var">repMap</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="#local-6989586621679227835"><span class="hs-identifier hs-var">bondsMap</span></a><span>
+</span><a name="line-67"></a><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-identifier hs-var">otherwise</span><span>     </span><span class="hs-glyph">=</span><span>
+</span><a name="line-68"></a><span>      </span><span class="hs-identifier hs-var">Left</span><span> </span><span class="hs-string">&quot;reIndexBonds: The replacement IntMap has holes and cannot map all old indices to new \
+      \ indices.&quot;</span><span>
+</span><a name="line-70"></a><span>  </span><span class="hs-keyword">where</span><span>
+</span><a name="line-71"></a><span>    </span><span class="hs-comment">-- Old keys (origin of bonds Atoms)</span><span>
+</span><a name="line-72"></a><span>    </span><a name="local-6989586621679227836"><a href="#local-6989586621679227836"><span class="hs-identifier">oldKeys</span></a></a><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">IM.keysSet</span><span> </span><a href="#local-6989586621679227835"><span class="hs-identifier hs-var">bondsMap</span></a><span>
+</span><a name="line-73"></a><span>    </span><span class="hs-comment">-- Old values (target of bonds Atoms)</span><span>
+</span><a name="line-74"></a><span>    </span><a name="local-6989586621679227837"><a href="#local-6989586621679227837"><span class="hs-identifier">oldSets</span></a></a><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">IS.unions</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="#local-6989586621679227835"><span class="hs-identifier hs-var">bondsMap</span></a><span>
+</span><a name="line-75"></a><span>    </span><span class="hs-comment">-- Keys to be replaced</span><span>
+</span><a name="line-76"></a><span>    </span><a name="local-6989586621679227838"><a href="#local-6989586621679227838"><span class="hs-identifier">repKeys</span></a></a><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">IM.keysSet</span><span> </span><a href="#local-6989586621679227834"><span class="hs-identifier hs-var">repMap</span></a><span>
+</span><a name="line-77"></a><span>    </span><span class="hs-comment">-- Keys that are in the old map, but not in the new map.</span><span>
+</span><a name="line-78"></a><span>    </span><a name="local-6989586621679227839"><a href="#local-6989586621679227839"><span class="hs-identifier">lostKeysIM</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621679227836"><span class="hs-identifier hs-var">oldKeys</span></a><span> </span><span class="hs-operator hs-var">\\</span><span> </span><a href="#local-6989586621679227838"><span class="hs-identifier hs-var">repKeys</span></a><span>
+</span><a name="line-79"></a><span>    </span><a name="local-6989586621679227840"><a href="#local-6989586621679227840"><span class="hs-identifier">lostKeysIS</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621679227837"><span class="hs-identifier hs-var">oldSets</span></a><span> </span><span class="hs-operator hs-var">\\</span><span> </span><a href="#local-6989586621679227838"><span class="hs-identifier hs-var">repKeys</span></a><span>
+</span><a name="line-80"></a><span>
+</span><a name="line-81"></a><span class="hs-comment">{-|
+Given a list of 'IM.Key's, delete all 'IM.Key's in the list from the original 'IntMap'.
+-}</span><span>
+</span><a name="line-84"></a><span class="hs-identifier">deleteIntMapByKeys</span><span> </span><span class="hs-glyph">::</span><span>
+</span><a name="line-85"></a><span>     </span><span class="hs-special">[</span><span class="hs-identifier hs-type">IM.Key</span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- ^ List of 'IM.Key's to be removed from an 'IntMap'</span><span>
+</span><a name="line-86"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><a href="#local-6989586621679227691"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-comment">-- ^ Original 'IntMap', where 'IM.Key's shall be deleted.</span><span>
+</span><a name="line-87"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><a href="#local-6989586621679227691"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-comment">-- ^ 'IntMap' after deletion.</span><span>
+</span><a name="line-88"></a><a name="deleteIntMapByKeys"><a href="Spicy.Molecule.Util.html#deleteIntMapByKeys"><span class="hs-identifier">deleteIntMapByKeys</span></a></a><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">!</span><a name="local-6989586621679227841"><a href="#local-6989586621679227841"><span class="hs-identifier">im</span></a></a><span>     </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621679227841"><span class="hs-identifier hs-var">im</span></a><span>
+</span><a name="line-89"></a><span class="hs-identifier">deleteIntMapByKeys</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679227842"><a href="#local-6989586621679227842"><span class="hs-identifier">k</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679227843"><a href="#local-6989586621679227843"><span class="hs-identifier">kt</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><a name="local-6989586621679227844"><a href="#local-6989586621679227844"><span class="hs-identifier">im</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Spicy.Molecule.Util.html#deleteIntMapByKeys"><span class="hs-identifier hs-var">deleteIntMapByKeys</span></a><span> </span><a href="#local-6989586621679227843"><span class="hs-identifier hs-var">kt</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">IM.delete</span><span> </span><a href="#local-6989586621679227842"><span class="hs-identifier hs-var">k</span></a><span> </span><a href="#local-6989586621679227844"><span class="hs-identifier hs-var">im</span></a><span class="hs-special">)</span><span>
+</span><a name="line-90"></a><span>
+</span><a name="line-91"></a><span class="hs-comment">{-|
+Given a list of 'IS.Key's, delete all 'IS.Key's in the list from the original 'IntSet'.
+-}</span><span>
+</span><a name="line-94"></a><span class="hs-identifier">deleteIntSetByKeys</span><span> </span><span class="hs-glyph">::</span><span>
+</span><a name="line-95"></a><span>     </span><span class="hs-special">[</span><span class="hs-identifier hs-type">IS.Key</span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- ^ List of 'IS.Key's to be removed from an 'IntSet'.</span><span>
+</span><a name="line-96"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>   </span><span class="hs-comment">-- ^ 'IntSet' from which to remove 'IS.Key's.</span><span>
+</span><a name="line-97"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>   </span><span class="hs-comment">-- ^ 'IntSet' after deletion of 'IS.Key's.</span><span>
+</span><a name="line-98"></a><a name="deleteIntSetByKeys"><a href="Spicy.Molecule.Util.html#deleteIntSetByKeys"><span class="hs-identifier">deleteIntSetByKeys</span></a></a><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">!</span><a name="local-6989586621679227845"><a href="#local-6989586621679227845"><span class="hs-identifier">is</span></a></a><span>     </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621679227845"><span class="hs-identifier hs-var">is</span></a><span>
+</span><a name="line-99"></a><span class="hs-identifier">deleteIntSetByKeys</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679227846"><a href="#local-6989586621679227846"><span class="hs-identifier">k</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679227847"><a href="#local-6989586621679227847"><span class="hs-identifier">kt</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><a name="local-6989586621679227848"><a href="#local-6989586621679227848"><span class="hs-identifier">is</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Spicy.Molecule.Util.html#deleteIntSetByKeys"><span class="hs-identifier hs-var">deleteIntSetByKeys</span></a><span> </span><a href="#local-6989586621679227847"><span class="hs-identifier hs-var">kt</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">IS.delete</span><span> </span><a href="#local-6989586621679227846"><span class="hs-identifier hs-var">k</span></a><span> </span><a href="#local-6989586621679227848"><span class="hs-identifier hs-var">is</span></a><span class="hs-special">)</span><span>
+</span><a name="line-100"></a><span>
+</span><a name="line-101"></a><span>
+</span><a name="line-102"></a><span class="hs-comment">{-|
+Given a replacement 'IntMap' ('IM.Key' is the old value, value is the new 'IM.Key'), replace the
+'IM.Key's from the old 'IntMap' with the ones from the replacement 'IntMap'. If a key cannot be
+found in the replacement 'IntMap', the original Key of the old 'IntMap' will be kept.
+-}</span><span>
+</span><a name="line-107"></a><span class="hs-comment">-- &quot;oK&quot; = Old Key</span><span>
+</span><a name="line-108"></a><span class="hs-comment">-- &quot;nK&quot; = new Key</span><span>
+</span><a name="line-109"></a><span class="hs-identifier">updateKeys</span><span> </span><span class="hs-glyph">::</span><span>
+</span><a name="line-110"></a><span>     </span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">Int</span><span> </span><span class="hs-comment">-- ^ 'IntMap' of replacements. Old 'IM.Key' mapped to a new 'IM.Key'.</span><span>
+</span><a name="line-111"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><a href="#local-6989586621679227690"><span class="hs-identifier hs-type">a</span></a><span>   </span><span class="hs-comment">-- ^ Original 'IntMap' in which to replace the 'IM.Key's.</span><span>
+</span><a name="line-112"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><a href="#local-6989586621679227690"><span class="hs-identifier hs-type">a</span></a><span>   </span><span class="hs-comment">-- ^ 'IntMap' after replacements.</span><span>
+</span><a name="line-113"></a><a name="updateKeys"><a href="Spicy.Molecule.Util.html#updateKeys"><span class="hs-identifier">updateKeys</span></a></a><span> </span><a name="local-6989586621679227849"><a href="#local-6989586621679227849"><span class="hs-identifier">repMap</span></a></a><span> </span><a name="local-6989586621679227850"><a href="#local-6989586621679227850"><span class="hs-identifier">origMap</span></a></a><span> </span><span class="hs-glyph">=</span><span>
+</span><a name="line-114"></a><span>  </span><span class="hs-identifier hs-var">IM.mapKeys</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><a name="local-6989586621679227851"><a href="#local-6989586621679227851"><span class="hs-identifier">oK</span></a></a><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a name="line-115"></a><span>    </span><span class="hs-keyword">let</span><span> </span><a name="local-6989586621679227852"><a href="#local-6989586621679227852"><span class="hs-identifier">newKeyCandidate</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621679227849"><span class="hs-identifier hs-var">repMap</span></a><span> </span><span class="hs-operator hs-var">!?</span><span> </span><a href="#local-6989586621679227851"><span class="hs-identifier hs-var">oK</span></a><span>
+</span><a name="line-116"></a><span>    </span><span class="hs-keyword">in</span><span>  </span><span class="hs-keyword">case</span><span> </span><a href="#local-6989586621679227852"><span class="hs-identifier hs-var">newKeyCandidate</span></a><span> </span><span class="hs-keyword">of</span><span>
+</span><a name="line-117"></a><span>          </span><span class="hs-identifier hs-var">Just</span><span> </span><a name="local-6989586621679227853"><a href="#local-6989586621679227853"><span class="hs-identifier">nK</span></a></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679227853"><span class="hs-identifier hs-var">nK</span></a><span>
+</span><a name="line-118"></a><span>          </span><span class="hs-identifier hs-var">Nothing</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679227851"><span class="hs-identifier hs-var">oK</span></a><span>
+</span><a name="line-119"></a><span>  </span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679227850"><span class="hs-identifier hs-var">origMap</span></a><span>
+</span><a name="line-120"></a><span>
+</span><a name="line-121"></a><span class="hs-comment">{-|
+Given a replacement 'IntMap', replace all values in an original 'IntSet' by values from a
+replacement 'IntMap'. Values from the 'IntSet', that have no 'IM.Key' in the 'IntMap' will remain
+unchanged.
+-}</span><span>
+</span><a name="line-126"></a><span class="hs-comment">-- &quot;oK&quot; = Old Key</span><span>
+</span><a name="line-127"></a><span class="hs-comment">-- &quot;nK&quot; = new Key</span><span>
+</span><a name="line-128"></a><span class="hs-identifier">updateIntSet</span><span> </span><span class="hs-glyph">::</span><span>
+</span><a name="line-129"></a><span>     </span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">Int</span><span> </span><span class="hs-comment">-- ^ 'IntMap' of replacements. Old 'IM.Key' mapped to a new 'IM.Key'.</span><span>
+</span><a name="line-130"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>     </span><span class="hs-comment">-- ^ Original 'IntSet' in which to replace 'IS.Key's</span><span>
+</span><a name="line-131"></a><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>     </span><span class="hs-comment">-- ^ 'IntSet' after replacements done.</span><span>
+</span><a name="line-132"></a><a name="updateIntSet"><a href="Spicy.Molecule.Util.html#updateIntSet"><span class="hs-identifier">updateIntSet</span></a></a><span> </span><a name="local-6989586621679227854"><a href="#local-6989586621679227854"><span class="hs-identifier">repMap</span></a></a><span> </span><a name="local-6989586621679227855"><a href="#local-6989586621679227855"><span class="hs-identifier">origSet</span></a></a><span> </span><span class="hs-glyph">=</span><span>
+</span><a name="line-133"></a><span>  </span><span class="hs-identifier hs-var">IS.map</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><a name="local-6989586621679227856"><a href="#local-6989586621679227856"><span class="hs-identifier">oK</span></a></a><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a name="line-134"></a><span>    </span><span class="hs-keyword">let</span><span> </span><a name="local-6989586621679227857"><a href="#local-6989586621679227857"><span class="hs-identifier">newKeyCandidate</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621679227854"><span class="hs-identifier hs-var">repMap</span></a><span> </span><span class="hs-operator hs-var">!?</span><span> </span><a href="#local-6989586621679227856"><span class="hs-identifier hs-var">oK</span></a><span>
+</span><a name="line-135"></a><span>    </span><span class="hs-keyword">in</span><span>  </span><span class="hs-keyword">case</span><span> </span><a href="#local-6989586621679227857"><span class="hs-identifier hs-var">newKeyCandidate</span></a><span> </span><span class="hs-keyword">of</span><span>
+</span><a name="line-136"></a><span>          </span><span class="hs-identifier hs-var">Just</span><span> </span><a name="local-6989586621679227858"><a href="#local-6989586621679227858"><span class="hs-identifier">nK</span></a></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679227858"><span class="hs-identifier hs-var">nK</span></a><span>
+</span><a name="line-137"></a><span>          </span><span class="hs-identifier hs-var">Nothing</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679227856"><span class="hs-identifier hs-var">oK</span></a><span>
+</span><a name="line-138"></a><span>  </span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679227855"><span class="hs-identifier hs-var">origSet</span></a><span>
+</span><a name="line-139"></a></pre></body></html>
