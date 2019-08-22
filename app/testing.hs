@@ -12,7 +12,6 @@ import qualified Data.Text.Lazy.IO         as T
 import qualified Data.Vector               as VB
 import qualified Data.Vector.Storable      as VS
 import           Spicy.Math
-import           Spicy.MolecularSystem
 import           Spicy.MolWriter
 import           Spicy.Parser
 import           Spicy.Types

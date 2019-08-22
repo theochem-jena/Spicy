@@ -153,8 +153,8 @@ moleculeHFeCNxH2O = Molecule
       , (6, IS.empty)          -- H6
       ]
   , _molecule_Energy   = Just (-1000.0)
-  , _molecule_Gradient = Just $ A.fromList (A.Z A.:. 21) . map fromInteger $ [1 .. 21]
-  , _molecule_Hessian  = Just $ A.fromList (A.Z A.:. 21 A.:. 21) . map fromInteger $ [1 .. 441]
+  , _molecule_Gradient = Just $ VS.fromList . map fromInteger $ [1 .. 21]
+  , _molecule_Hessian  = Nothing -- Just $ A.fromList (A.Z A.:. 21 A.:. 21) . map fromInteger $ [1 .. 441]
   }
 
 {-|

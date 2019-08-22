@@ -23,6 +23,7 @@ import qualified Data.Vector           as VB
 import qualified Data.Vector.Storable  as VS
 import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
+import qualified Data.Array.Unboxed as AU
 
 
 {-|
@@ -49,6 +50,12 @@ data IndType =
     Global
   | Individual
   deriving (Eq, Show)
+
+{-|
+Alias for an unboxed matrix from the Array library. This type can easily be converted to
+Accelerate's array type.
+-}
+type UMatrix a = AU.Array (Int, Int) a
 
 ----------------------------------------------------------------------------------------------------
 {- $moleculeTypes
@@ -116,29 +123,30 @@ the recursion, their information is not used to describe a higher layer. Instead
 deeper layers (except pseudoatoms) must be also replicated in a higher layer.
 
 Two possible types of index countings are possible:
-  - *'Global'*: All atoms in the system (which should be present at the top layer molecule) except
+
+  - __/'Global'/__: All atoms in the system (which should be present at the top layer molecule) except
     pseudoatoms are counted in the top layer. The fragments might therefore not start at atom with
     index 0, but depending on where they are in a higher level with higher numbers. Pseudoatoms are
     counted after all other atoms are counted.
-  - *'Individual'*: Counting happens for each molecule individually. In this counting scheme,
+  - __/'Individual'/__: Counting happens for each molecule individually. In this counting scheme,
     pseudoatoms do not need any special treatment.
 -}
 data Molecule = Molecule
-  { _molecule_Label    :: String                  -- ^ Comment or identifier of a molecule. Can be
-                                                  --   empty.
-  , _molecule_Atoms    :: VB.Vector Atom          -- ^ A 'VB.Vector' of Atoms.
-  , _molecule_Bonds    :: IntMap IntSet           -- ^ An IntMap, mapping the index of an 'Atom' in
-                                                  --   the 'Molecule' to the indices of all 'Atom's,
-                                                  --   to which it binds.
-  , _molecule_SubMol   :: VB.Vector Molecule      -- ^ A Molecule might contain other molecules.
-                                                  --   These might be fragments or higher level
-                                                  --   ONIOM layers.
-  , _molecule_IndType  :: IndType                 -- ^ Which counting scheme for atoms is used in
-                                                  --   this representation. Must be same for all
-                                                  --   layers.
-  , _molecule_Energy   :: Maybe Double            -- ^ An energy, that might have been calculated.
-  , _molecule_Gradient :: Maybe (A.Vector Double) -- ^ A gradient, that might have been calculated.
-  , _molecule_Hessian  :: Maybe (A.Matrix Double) -- ^ A hessian, that might have been calculated.
+  { _molecule_Label    :: String                   -- ^ Comment or identifier of a molecule. Can be
+                                                   --   empty.
+  , _molecule_Atoms    :: VB.Vector Atom           -- ^ A 'VB.Vector' of Atoms.
+  , _molecule_Bonds    :: IntMap IntSet            -- ^ An IntMap, mapping the index of an 'Atom' in
+                                                   --   the 'Molecule' to the indices of all
+                                                   --   'Atom's, to which it binds.
+  , _molecule_SubMol   :: VB.Vector Molecule       -- ^ A Molecule might contain other molecules.
+                                                   --   These might be fragments or higher level
+                                                   --   ONIOM layers.
+  , _molecule_IndType  :: IndType                  -- ^ Which counting scheme for atoms is used in
+                                                   --   this representation. Must be same for all
+                                                   --   layers.
+  , _molecule_Energy   :: Maybe Double             -- ^ An energy, that might have been calculated.
+  , _molecule_Gradient :: Maybe (VS.Vector Double) -- ^ A gradient, that might have been calculated.
+  , _molecule_Hessian  :: Maybe (UMatrix Double)   -- ^ A hessian, that might have been calculated.
   } deriving (Eq, Generic, Show)
 makeLenses ''Molecule
 

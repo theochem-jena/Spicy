@@ -9,7 +9,6 @@ import           Data.Maybe
 import           Data.Text.Lazy            (Text)
 import qualified Data.Text.Lazy            as T
 import           Lens.Micro.Platform
-import           Spicy.MolecularSystem
 import           Spicy.MolWriter
 import           Spicy.Parser
 import           Spicy.Types
