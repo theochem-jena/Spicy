@@ -41,10 +41,10 @@ counting scheme of the atoms of the higher layers and pseudoatoms come last.
 -}
 reIndexMolecule :: IntMap Int -> Molecule -> Either String Molecule
 reIndexMolecule repMap mol = do
-  -- Reindex the current layer only
-  molRI <- reIndexMoleculeLayer repMap mol
   -- Get the submolecules
   let subMols = mol ^. molecule_SubMol
+  -- Reindex the current layer only
+  molRI <- reIndexMoleculeLayer repMap mol
     -- If the molecule has no submolecules:
   if VB.null subMols
     -- Then we are done.
@@ -53,8 +53,6 @@ reIndexMolecule repMap mol = do
     else do
       subMolsRI <- VB.sequence . VB.map (reIndexMolecule repMap) $ subMols
       reIndexMolecule repMap $ molRI & molecule_SubMol .~ subMolsRI
-
-
 
 {-|
 Reindex the '_molecule_Atoms' and '_molecule_Bonds' of a single layer of a molecule (ignoring
