@@ -30,7 +30,7 @@ main = defaultMain tests
 tests :: TestTree
 tests = testGroup "All tests"
   [ testMath
-  , testParser
+  -- , testParser
   -- , testMolecularSystem
   ]
 
@@ -107,7 +107,7 @@ testVCross =
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for Parser
-
+{-
 {-|
 These tests are HUnit tests within the Tasty framework. Correct results and answers are stored in
 Spicy.UnitTests.Data, to make sure the parsers work absolutely indepent from environmet. If one of
@@ -116,24 +116,21 @@ Tests instead of UnitTests.
 -}
 testParser :: TestTree
 testParser = testGroup "Parser"
-  [testParserXYZ1]
-{-
   [ testParserTXYZ1
   , testParserXYZ1
   , testParserMOL21
   , testParserSpicy
   ]
--}
-{-
+
+
 testParserTXYZ1 :: TestTree
 testParserTXYZ1 = testCase "Tinker XYZ (1)" $
   (maybeResult $ parse parseTXYZ textHFeCNxH2OTXYZ) @?= Just moleculeHFeCNxH2OTXYZ
--}
 
 testParserXYZ1 :: TestTree
 testParserXYZ1 = testCase "Molden XYZ (1)" $
   (maybeResult $ parse parseXYZ testHFeCNxH2OXYZ) @?= Just moleculeHFeCNxH2OXYZ
-{-
+
 testParserMOL21 :: TestTree
 testParserMOL21 = testCase "SyByl MOL2 (1)" $
  (maybeResult $ parse parseMOL2 testHFeCNxH2OMOL2) @?= Just moleculeHFeCNxH2OMOL2
@@ -141,7 +138,6 @@ testParserMOL21 = testCase "SyByl MOL2 (1)" $
 testParserSpicy :: TestTree
 testParserSpicy = testCase "Spicy format (1)" $
   (maybeResult $ parse parseSpicy testHFeCNxH2OSpicy) @?= Just moleculeHFeCNxH2O
-
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem
