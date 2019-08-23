@@ -21,17 +21,19 @@ import           Spicy.Types
 import qualified Data.Vector           as VB
 import qualified Data.Vector.Storable  as VS
 import Control.Parallel.Strategies
+import qualified Data.IntMap as IM
+import Data.IntMap (IntMap)
 
 {-|
 Get the 'Atom' '_atom_Coordinates' from a 'Molecule' and convert to a plain 'VS.Vector'. This is therefore
 basically a concatenation of all cartesian coordinates
 -}
 getCoordinates1 :: Strat -> Molecule -> VS.Vector Double
-getCoordinates1 s m =
-  let atomCoords  = case s of
-        Serial   -> VB.map _atom_Coordinates (m ^. molecule_Atoms)
-        Parallel -> VB.map _atom_Coordinates (m ^. molecule_Atoms) `using` parTraversable rdeepseq
-      plainCoords = VB.foldl' (VS.++) VS.empty atomCoords
+getCoordinates1 strat mol =
+  let atomCoords  = case strat of
+        Serial   -> IM.map _atom_Coordinates (mol ^. molecule_Atoms)
+        Parallel -> IM.map _atom_Coordinates (mol ^. molecule_Atoms) `using` parTraversable rdeepseq
+      plainCoords = IM.foldl' (VS.++) VS.empty atomCoords
   in  plainCoords
 
 getCoordinates2 :: Strat -> Molecule -> VS.Vector Double

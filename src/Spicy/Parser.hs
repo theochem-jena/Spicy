@@ -48,7 +48,7 @@ maybeOption p = option Nothing (Just <$> p)
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
-parseXYZ = do
+parseXYZ = undefined {- do
   skipSpace
   nAtoms <- decimal
   skipSpace
@@ -83,6 +83,7 @@ parseXYZ = do
         , _atom_PCharge      = Nothing
         , _atom_Coordinates  = VS.fromList [x, y, z]
         }
+-}
 
 
 {-|
@@ -90,7 +91,7 @@ Parse a Tinker XYZ formatted file. It has coordinates and might have connectivit
 This format and therefore parser are not using any layers (recursions of 'Molecule').
 -}
 parseTXYZ :: Parser Molecule
-parseTXYZ = do
+parseTXYZ = undefined {-do
   skipSpace
   nAtoms <- decimal
   _ <- many' (char ' ' <|> char '\t')
@@ -146,6 +147,7 @@ parseTXYZ = do
       i <- decimal
       _ <- many' (char ' ' <|> char '\t')
       return i
+-}
 
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as

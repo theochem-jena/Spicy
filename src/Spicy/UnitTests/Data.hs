@@ -9,17 +9,7 @@ Portability : POSIX, Windows
 
 The module collects data only used for unit testing, such as the correct answers for unit tests.
 -}
-module Spicy.UnitTests.Data
-( moleculeEmpty
-, moleculeHFeCNxH2O
-, moleculeHFeCNxH2OTXYZ
-, moleculeHFeCNxH2OXYZ
-, moleculeHFeCNxH2OMOL2
-, textHFeCNxH2OTXYZ
-, testHFeCNxH2OXYZ
-, testHFeCNxH2OMOL2
-, testHFeCNxH2OSpicy
-) where
+module Spicy.UnitTests.Data where
 import           Data.Text.Lazy        (Text)
 import qualified Data.IntMap.Lazy      as IM
 import qualified Data.IntSet           as IS
@@ -34,6 +24,7 @@ import           Spicy.Types
 ----------------------------------------------------------------------------------------------------
 -- Atom and molecules for testing
 
+{-
 {-|
 Empty molecule.
 -}
@@ -307,3 +298,4 @@ testHFeCNxH2OSpicy = T.pack . concat $
   , "    H        H5              1          No        2.0965600000     -2.8182400000      2.2907100000         4  \n"
   , "    H        H6    P         1     0.40000        2.7085200000     -2.1375800000      3.5614500000  \n"
   ]
+-}

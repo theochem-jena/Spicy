@@ -61,7 +61,8 @@ vConcat a = VB.foldl' T.append "" a
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
 -}
 writeXYZ :: Molecule -> Text
-writeXYZ mol =
+writeXYZ mol = undefined
+{-
   -- Header section with number of atoms and comment
   T.unlines
     [ T.pack . show $ (VB.length $ mol ^. molecule_Atoms)
@@ -77,6 +78,7 @@ writeXYZ mol =
       (T.pack . printf "%-4s" . show $ a ^. atom_Element)
       `T.append`
       (vConcat . VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
+-}
 
 {-|
 Write a Tinker XYZ from a 'Molecule'. The writer trusts the '_atom_FFType' to be
@@ -87,7 +89,8 @@ for visualisation but obviously not for MM.
 This format ingores all deeper level layers of a molecule.
 -}
 writeTXYZ :: Molecule -> Text
-writeTXYZ mol =
+writeTXYZ mol = undefined
+{-
   let atoms        = mol ^. molecule_Atoms
       nAtoms       = VB.length atoms
       -- Index the atoms. Ignore higher
@@ -130,6 +133,7 @@ writeTXYZ mol =
             Just b  ->
               IS.foldl' (\acc x -> acc `T.append` (T.pack $ printf "%6d  " x)) "" (IS.map (+1) b)
             Nothing -> ""
+-}
 
 {-|
 Write a simplified .mol2 file (Tripos SYBYL) from a 'Molecule', containing the atoms, connectivities

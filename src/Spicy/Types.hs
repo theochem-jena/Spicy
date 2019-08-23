@@ -16,7 +16,6 @@ computations on molecules in different software packages.
 module Spicy.Types
 where
 import           Control.DeepSeq
-import qualified Data.Array.Accelerate as A
 import           Data.IntMap.Lazy      (IntMap)
 import           Data.IntSet           (IntSet)
 import qualified Data.Vector           as VB
@@ -41,15 +40,6 @@ if to evaluate in serial or parallel, to avoid nested parallelism. Every method 
 operations by Control.Parallel.Strategies should provide this switch in Spicy.
 -}
 data Strat = Serial | Parallel deriving Eq
-
-{-|
-Indexing type for recursive molecule structures. Count all layers with a global index range
-('Global') or by fragment specific index range ('Individual').
--}
-data IndType =
-    Global
-  | Individual
-  deriving (Eq, Show)
 
 {-|
 Alias for an unboxed matrix from the Array library. This type can easily be converted to
@@ -94,12 +84,10 @@ on the MM software used.
 type FFType = String
 
 {-|
-An Atom in a 'Molecule'.
+An Atom in a 'Molecule'. Atoms are compared by their indices only and they must therefore be unique.
 -}
 data Atom = Atom
-  { _atom_Index       :: Int              -- ^ The index of an atom in a molecule. For counting
-                                          --   conventions refer to 'Molecule' and 'IndType'.
-  , _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
+  { _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
   , _atom_Label       :: AtomLabel        -- ^ Label, e.g. from a pdb, just for identification, can
                                           --   be empty.
   , _atom_IsPseudo    :: Bool             -- ^ Boolean, telling if this is a pseudo atom, introduced
@@ -134,16 +122,14 @@ Two possible types of index countings are possible:
 data Molecule = Molecule
   { _molecule_Label    :: String                   -- ^ Comment or identifier of a molecule. Can be
                                                    --   empty.
-  , _molecule_Atoms    :: VB.Vector Atom           -- ^ A 'VB.Vector' of Atoms.
+  , _molecule_Atoms    :: IntMap Atom              -- ^ An 'IntMap' of 'Atom's, 'Atom's identified
+                                                   --   by their 'Int' index.
   , _molecule_Bonds    :: IntMap IntSet            -- ^ An IntMap, mapping the index of an 'Atom' in
                                                    --   the 'Molecule' to the indices of all
                                                    --   'Atom's, to which it binds.
   , _molecule_SubMol   :: VB.Vector Molecule       -- ^ A Molecule might contain other molecules.
                                                    --   These might be fragments or higher level
                                                    --   ONIOM layers.
-  , _molecule_IndType  :: IndType                  -- ^ Which counting scheme for atoms is used in
-                                                   --   this representation. Must be same for all
-                                                   --   layers.
   , _molecule_Energy   :: Maybe Double             -- ^ An energy, that might have been calculated.
   , _molecule_Gradient :: Maybe (VS.Vector Double) -- ^ A gradient, that might have been calculated.
   , _molecule_Hessian  :: Maybe (UMatrix Double)   -- ^ A hessian, that might have been calculated.
