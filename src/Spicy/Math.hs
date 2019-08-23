@@ -16,8 +16,7 @@ have equal lenght) and trust the caller.
 
 -}
 module Spicy.Math
-( (∩)
-, (<.>)
+( (<.>)
 , vLength
 , vDistance
 , vAngle
@@ -38,14 +37,6 @@ arr <!!> ix =
       atIx = head . VS.toList $ accAtIx
   in  atIx
   -}
-
-
-
-{-|
-Intersection (subset) of two lists a and b.
--}
-(∩) :: Eq a => [a] -> [a] -> [a]
-a ∩ b = a `intersect` b
 
 {-|
 Dot product of two 'VS.Vector's.
