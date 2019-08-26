@@ -23,6 +23,8 @@ import qualified Data.Vector.Storable  as VS
 import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import qualified Data.Array.Unboxed as AU
+import Data.Sequence (Seq)
+import qualified Data.Sequence as S
 
 
 {-|
@@ -127,7 +129,7 @@ data Molecule = Molecule
   , _molecule_Bonds    :: IntMap IntSet            -- ^ An IntMap, mapping the index of an 'Atom' in
                                                    --   the 'Molecule' to the indices of all
                                                    --   'Atom's, to which it binds.
-  , _molecule_SubMol   :: VB.Vector Molecule       -- ^ A Molecule might contain other molecules.
+  , _molecule_SubMol   :: Seq Molecule             -- ^ A Molecule might contain other molecules.
                                                    --   These might be fragments or higher level
                                                    --   ONIOM layers.
   , _molecule_Energy   :: Maybe Double             -- ^ An energy, that might have been calculated.
@@ -137,9 +139,9 @@ data Molecule = Molecule
 makeLenses ''Molecule
 
 {-|
-Trajectories are simply a vector of 'Molecule's.
+Trajectories are simply 'Seq'uences of 'Molecule's.
 -}
-type Trajectory = VB.Vector Molecule
+type Trajectory = Seq Molecule
 
 
 ----------------------------------------------------------------------------------------------------

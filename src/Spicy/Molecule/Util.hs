@@ -12,12 +12,13 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
 (
 ) where
-import           Data.IntMap.Lazy         (IntMap, (!?))
-import qualified Data.IntMap.Lazy         as IM
+import           Data.Foldable
+import           Data.IntMap.Lazy    (IntMap, (!?))
+import qualified Data.IntMap.Lazy    as IM
 import           Data.IntSet         (IntSet, (\\))
 import qualified Data.IntSet         as IS
 import           Data.Maybe
-import qualified Data.Vector         as VB
+import qualified Data.Sequence       as S
 import           Lens.Micro.Platform
 import           Spicy.Types
 
@@ -53,10 +54,10 @@ checkMolecule mol
   | not subsetCheckAtoms   =
       Left "checkMolecule: The atoms of deeper layers are not a subset of this layer."
   | otherwise              =
-      if VB.null (mol ^. molecule_SubMol)
+      if S.null (mol ^. molecule_SubMol)
         then Right mol
         else do
-          subMols <- sequence . VB.map checkMolecule $ mol ^. molecule_SubMol
+          subMols <- traverse checkMolecule $ mol ^. molecule_SubMol
           return $ mol & molecule_SubMol .~ subMols
   where
     -- Indices of the atoms
@@ -69,21 +70,21 @@ checkMolecule mol
     layerIndCheck        = IS.null $ (bondsOrig `IS.union` bondsTarget) \\ atomInds
     -- Next layer molecules
     sM                   = mol ^. molecule_SubMol
-    sMSize               = VB.length sM
+    sMSize               = S.length sM
     -- Disjointment test (no atoms and bonds shared through fragments)
     -- "bA" = Bool_A, "aA" = Atoms_A
     fragAtomsDisjCheck   =
         fst
-      . VB.foldl' (\(bA, aA) (_, aB) ->
+      . foldl' (\(bA, aA) (_, aB) ->
           if aA `iMdisjoint` aB && bA
             then (True, aA `IM.union` aB)
             else (False, aA)
         ) (True, IM.empty)
-      . VB.zip (VB.replicate sMSize True)
-      . VB.map (^. molecule_Atoms)
+      . S.zip (S.replicate sMSize True)
+      . fmap (^. molecule_Atoms)
       $ sM
     -- Next Layer atoms all joined
-    nLAtoms              = IM.unions . VB.map (^. molecule_Atoms) $ sM
+    nLAtoms              = IM.unions . fmap (^. molecule_Atoms) $ sM
     nLAtomsInds          = IM.keysSet nLAtoms
     -- All pseudo atoms of the next layer set
     nLPseudoAtomsInds    = IM.keysSet. IM.filter (^. atom_IsPseudo) $ nLAtoms
@@ -122,12 +123,12 @@ reIndexMolecule repMap mol = do
   -- Reindex the current layer only
   molRI <- reIndexMoleculeLayer repMap mol
     -- If the molecule has no submolecules:
-  if VB.null subMols
+  if S.null subMols
     -- Then we are done.
     then Right molRI
     -- Else we need to reindex the deeper layers also.
     else do
-      subMolsRI <- VB.sequence . VB.map (reIndexMolecule repMap) $ subMols
+      subMolsRI <- traverse (reIndexMolecule repMap) subMols
       reIndexMolecule repMap $ molRI & molecule_SubMol .~ subMolsRI
 
 {-|
