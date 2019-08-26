@@ -24,10 +24,14 @@ module Spicy.Math
 ) where
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.LLVM.Native as A
+import qualified Data.Foldable                     as F
+import           Data.Sequence                     (Seq)
+import qualified Data.Sequence                     as S
 import qualified Data.Vector                       as VB
 import qualified Data.Vector.Storable              as VS
 import           Prelude                           hiding ((<>))
 import qualified Spicy.Math.Internal               as M
+
 
 {-
 (<!!>) :: (VS.Shape sh, VS.Elt e) => VS.Array sh e -> Int -> e
@@ -38,45 +42,46 @@ arr <!!> ix =
   -}
 
 {-|
-Dot product of two 'VS.Vector's.
+Dot product of two 'Seq's.
 -}
-(<.>) :: (VS.Storable a, Num a) => VS.Vector a -> VS.Vector a -> a
-a <.> b = VS.sum $ VS.zipWith (*) a b
+(<.>) :: (Num a) => Seq a -> Seq a -> a
+a <.> b = F.sum $ S.zipWith (*) a b
 
 {-|
-Length of a 'VS.Vector'.
+Length of a 'Seq'.
 -}
-vLength :: (VS.Storable a, Floating a) => VS.Vector a -> a
+vLength :: (Floating a) => Seq a -> a
 vLength a = sqrt $ a <.> a
 
 {-|
-Distance between 2 points ('VS.Vector's).
+Distance between 2 points ('Seq's).
 -}
-vDistance :: (VS.Storable a, Floating a) => VS.Vector a -> VS.Vector a -> a
-vDistance a b = vLength $ VS.zipWith (-) a b
+vDistance :: (Floating a) => Seq a -> Seq a -> a
+vDistance a b = vLength $ S.zipWith (-) a b
 
 {-|
-Angle in radian between 2 'VS.Vector's.
+Angle in radian between 2 'Seq's.
 -}
-vAngle :: (VS.Storable a, Floating a) => VS.Vector a -> VS.Vector a -> a
+vAngle :: (Floating a) => Seq a -> Seq a -> a
 vAngle a b = acos $ (a <.> b) / ((vLength a) * (vLength b))
 
 {-|
-3D cross product of 2 'VS.Vectors'
+3D cross product of 2 'Seqs'
 -}
-vCross :: VS.Vector Double -> VS.Vector Double -> VS.Vector Double
-vCross a b =
-  let a1 = a VS.! 0
-      a2 = a VS.! 1
-      a3 = a VS.! 2
-      b1 = b VS.! 0
-      b2 = b VS.! 1
-      b3 = b VS.! 2
-      c1 = a2 * b3 - a3 * b2
+vCross :: Seq Double -> Seq Double -> Either String (Seq Double)
+vCross a b = do
+  a1 <- maybeToEither err $ a S.!? 0
+  a2 <- maybeToEither err $ a S.!? 1
+  a3 <- maybeToEither err $ a S.!? 2
+  b1 <- maybeToEither err $ b S.!? 0
+  b2 <- maybeToEither err $ b S.!? 1
+  b3 <- maybeToEither err $ b S.!? 2
+  let c1 = a2 * b3 - a3 * b2
       c2 = a3 * b1 - a1 * b3
       c3 = a1 * b2 - a2 * b1
-  in  VS.fromList [c1, c2, c3]
-
+  return $ S.fromList [c1, c2, c3]
+  where
+    err = "vCross: Could not get an element from input sequence"
 
 {-
 -- | Defines the normal vector of a plane, defined by 3 points
@@ -90,34 +95,18 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
     p1Normal = r3VecNormalVecOfPlane3Points (a, b, c)
     p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
 
--- vectorProduct :: VS.Vector Double -> VS.Vector Double -> VS.Scalar Double
+-- vectorProduct :: Seq Double -> Seq Double -> VS.Scalar Double
 -- vectorProduct = $( VS.runQ vectorProduct' )
 -}
 
 ----------------------------------------------------------------------------------------------------
 -- Helper functions, not to be exported
-
 {-|
-Convert
+Convert a 'Maybe' value to an 'Either' value.
 -}
-
-{-
-parVector :: NFData a => Strategy (V.Vector a)
-parVector vec =
-  let vLen = V.length vec
-      half = vLen `div` 2
-      minChunk = 10
-  in  if vLen > minChunk
-      then do
-        let v1 = V.unsafeSlice 0 half vec
-            v2 = V.unsafeSlice half (vLen - half) vec
-        parVector v1
-        parVector v2
-        return vec
-      else
-        evalChunk (vLen-1) >>
-        return vec
-  where
-  evalChunk 0 = rpar (rdeepseq (vec V.! 0)) >> return vec
-  evalChunk i = rpar (rdeepseq (vec V.! i)) >> evalChunk (i-1)
--}
+maybeToEither ::
+     a          -- ^ 'Left' a will be returned if 'Maybe' was 'Nothing'.
+  -> Maybe b    -- ^ 'Right' 'b' will be returned if 'Maybe' was 'Just' 'b'
+  -> Either a b
+maybeToEither e Nothing  = Left e
+maybeToEither e (Just a) = Right a

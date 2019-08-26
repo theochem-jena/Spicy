@@ -12,7 +12,7 @@ Definitions of auxiliary functions to deal with the GHC bug, making it necessary
 wrapped in the 'Spicy.Math' module.
 -}
 module Spicy.Math.Internal
-( getCoordinates1
+( getCoordinates
 ) where
 import           Control.Parallel.Strategies
 import qualified Data.Array.Accelerate       as A
