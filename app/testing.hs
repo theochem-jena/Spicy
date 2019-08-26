@@ -19,6 +19,8 @@ import           Spicy.UnitTests.Data
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
+import Data.Sequence (Seq)
+import qualified Data.Sequence as S
 
 
 -- instance Show Molecule where
@@ -51,33 +53,33 @@ testMath = testGroup "Math"
   ]
 
 {-|
-Dot product of 2 simple 'A.Vector's by Accelerate.
+Dot product of 2 simple vectors.
 -}
 testDotProduct :: TestTree
 testDotProduct =
-  let vecA = VS.fromList [1, 2 ,3]  :: VS.Vector Double
-      vecB = VS.fromList [-7, 8, 9] :: VS.Vector Double
+  let vecA = S.fromList [1, 2 ,3]  :: Seq Double
+      vecB = S.fromList [-7, 8, 9] :: Seq Double
       dotProduct = 36
   in  testCase "Math Dot Product" $
         vecA <.> vecB @?= dotProduct
 
 {-|
-Length of a 'A.Vector' by Accelerate.
+Length of a vector.
 -}
 testVLength :: TestTree
 testVLength =
-  let vecA = VS.fromList [2, 4, 4] :: VS.Vector Double
+  let vecA = S.fromList [2, 4, 4] :: Seq Double
       len  = 6
   in  testCase "Vector Length" $
         vLength vecA @?= len
 
 {-|
-Distance between 2 points, represented by 'A.Vector's.
+Distance between 2 points.
 -}
 testVDistance :: TestTree
 testVDistance =
-  let vecA = VS.fromList [0, 0, 10] :: VS.Vector Double
-      vecB = VS.fromList [0, 0, 0]  :: VS.Vector Double
+  let vecA = S.fromList [0, 0, 10] :: Seq Double
+      vecB = S.fromList [0, 0, 0]  :: Seq Double
       dist = 10
   in  testCase "Vectors Distance" $
         vDistance vecA vecB @?= dist
@@ -87,8 +89,8 @@ Anlge between two 'A.Vector's by Accelerate.
 -}
 testVAngle :: TestTree
 testVAngle =
-  let vecA  = VS.fromList [0, 0, 1] :: VS.Vector Double
-      vecB  = VS.fromList [0, 1, 0] :: VS.Vector Double
+  let vecA  = S.fromList [0, 0, 1] :: Seq Double
+      vecB  = S.fromList [0, 1, 0] :: Seq Double
       angle = 0.5 * pi
   in  testCase "Vectors Angle" $
         vAngle vecA vecB @?= angle
@@ -98,11 +100,11 @@ Cross product between two 'A.Vector's by Accelerate.
 -}
 testVCross :: TestTree
 testVCross =
-  let vecA = VS.fromList [0, 0, 1]  :: VS.Vector Double
-      vecB = VS.fromList [0, 1, 0]  :: VS.Vector Double
-      vecC = VS.fromList [-1, 0, 0] :: VS.Vector Double
+  let vecA = S.fromList [0, 0, 1]  :: Seq Double
+      vecB = S.fromList [0, 1, 0]  :: Seq Double
+      vecC = S.fromList [-1, 0, 0] :: Seq Double
   in  testCase "Vectors Cross Product" $
-        vCross vecA vecB @?= vecC
+        vCross vecA vecB @?= Right vecC
 
 
 ----------------------------------------------------------------------------------------------------
