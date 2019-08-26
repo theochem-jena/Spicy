@@ -87,18 +87,20 @@ type FFType = String
 
 {-|
 An Atom in a 'Molecule'. Atoms are compared by their indices only and they must therefore be unique.
+The coordinates of the 'Atom' are defined as 'Seq', as this is extremely easy to concatenate when
+building a coordinate vector.
 -}
 data Atom = Atom
-  { _atom_Element     :: Element          -- ^ Chemical 'Element' of the atom.
-  , _atom_Label       :: AtomLabel        -- ^ Label, e.g. from a pdb, just for identification, can
-                                          --   be empty.
-  , _atom_IsPseudo    :: Bool             -- ^ Boolean, telling if this is a pseudo atom, introduced
-                                          --   because a bond was broken.
-  , _atom_FFType      :: FFType           -- ^ Label depending on the MM software used, identifying
-                                          --   topological atom.
-  , _atom_PCharge     :: Maybe Double     -- ^ Possibly a partial charge.
-  , _atom_Coordinates :: VS.Vector Double -- ^ Coordinates of the atom, cartesian in R³. Relies on
-                                          --   the parser to fill with exactly 3 values.
+  { _atom_Element     :: Element      -- ^ Chemical 'Element' of the atom.
+  , _atom_Label       :: AtomLabel    -- ^ Label, e.g. from a pdb, just for identification, can
+                                      --   be empty.
+  , _atom_IsPseudo    :: Bool         -- ^ Boolean, telling if this is a pseudo atom, introduced
+                                      --   because a bond was broken.
+  , _atom_FFType      :: FFType       -- ^ Label depending on the MM software used, identifying
+                                      --   topological atom.
+  , _atom_PCharge     :: Maybe Double -- ^ Possibly a partial charge.
+  , _atom_Coordinates :: Seq Double   -- ^ Coordinates of the atom, cartesian in R³. Relies on
+                                      --   the parser to fill with exactly 3 values.
   } deriving (Eq, Generic, Show)
 makeLenses ''Atom
 
