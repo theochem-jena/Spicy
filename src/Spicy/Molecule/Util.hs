@@ -12,8 +12,8 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
 (
 ) where
-import           Data.IntMap         (IntMap, (!?))
-import qualified Data.IntMap         as IM
+import           Data.IntMap.Lazy         (IntMap, (!?))
+import qualified Data.IntMap.Lazy         as IM
 import           Data.IntSet         (IntSet, (\\))
 import qualified Data.IntSet         as IS
 import           Data.Maybe
@@ -31,7 +31,83 @@ import           Spicy.Types
 "nS" = new set
 "oA" = old atom
 "nA" = new atom
+"sM" = sub molecules
+"nL" = next layer
+"pA" = pseudo atoms
 -}
+
+{-|
+Check if a single 'Molecule' layer has sane indices ('IM.Key') in the 'IntMap' for '_molecule_Atoms'
+and '_molecule_SubMol', meaning the bonds do not include 'Atom's, that do not exist. Then
+recursively check if the 'Atom's of deeper layers are proper subsets of the higher layer, both for
+'_molecule_Atoms' and '_molecule_Bonds'. Also checks if fragments of the same layer are disjoint.
+Returns the 'Molecule' without modifications if it is sane, a string with description of the found
+problem otherwise. This check is exhaustive and potentially expensive.
+-}
+checkMolecule :: Molecule -> Either String Molecule
+checkMolecule mol
+  | not layerIndCheck      =
+      Left "checkMolecule: Bonds vs Atoms mismatch. Your bonds bind to non existing atoms."
+  | not fragAtomsDisjCheck =
+      Left "checkMolecule: The atoms of deeper layers are not disjoint but shared by fragments."
+  | not subsetCheckAtoms   =
+      Left "checkMolecule: The atoms of deeper layers are not a subset of this layer."
+  | otherwise              =
+      if VB.null (mol ^. molecule_SubMol)
+        then Right mol
+        else do
+          subMols <- sequence . VB.map checkMolecule $ mol ^. molecule_SubMol
+          return $ mol & molecule_SubMol .~ subMols
+  where
+    -- Indices of the atoms
+    atomInds             = IM.keysSet $ mol ^. molecule_Atoms
+    -- Indices of the bond origin atoms
+    bondsOrig            = IM.keysSet $ mol ^. molecule_Bonds
+    -- Indices of the bond target atoms
+    bondsTarget          = IS.unions $ mol ^. molecule_Bonds
+    -- Check if bond indices do not exceed atom indices.
+    layerIndCheck        = IS.null $ (bondsOrig `IS.union` bondsTarget) \\ atomInds
+    -- Next layer molecules
+    sM                   = mol ^. molecule_SubMol
+    sMSize               = VB.length sM
+    -- Disjointment test (no atoms and bonds shared through fragments)
+    -- "bA" = Bool_A, "aA" = Atoms_A
+    fragAtomsDisjCheck   =
+        fst
+      . VB.foldl' (\(bA, aA) (_, aB) ->
+          if aA `iMdisjoint` aB && bA
+            then (True, aA `IM.union` aB)
+            else (False, aA)
+        ) (True, IM.empty)
+      . VB.zip (VB.replicate sMSize True)
+      . VB.map (^. molecule_Atoms)
+      $ sM
+    -- Next Layer atoms all joined
+    nLAtoms              = IM.unions . VB.map (^. molecule_Atoms) $ sM
+    nLAtomsInds          = IM.keysSet nLAtoms
+    -- All pseudo atoms of the next layer set
+    nLPseudoAtomsInds    = IM.keysSet. IM.filter (^. atom_IsPseudo) $ nLAtoms
+    -- Test if the next deeper layer is a proper subset of the current layer.
+    subsetCheckAtoms     = IS.null $ (nLAtomsInds \\ nLPseudoAtomsInds) \\ atomInds
+    {-
+    -- This check doesn't need to be true, as pseudobonds can break the subset property.
+    -- All Bonds of the next layer joinded
+    nLBonds              = IM.unions . VB.map (^. molecule_Bonds) $ sM
+    -- Exclude bonds from and to pseudo atoms in deeper layers
+    nLBondsOrigin        = IM.keysSet nLBonds \\ nLPseudoAtomsInds
+    nLBondsTarget        = IS.unions nLBonds \\ nLPseudoAtomsInds
+    subsetCheckBonds     =
+      (nLBondsOrigin `IS.union` nLBondsTarget) \\ (bondsTarget `IS.union` bondsOrig)
+    -}
+
+{-|
+Check if 2 'IntMap' are disjoint in their 'IM.Key's.
+-}
+iMdisjoint ::
+     IntMap a
+  -> IntMap b
+  -> Bool
+iMdisjoint a b = IM.null $ a `IM.intersection` b
 
 {-|
 Reindex a complete 'Molecule', including all its deeper layers in '_molecule_SubMol') by mappings
@@ -164,7 +240,7 @@ replaceIMIS ::
      IntMap Int    -- ^ 'IntMap' containing the mapping from old 'IS.Key's to new 'IS.Key's.
   -> IntMap IntSet -- ^ Original structure, which to replace both keys and values.
   -> IntMap IntSet -- ^ modified structure.
-replaceIMIS repMap imis = undefined
+replaceIMIS repMap imis =
   -- Replace all values in all IntSet
     IM.map (replaceIS repMap)
   -- Replace all lookup keys
