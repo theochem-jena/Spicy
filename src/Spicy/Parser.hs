@@ -14,26 +14,13 @@ module Spicy.Parser
   parseXYZ
 , parseTXYZ
 , parseMOL2
+, parsePDB
 , parseSpicy
 -- * Generic formats
 , parseHMatrix
 ) where
-import           Control.Applicative
 import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
-import           Data.IntMap.Lazy          (IntMap)
-import qualified Data.IntMap.Lazy          as IM
-import           Data.IntSet               (IntSet)
-import qualified Data.IntSet               as I
-import qualified Data.IntSet               as IS
-import           Data.Maybe
-import qualified Data.Text                 as TS
-import qualified Data.Text.Lazy            as T
-import           Data.Tuple
-import qualified Data.Vector               as VB
-import qualified Data.Vector.Storable      as VS
-import           Lens.Micro.Platform
-import           Spicy.MolWriter
 import           Spicy.Types
 
 
@@ -253,6 +240,9 @@ parseMOL2 = undefined {- do
           endOfLine
           return (originAtom - 1, targetAtom - 1)
 -}
+
+parsePDB :: Parser Molecule
+parsePDB = undefined
 
 {-|
 Parser for the Spicy format used in this program. Represents fully all informations stored in the

@@ -16,26 +16,13 @@ module Spicy.MolWriter
 ( writeXYZ
 , writeTXYZ
 , writeMOL2
+, writePDB
 , writeSpicy
-, Molecule(..)
 ) where
-import qualified Data.Array.Accelerate                        as A
-import qualified Data.Array.Accelerate.IO.Data.Vector.Generic as A
-import qualified Data.Array.Accelerate.LLVM.Native            as A
-import qualified Data.IntMap.Lazy                             as IM
-import qualified Data.IntSet                                  as I
-import qualified Data.IntSet                                  as IS
-import           Data.List
-import           Data.List.Split
-import           Data.Maybe
-import           Data.Text.Lazy                               (Text)
-import qualified Data.Text.Lazy                               as T
-import           Data.Tuple
-import qualified Data.Vector                                  as VB
-import qualified Data.Vector.Storable                         as VS
-import           Lens.Micro.Platform
+import           Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as T
+import qualified Data.Vector    as VB
 import           Spicy.Types
-import           Text.Printf
 
 {-|
 Portable new line character.
@@ -61,7 +48,7 @@ vConcat a = VB.foldl' T.append "" a
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
 -}
 writeXYZ :: Molecule -> Text
-writeXYZ mol = undefined
+writeXYZ _mol = undefined
 {-
   -- Header section with number of atoms and comment
   T.unlines
@@ -89,7 +76,7 @@ for visualisation but obviously not for MM.
 This format ingores all deeper level layers of a molecule.
 -}
 writeTXYZ :: Molecule -> Text
-writeTXYZ mol = undefined
+writeTXYZ _mol = undefined
 {-
   let atoms        = mol ^. molecule_Atoms
       nAtoms       = VB.length atoms
@@ -143,7 +130,7 @@ files that have correct topology and geometry, but visualisation programs wont b
 correct elements.
 -}
 writeMOL2 :: Molecule -> Text
-writeMOL2 mol = undefined
+writeMOL2 _mol = undefined
 {-
   let atoms  = mol ^. molecule_Atoms
       nAtoms = VB.length atoms
@@ -222,12 +209,15 @@ writeMOL2 mol = undefined
     numberedBonds = V.generate nBonds (\i -> (i, pairBonds !! i))
 -}
 
+writePDB :: Molecule -> Text
+writePDB _mol = undefined
+
 {-|
 Write Spicy format, which is a custom format (not stable yet), containing all informations, that are
 internally used to represent a molecule.
 -}
 writeSpicy :: Molecule -> String
-writeSpicy m = undefined
+writeSpicy _mol = undefined
 {-
   "#Spicy-Format v0.2\n" ++
   "\n" ++

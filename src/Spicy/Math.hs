@@ -22,15 +22,10 @@ module Spicy.Math
 , vAngle
 , vCross
 ) where
-import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.LLVM.Native as A
-import qualified Data.Foldable                     as F
-import           Data.Sequence                     (Seq)
-import qualified Data.Sequence                     as S
-import qualified Data.Vector                       as VB
-import qualified Data.Vector.Storable              as VS
-import           Prelude                           hiding ((<>))
-import qualified Spicy.Math.Internal               as M
+import qualified Data.Foldable as F
+import           Data.Sequence (Seq)
+import qualified Data.Sequence as S
+import           Prelude       hiding ((<>))
 
 
 {-

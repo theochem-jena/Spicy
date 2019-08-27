@@ -4,23 +4,11 @@ parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
 {-# LANGUAGE OverloadedStrings #-}
-import qualified Data.Array.Accelerate     as A
-import           Data.Attoparsec.Text.Lazy
-import qualified Data.ByteString.Lazy.UTF8 as LBS
-import           Data.Maybe
-import qualified Data.Text.Lazy.IO         as T
-import qualified Data.Vector               as VB
-import qualified Data.Vector.Storable      as VS
+import           Data.Sequence    (Seq)
+import qualified Data.Sequence    as S
 import           Spicy.Math
-import           Spicy.MolWriter
-import           Spicy.Parser
-import           Spicy.Types
-import           Spicy.UnitTests.Data
 import           Test.Tasty
-import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
-import Data.Sequence (Seq)
-import qualified Data.Sequence as S
 
 
 -- instance Show Molecule where

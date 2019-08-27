@@ -9,17 +9,10 @@ Portability : POSIX, Windows
 
 The module collects data only used for unit testing, such as the correct answers for unit tests.
 -}
-module Spicy.UnitTests.Data where
-import qualified Data.Array.Accelerate as A
-import qualified Data.IntMap.Lazy      as IM
-import qualified Data.IntMap.Lazy      as I
-import qualified Data.IntSet           as IS
-import           Data.Text.Lazy        (Text)
-import qualified Data.Text.Lazy        as T
-import qualified Data.Vector           as VB
-import qualified Data.Vector.Storable  as VS
-import           Lens.Micro.Platform
-import           Spicy.Types
+module Spicy.UnitTests.Data
+(
+) where
+
 
 ----------------------------------------------------------------------------------------------------
 -- Atom and molecules for testing

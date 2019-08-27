@@ -1,7 +1,7 @@
 {-
 Benchmarks of Spicy functions
 -}
-{-# LANGUAGE BangPatterns #-}
+{-
 import           Criterion.Main
 import           Data.Attoparsec.Text.Lazy (many1, parse)
 import qualified Data.IntMap               as I
@@ -12,6 +12,7 @@ import           Lens.Micro.Platform
 import           Spicy.MolWriter
 import           Spicy.Parser
 import           Spicy.Types
+-}
 
 
 main :: IO ()

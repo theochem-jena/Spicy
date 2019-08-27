@@ -11,24 +11,21 @@ Definitions of auxiliary functions to deal with the GHC bug, making it necessary
 'A.runQ' expressions as untyped slices. Functions in this module are not meant for direct use, but
 wrapped in the 'Spicy.Math' module.
 -}
+{-# LANGUAGE TypeOperators #-}
 module Spicy.Math.Internal
 ( getCoordinates
 , distMat
 ) where
 import           Control.Parallel.Strategies
-import Data.Array.Accelerate       as A
-import Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
-import Data.Array.Accelerate.Control.Lens
-import qualified Data.Foldable               as F
-import           Data.IntMap                 (IntMap)
-import qualified Data.IntMap                 as IM
-import           Data.Sequence               (Seq)
-import qualified Data.Sequence               as S
-import qualified Data.Vector                 as VB
-import qualified Data.Vector.Storable        as VS
--- import           Lens.Micro.Platform
+import           Data.Array.Accelerate                         as A
+import           Data.Array.Accelerate.Control.Lens
+import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
+import qualified Data.Foldable                                 as F
+import qualified Data.IntMap                                   as IM
+import qualified Data.Sequence                                 as S
+import qualified Data.Vector.Storable                          as VS
+import           Prelude                                       hiding ((/=))
 import           Spicy.Types
-import Prelude hiding ((/=))
 
 {-|
 Get the 'Atom' '_atom_Coordinates' from a 'Molecule' and convert to a plain 'VS.Vector'. This is

@@ -8,23 +8,41 @@ Stability   : experimental
 Portability : POSIX, Windows
 
 Spicy.Types contains the definition of all classes and data types, that are used in Spicy. Mainly it
-takes care of the description of molecules (structure, topology, potential energy surface, ...) and
-computations on molecules in different software packages.
+takes care of the description of molecules (structure, topology, potential energy surface, ...).
 -}
 {-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE DeriveGeneric   #-}
 module Spicy.Types
-where
+( Strat(..)
+, UMatrix
+, Element(..)
+, AtomLabel
+, FFType
+, Atom(..)
+, atom_Element
+, atom_Label
+, atom_IsPseudo
+, atom_FFType
+, atom_PCharge
+, atom_Coordinates
+, Molecule(..)
+, molecule_Label
+, molecule_Atoms
+, molecule_Bonds
+, molecule_SubMol
+, molecule_Energy
+, molecule_Gradient
+, molecule_Hessian
+, Trajectory
+) where
 import           Control.DeepSeq
 import           Data.IntMap.Lazy      (IntMap)
 import           Data.IntSet           (IntSet)
-import qualified Data.Vector           as VB
 import qualified Data.Vector.Storable  as VS
 import           GHC.Generics          (Generic)
 import           Lens.Micro.Platform
 import qualified Data.Array.Unboxed as AU
 import Data.Sequence (Seq)
-import qualified Data.Sequence as S
 
 
 {-|

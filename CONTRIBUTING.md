@@ -39,6 +39,8 @@ reIndexBonds repMap bondsMap
     lostKeysIS = oldSets \\ repKeys
   ```
 
+Before pull requests, make sure to rebuild the complete Haddock documentation with `stack haddock --haddock-arguments "--odir=./doc/haddock"`.
+
 ### Function Declaration and Indentation
 Line width maximum is 100 characters, both for comments and for code. Generally functions should not be longer than 30 lines (excluding comments and possibly multiline records). If a function cannot be expressed in 30 lines, split it into atomic functions. Short functions are easier to understand, debug and reuse. Expections might be parsers and writers for text processing or wrapper interactions in a process.
 

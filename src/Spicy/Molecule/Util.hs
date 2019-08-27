@@ -10,7 +10,8 @@ Portability : POSIX, Windows
 This module provides functions to manipulate basic data structures of 'Molecule's, such as indexing.
 -}
 module Spicy.Molecule.Util
-(
+( checkMolecule
+, reIndexMolecule
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap, (!?))
