@@ -22,10 +22,13 @@ module Spicy.Parser
 import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.IntMap               as IM
+import           Data.IntSet               (IntSet)
+import qualified Data.IntSet               as IS
 import           Data.Maybe
 import qualified Data.Sequence             as S
 import qualified Data.Text                 as TS
 import qualified Data.Text.Lazy            as TL
+import           Lens.Micro.Platform
 import           Prelude                   hiding (cycle, foldl1, foldr1, head,
                                             init, last, maximum, minimum, tail,
                                             take, takeWhile, (!!))
@@ -39,14 +42,22 @@ Make a parser optional and wrap it in a 'Maybe'.
 maybeOption :: Parser a -> Parser (Maybe a)
 maybeOption p = option Nothing (Just <$> p)
 
+{-|
+Parser for skiping non line breaking space.
+-}
+skipSpace' :: Parser ()
+skipSpace' = do
+  _ <- takeWhile (`elem` [' ', '\t', '\f', '\v'])
+  return ()
+
 ----------------------------------------------------------------------------------------------------
 {-|
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
 parseXYZ = do
-  nAtoms <- skipSpace *> decimal
-  label  <- skipSpace *> takeWhile (/= '\n')
+  nAtoms <- skipSpace' *> decimal
+  label  <- skipSpace *> takeWhile (/= '\n') <* skipSpace
   atoms  <- count nAtoms xyzLineParser
   return Molecule
     { _molecule_Label    = TL.pack . TS.unpack $ label
@@ -60,10 +71,10 @@ parseXYZ = do
   where
     xyzLineParser :: Parser Atom
     xyzLineParser = do
-      cElement <- skipSpace *> many1 letter
-      x        <- skipSpace *> double
-      y        <- skipSpace *> double
-      z        <- skipSpace *> double
+      cElement <- skipSpace' *> many1 letter
+      x        <- skipSpace' *> double
+      y        <- skipSpace' *> double
+      z        <- skipSpace' *> double
       skipSpace
       return Atom
         { _atom_Element     = fromMaybe H . readMaybe $ cElement
@@ -73,7 +84,6 @@ parseXYZ = do
         , _atom_PCharge     = Nothing
         , _atom_Coordinates = S.fromList [x, y, z]
         }
-
 
 {-|
 Parse a Tinker XYZ formatted file. It has coordinates and might have connectivity and atom types.
