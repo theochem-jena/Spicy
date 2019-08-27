@@ -66,12 +66,12 @@ parseXYZ = do
       z        <- skipSpace *> double
       skipSpace
       return Atom
-        { _atom_Element      = fromMaybe H . readMaybe $ cElement
-        , _atom_Label        = ""
-        , _atom_IsPseudo     = False
-        , _atom_FFType       = ""
-        , _atom_PCharge      = Nothing
-        , _atom_Coordinates  = S.fromList [x, y, z]
+        { _atom_Element     = fromMaybe H . readMaybe $ cElement
+        , _atom_Label       = ""
+        , _atom_IsPseudo    = False
+        , _atom_FFType      = ""
+        , _atom_PCharge     = Nothing
+        , _atom_Coordinates = S.fromList [x, y, z]
         }
 
 
