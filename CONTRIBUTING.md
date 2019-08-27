@@ -38,14 +38,18 @@ reIndexBonds repMap bondsMap
     lostKeysIM = oldKeys \\ repKeys
     lostKeysIS = oldSets \\ repKeys
   ```
-  
+
 ### Function Declaration and Indentation
 Line width maximum is 100 characters, both for comments and for code. Generally functions should not be longer than 30 lines (excluding comments and possibly multiline records). If a function cannot be expressed in 30 lines, split it into atomic functions. Short functions are easier to understand, debug and reuse. Expections might be parsers and writers for text processing or wrapper interactions in a process.
-  
+
 Indentation width is exactly 2 spaces. `->` in `case` statements and `=` in assignments of the same level (e.g. in the same `where` or `let` blocks should be on the same column. The code in a `let ... in  ...` construct should begin in the same column. Therefore one space after `let` but two after `in`.
 
 In case of multiline functions, do not start the function definition in the same line as the `=`.
-  
+
+Imports and modules should be cleaned with stylish-haskell.
+
+Avoid *ALL* [partial functions](https://wiki.haskell.org/Partial_functions).
+
 __*Example:*__
 ```haskell
 {-|
@@ -72,7 +76,7 @@ isRepMapCompleteIM repMap bondsMap =
 ```
 
 ## Testing and Benchmarking
-For all major functions (all that are exported in a module) there must be a unit or golden test. *ALL* tests muss pass. Tests are in written in the [Tasty](http://hackage.haskell.org/package/tasty) framework, both for unit tests and golden tests. 
+For all major functions (all that are exported in a module) there must be a unit or golden test. *ALL* tests muss pass. Tests are in written in the [Tasty](http://hackage.haskell.org/package/tasty) framework, both for unit tests and golden tests.
 Tests should be performed by a simple `stack test`.
 
 Spicy shall be able to handle large molecules up to protein size. Use [Criterion](http://hackage.haskell.org/package/criterion) benchmarks for functions, that need to handle large data structures and test for different input sizes, to check if they scale and parallelise well. Benchmarks can be executed by `stack bench`, but this can cause problems with parallel functions. Better build the executable and run it standalone as `stack exec benchmarks`.
