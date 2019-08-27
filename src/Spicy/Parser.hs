@@ -90,16 +90,15 @@ Parse a Tinker XYZ formatted file. It has coordinates and might have connectivit
 This format and therefore parser are not using any layers (recursions of 'Molecule').
 -}
 parseTXYZ :: Parser Molecule
-parseTXYZ = undefined {-do
-  skipSpace
-  nAtoms <- decimal
-  _ <- many' (char ' ' <|> char '\t')
-  comment <- manyTill anyChar endOfLine
+parseTXYZ = do
+  _nAtoms     <- skipSpace' *> (decimal :: Parser Int)
+  label       <- skipSpace' *> takeWhile (/= '\n') <* skipSpace
   conAndAtoms <- many1 txyzLineParser
   return Molecule
-    { _molecule_Label    = comment
-    , _molecule_Atoms    = VB.fromList . map snd $ conAndAtoms
+    { _molecule_Label    = TL.pack . TS.unpack $ label
+    , _molecule_Atoms    = IM.fromList . map (\a -> (a ^. _1 . _1, a ^. _2)) $ conAndAtoms
     , _molecule_Bonds    = IM.fromList . map fst $ conAndAtoms
+    , _molecule_SubMol   = S.empty
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -109,44 +108,31 @@ parseTXYZ = undefined {-do
     -- suitable to construct the 'IntMap' is returned additional to the pure atoms.
     txyzLineParser :: Parser ((Int, IntSet), Atom)
     txyzLineParser = do
-      skipSpace
-      index <- (\a -> a - 1) <$> decimal
-      skipSpace
-      cElement <- many1 letter
-      skipSpace
-      x <- double
-      skipSpace
-      y <- double
-      skipSpace
-      z <- double
-      skipSpace
-      mFFType <- maybeOption decimal
-      _ <- many' (char ' ' <|> char '\t')
-      connectivityRaw <- many' columnDecimal
+      index           <- skipSpace' *> ((\a -> a - 1) <$> decimal)
+      cElement        <- skipSpace' *> many1 letter
+      x               <- skipSpace' *> double
+      y               <- skipSpace' *> double
+      z               <- skipSpace' *> double
+      mFFType         <- skipSpace' *> maybeOption decimal
+      connectivityRaw <- skipSpace' *> many' columnDecimal
       endOfLine
       return
         ( (index, IS.fromList connectivityRaw)
         , Atom
-            { _atom_Index        = index
-            , _atom_Element      = read cElement
+            { _atom_Element      = fromMaybe H . readMaybe $ cElement
             , _atom_Label        = ""
             , _atom_IsPseudo     = False
             , _atom_FFType       =
                 case mFFType of
                   Nothing -> ""
-                  Just x' -> show x'
+                  Just a  -> TL.pack . show $ (a :: Int)
             , _atom_PCharge      = Nothing
-            , _atom_Coordinates  = VS.fromList [x, y, z]
+            , _atom_Coordinates  = S.fromList [x, y, z]
             }
           )
     -- Parse multiple non-line-breaking whitespace separated decimals.
     columnDecimal :: Parser Int
-    columnDecimal = do
-      _ <- many' (char ' ' <|> char '\t')
-      i <- decimal
-      _ <- many' (char ' ' <|> char '\t')
-      return i
--}
+    columnDecimal = skipSpace' *> decimal <* skipSpace'
 
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
