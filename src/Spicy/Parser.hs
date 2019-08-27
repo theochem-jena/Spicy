@@ -21,7 +21,16 @@ module Spicy.Parser
 ) where
 import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
+import qualified Data.IntMap               as IM
+import           Data.Maybe
+import qualified Data.Sequence             as S
+import qualified Data.Text                 as TS
+import qualified Data.Text.Lazy            as TL
+import           Prelude                   hiding (cycle, foldl1, foldr1, head,
+                                            init, last, maximum, minimum, tail,
+                                            take, takeWhile, (!!))
 import           Spicy.Types
+import           Text.Read
 
 
 {-|
@@ -35,16 +44,15 @@ maybeOption p = option Nothing (Just <$> p)
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
-parseXYZ = undefined {- do
-  skipSpace
-  nAtoms <- decimal
-  skipSpace
-  comment <- manyTill anyChar endOfLine
-  atoms <- count nAtoms xyzLineParser
+parseXYZ = do
+  nAtoms  <- skipSpace *> decimal
+  label   <- skipSpace *> takeWhile (/= '\n')
+  atoms   <- count nAtoms xyzLineParser
   return Molecule
-    { _molecule_Label    = comment
-    , _molecule_Atoms    = VB.fromList atoms
+    { _molecule_Label    = TL.pack . TS.unpack $ label
+    , _molecule_Atoms    = IM.fromList $ zip [ 0 .. ] atoms
     , _molecule_Bonds    = IM.empty
+    , _molecule_SubMol   = S.empty
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -52,25 +60,19 @@ parseXYZ = undefined {- do
   where
     xyzLineParser :: Parser Atom
     xyzLineParser = do
-      skipSpace
-      cElement <- many1 letter
-      skipSpace
-      x <- double
-      skipSpace
-      y <- double
-      skipSpace
-      z <- double
+      cElement <- skipSpace *> many1 letter
+      x        <- skipSpace *> double
+      y        <- skipSpace *> double
+      z        <- skipSpace *> double
       skipSpace
       return Atom
-        { _atom_Index        = 0
-        , _atom_Element      = read cElement
+        { _atom_Element      = fromMaybe H . readMaybe $ cElement
         , _atom_Label        = ""
         , _atom_IsPseudo     = False
         , _atom_FFType       = ""
         , _atom_PCharge      = Nothing
-        , _atom_Coordinates  = VS.fromList [x, y, z]
+        , _atom_Coordinates  = S.fromList [x, y, z]
         }
--}
 
 
 {-|
