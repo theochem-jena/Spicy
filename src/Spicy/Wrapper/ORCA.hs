@@ -5,3 +5,5 @@ module Spicy.Wrapper.ORCA
 (
 
 ) where
+import           Prelude hiding (cycle, foldl1, foldr1, head, init, last,
+                          maximum, minimum, tail, take, takeWhile, (!!))

@@ -25,7 +25,8 @@ module Spicy.Math
 import qualified Data.Foldable as F
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as S
-import           Prelude       hiding ((<>))
+import           Prelude       hiding (cycle, foldl1, foldr1, head, init, last,
+                                maximum, minimum, tail, take, takeWhile, (!!))
 
 
 {-

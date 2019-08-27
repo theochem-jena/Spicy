@@ -21,6 +21,9 @@ import qualified Data.IntSet         as IS
 import           Data.Maybe
 import qualified Data.Sequence       as S
 import           Lens.Micro.Platform
+import           Prelude             hiding (cycle, foldl1, foldr1, head, init,
+                                      last, maximum, minimum, tail, take,
+                                      takeWhile, (!!))
 import           Spicy.Types
 
 {-

@@ -12,6 +12,7 @@ takes care of the description of molecules (structure, topology, potential energ
 -}
 {-# LANGUAGE DeriveAnyClass  #-}
 {-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Spicy.Types
 ( Strat(..)
 , UMatrix
@@ -36,13 +37,17 @@ module Spicy.Types
 , Trajectory
 ) where
 import           Control.DeepSeq
-import           Data.IntMap.Lazy      (IntMap)
-import           Data.IntSet           (IntSet)
-import qualified Data.Vector.Storable  as VS
-import           GHC.Generics          (Generic)
+import qualified Data.Array.Unboxed   as AU
+import           Data.IntMap.Lazy     (IntMap)
+import           Data.IntSet          (IntSet)
+import           Data.Sequence        (Seq)
+import           Data.Text.Lazy       (Text)
+import qualified Data.Vector.Storable as VS
+import           GHC.Generics         (Generic)
 import           Lens.Micro.Platform
-import qualified Data.Array.Unboxed as AU
-import Data.Sequence (Seq)
+import           Prelude              hiding (cycle, foldl1, foldr1, head, init,
+                                       last, maximum, minimum, tail, take,
+                                       takeWhile, (!!))
 
 
 {-|
@@ -95,13 +100,13 @@ data Element =
 An atom label. They may come from pdb or force field parameter files or can be assigned by other
 ways just to distinguish specific atoms.
 -}
-type AtomLabel = String
+type AtomLabel = Text
 
 {-|
 These are labels for molecular mechanics software. The strings are basically arbitrary and depending
 on the MM software used.
 -}
-type FFType = String
+type FFType = Text
 
 {-|
 An Atom in a 'Molecule'. Atoms are compared by their indices only and they must therefore be unique.
@@ -142,7 +147,7 @@ Two possible types of index countings are possible:
     pseudoatoms do not need any special treatment.
 -}
 data Molecule = Molecule
-  { _molecule_Label    :: String                   -- ^ Comment or identifier of a molecule. Can be
+  { _molecule_Label    :: Text                     -- ^ Comment or identifier of a molecule. Can be
                                                    --   empty.
   , _molecule_Atoms    :: IntMap Atom              -- ^ An 'IntMap' of 'Atom's, 'Atom's identified
                                                    --   by their 'Int' index.
