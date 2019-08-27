@@ -109,4 +109,4 @@ maybeToEither ::
   -> Maybe b    -- ^ 'Right' 'b' will be returned if 'Maybe' was 'Just' 'b'
   -> Either a b
 maybeToEither e Nothing  = Left e
-maybeToEither e (Just a) = Right a
+maybeToEither _ (Just a) = Right a
