@@ -45,9 +45,9 @@ Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
 parseXYZ = do
-  nAtoms  <- skipSpace *> decimal
-  label   <- skipSpace *> takeWhile (/= '\n')
-  atoms   <- count nAtoms xyzLineParser
+  nAtoms <- skipSpace *> decimal
+  label  <- skipSpace *> takeWhile (/= '\n')
+  atoms  <- count nAtoms xyzLineParser
   return Molecule
     { _molecule_Label    = TL.pack . TS.unpack $ label
     , _molecule_Atoms    = IM.fromList $ zip [ 0 .. ] atoms
