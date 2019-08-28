@@ -13,7 +13,6 @@ module Spicy.Molecule.Util
 ( checkMolecule
 , reIndexMolecule
 , groupTupleSeq
-, groupSortBySeq
 , groupBy
 ) where
 import           Data.Foldable
@@ -263,30 +262,42 @@ elements.
 groupTupleSeq :: Seq (Int, Int) -> IntMap IntSet
 groupTupleSeq a =
   let -- Build groups of tuples with same keys.
-      keyValGroups = groupSortBySeq (\x y -> fst x == fst y) a
-  in  -- Fold sequence of same key (k, v) tuples to a (IntMap IntSet) with only a single key int the
-      -- IntMap and then append all IntMap.
-        foldl' (<>) IM.empty
-      . fmap foldGroupedKeys
-      $ keyValGroups
-  where
-    foldGroupedKeys :: Seq (Int, Int) -> IntMap IntSet
-    foldGroupedKeys group =
-      let headGroup = group S.!? 0
-          values    = IS.fromList . toList . fmap snd $ group
-      in  case headGroup of
-            Nothing      -> IM.empty
-            Just (k, _v) -> IM.fromList [(k, values)]
+      keyValGroups :: Seq (Seq (Int, Int))
+      keyValGroups  = groupBy (\x y -> fst x == fst y) . S.sortOn fst $ a
+      -- Transform the grouped key value structures to a Seq (IntMap IntSet), where each IntMap has
+      -- just one key.
+      atomicIntMaps :: Either String (Seq (IntMap IntSet))
+      atomicIntMaps = traverse imisFromGroupedSequence keyValGroups
+      -- Fold all atom IntMap in the sequence into one.
+      completeMap  = foldl' (<>) IM.empty <$> atomicIntMaps
+  in  -- The only way this function can fail, is if keys would not properly be groupled. This cannot
+      -- happen if 'groupBy' is called correclty before 'imisFromGroupedSequence'. Therefore default
+      -- to the empty IntMap if this case, that cannot happen, happens.
+      case completeMap of
+        Left _   -> IM.empty
+        Right im -> im
 
 {-|
-This function works similiar to
-[groupBy](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-List.html#v:groupBy), but on
-'Seq' and if a 'S.sort' applied first. So all elements with same grouping criterion will appear in
-the inner same 'Seq'.
+Create the IntMap IntSet structure from a group of 'IM.Key' value pairs. This means, that the first
+elements of the tuple, all need to be the same 'IM.key'. If they are not the assumptions of this
+function are not met and a 'Left' 'String' as error will be returned. The result will be an IntMap
+with a single 'IM.Key'.
 -}
-groupSortBySeq :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
-groupSortBySeq f s =
-  fmap (\e -> S.filter (f e) s) s
+imisFromGroupedSequence :: Seq (Int, Int) -> Either String (IntMap IntSet)
+imisFromGroupedSequence group
+  | S.null group = Right IM.empty
+  | keyCheck     =
+      case headKey of
+        Nothing -> Right IM.empty
+        Just k  -> Right $ IM.fromList [(k, values)]
+  | otherwise    =
+      Left "imisFromGroupedSequence: The keys are not all the same."
+  where
+    headGroup = group S.!? 0
+    keys      = fst <$> group
+    headKey   = fst <$> headGroup
+    keyCheck  = all (== headKey) (pure <$> keys)
+    values    = IS.fromList . toList . fmap snd $ group
 
 {-|
 This function implements
