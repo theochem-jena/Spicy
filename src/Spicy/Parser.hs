@@ -19,21 +19,30 @@ module Spicy.Parser
 -- * Generic formats
 , parseHMatrix
 ) where
+import           Control.Applicative
 import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
+import           Data.Char
+import           Data.Foldable
+import           Data.IntMap               (IntMap)
 import qualified Data.IntMap               as IM
 import           Data.IntSet               (IntSet)
 import qualified Data.IntSet               as IS
 import           Data.Maybe
+import           Data.Sequence             (Seq (..))
 import qualified Data.Sequence             as S
 import qualified Data.Text                 as TS
 import qualified Data.Text.Lazy            as TL
+import           Data.Tuple
 import           Lens.Micro.Platform
 import           Prelude                   hiding (cycle, foldl1, foldr1, head,
                                             init, last, maximum, minimum, tail,
                                             take, takeWhile, (!!))
+import           Spicy.Molecule.Util
 import           Spicy.Types
 import           Text.Read
+--import Data.Monoid
+--import Data.Sequence (Seq)
 
 
 {-|
@@ -137,107 +146,177 @@ parseTXYZ = do
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
 connectivity. There is no special understanding for the atom types, that are available in MOL2
-files. They will simply be treated as the force field string.
+files. They will simply be treated as the force field string. See
+<http://chemyang.ccnu.edu.cn/ccb/server/AIMMS/mol2.pdf>.
 -}
 parseMOL2 :: Parser Molecule
-parseMOL2 = undefined {- do
+parseMOL2 = do
   (label, nAtoms, nBonds) <- moleculeParser
-  atoms <- atomParser
-  bonds <- bondParser nAtoms
-  let updatedAtoms =
-        [ (atoms !! i) & atom_Connectivity .~ I.fromList (bonds !! i)
-        | i <- [ 0 .. length atoms - 1 ]
-        ]
+  atomsLabeled            <- atomParser nAtoms
+  bonds                   <- bondParser nBonds
+  let -- Construct the top layer of the molecule.
+      atoms        = IM.fromList . map (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
+      -- Sort the labeled atoms based on their substructure IDs.
+      subMolGroups :: Seq (Seq (Int, (Int, TL.Text), Atom))
+      subMolGroups =
+          groupBy (\x y -> x ^. _2 . _1 == y ^. _2 . _1)
+        . S.unstableSortOn (\(_, (subID, _), _) -> subID)
+        . S.fromList
+        $ atomsLabeled
+      -- From the groups of same substructure ID fragments, build molecules.
+      subMols = fmap (\g -> makeSubMolFromGroup g bonds) subMolGroups
+      -- Assume we get properly sorted groups (all subIDs are them same): Build a new molecule from
+      -- this group.
+      makeSubMolFromGroup :: Seq (Int, (Int, TL.Text), Atom) -> IntMap IntSet -> Molecule
+      makeSubMolFromGroup group bonds' =
+        let atoms'      = IM.fromList . toList . fmap (\(ind, _, atom) -> (ind, atom)) $ group
+            label'      = fromMaybe "" . (S.!? 0) . fmap (^. _2 . _2) $ group
+            atomInds    = IM.keysSet atoms'
+            -- Remove all bonds from the IntMap, that have origin on atoms not in this set and all
+            -- target atoms that are not in the set.
+            bondsCleaned :: IntMap IntSet
+            bondsCleaned =
+                IM.map (IS.filter (`IS.member` atomInds))
+              $ bonds' `IM.restrictKeys` atomInds
+        in  Molecule
+              { _molecule_Label    = label'
+              , _molecule_Atoms    = atoms'
+              , _molecule_Bonds    = bondsCleaned
+              , _molecule_SubMol   = S.empty
+              , _molecule_Energy   = Nothing
+              , _molecule_Gradient = Nothing
+              , _molecule_Hessian  = Nothing
+              }
   return Molecule
     { _molecule_Label    = label
-    , _molecule_Atoms    = R.fromList (R.Z R.:. (length updatedAtoms :: Int)) updatedAtoms
+    , _molecule_Atoms    = atoms
+    , _molecule_Bonds    = bonds
+    , _molecule_SubMol   = subMols
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
     }
   where
-    moleculeParser :: Parser (String, Int, Int)
+    -- Parse the @<TRIPOS>MOLECULE block of MOL2.
+    moleculeParser :: Parser (TL.Text, Int, Maybe Int)
     moleculeParser = do
-      _ <- manyTill anyChar (string "@<TRIPOS>MOLECULE")
-      endOfLine
-      label <- manyTill anyChar endOfLine
-      skipSpace
-      nAtoms <- decimal
-      _ <- many1 $ char ' '
-      nBonds <- decimal
-      _ <- manyTill anyChar endOfLine
-      return (label, nAtoms, nBonds)
-    atomParser :: Parser [Atom]
-    atomParser = do
-      _ <- manyTill anyChar (string "@<TRIPOS>ATOM")
-      endOfLine
-      atoms <- many1 atomLineParser
+      _header     <- manyTill anyChar (string "@<TRIPOS>MOLECULE") <* endOfLine
+      -- Line 1 -> "mol_name"
+      label       <- takeWhile (/= '\n') <* endOfLine
+      --traceShowM label
+      -- Line 2 -> "num_atoms [num_bonds [num_subst [num_feat [num_sets]]]]"
+      nAtoms      <- skipSpace' *> decimal
+      nBonds      <- maybeOption $ skipSpace' *> decimal
+      _nSubMols   <- maybeOption $ skipSpace' *> (decimal :: Parser Int)
+      _nFeatures  <- maybeOption $ skipSpace' *> (decimal :: Parser Int)
+      _nSets      <- maybeOption $ skipSpace' *> (decimal :: Parser Int) <* skipSpace' <* endOfLine
+      -- Line 3 -> "mol_type"
+      _molType    <-
+            skipSpace'
+        *>  string "SMALL"
+        <|> string "BIOPOLYMER"
+        <|> string "PROTEIN"
+        <|> string "NUCLEIC_ACID"
+        <|> string "SACCHARIDE"
+        <*  skipSpace
+      -- Line 4 -> "charge_type"
+      _chargeType <-
+            skipSpace
+        *>( string "NO_CHARGES"
+        <|> string "DEL_RE"
+        <|> string "GASTEIGER"
+        <|> string "GAST_HUCK"
+        <|> string "HUCKEL"
+        <|> string "PULLMAN"
+        <|> string "GAUSS80_CHARGES"
+        <|> string "AMPAC_CHARGES"
+        <|> string "MULLIKEN_CHARGES"
+        <|> string "DICT_CHARGES"
+        <|> string "MMFF94_CHARGES"
+        <|> string "USER_CHARGES"
+        )<* skipSpace'
+        <*  endOfLine
+      -- Line 5 -> "[status_bits"
+      _statusBit  <- maybeOption $ skipSpace' *> many1 letter <* skipSpace
+      -- Line 6 -> "[mol_comment]]"
+      _comment    <- maybeOption $ skipSpace' *> takeWhile (/= '\n') <* skipSpace
+      return (TL.pack . TS.unpack $ label, nAtoms, nBonds)
+    --
+    -- Parse the @<TRIPOS>ATOM block of MOL2. This will give:
+    -- (index of the atom, (substructure ID, substructure name), atom).
+    atomParser :: Int -> Parser [(Int, (Int, TL.Text), Atom)]
+    atomParser nAtoms = do
+      _header <- manyTill anyChar (string "@<TRIPOS>ATOM") <* endOfLine
+      -- Parse multiple lines of ATOM data.
+      atoms   <- count nAtoms $ do -- atomLineParser
+        index    <- skipSpace' *> ((\a -> a - 1) <$> decimal)
+        -- Most often this will be the element symbol.
+        label    <- skipSpace' *> takeWhile (not . isHorizontalSpace)
+        -- x, y and z coordinates
+        x        <- skipSpace' *> double
+        y        <- skipSpace' *> double
+        z        <- skipSpace' *> double
+        -- Parse the chemical element, which is actually the first part of the SYBYL atom type.
+        cElem    <- skipSpace' *> many1 letter
+        -- A dot often separates the element from the type of this element.
+        ffdot    <- maybeOption $ char '.'
+        -- And after the dot the rest of the SYBYL atom type might come.
+        ffType   <- maybeOption $ takeWhile (not . isHorizontalSpace)
+        -- The substructure ID. This is the identifier to identify sub molecules.
+        subID    <- skipSpace' *> (decimal :: Parser Int)
+        -- The substructure Name. This should be used as label for the sub molecule.
+        subName  <- skipSpace' *> takeWhile (not . isHorizontalSpace)
+        -- The partial charge
+        pCharge  <- skipSpace' *> double <* skipSpace
+        return
+          ( index
+          , (subID, TL.pack . TS.unpack $ subName)
+          , Atom
+              { _atom_Element     = fromMaybe H . readMaybe $ cElem
+              , _atom_Label       = TL.pack . TS.unpack $ label
+              , _atom_IsPseudo    = False
+              , _atom_FFType      =
+                  (TL.pack cElem)
+                  `TL.append`
+                  ( TL.pack . (\c -> case c of
+                      Just a  -> [a]
+                      Nothing -> ""
+                    ) $ ffdot
+                  )
+                  `TL.append`
+                  (fromMaybe "" $ TL.pack . TS.unpack <$> ffType)
+              , _atom_PCharge     = Just pCharge
+              , _atom_Coordinates = S.fromList [x, y, z]
+              }
+          )
       return atoms
-      where
-        atomLineParser :: Parser Atom
-        atomLineParser = do
-          skipSpace
-          _ <- decimal
-          skipSpace
-          label <- manyTill anyChar (char ' ' <|> char '\t')
-          skipSpace
-          x <- double
-          skipSpace
-          y <- double
-          skipSpace
-          z <- double
-          skipSpace
-          cElement <- many1 letter
-          ffDot <- maybeOption $ char '.'
-          ffType2 <- maybeOption $ manyTill anyChar (char ' ' <|> char '\t')
-          skipSpace
-          nSubstructure <- decimal
-          skipSpace
-          nameSubstructure <- manyTill anyChar (char ' ' <|> char '\t')
-          skipSpace
-          partialCharge <- double
-          _ <- many' (char ' ' <|> char '\t')
-          endOfLine
-          let ffType =
-                if isNothing ffDot || isNothing ffType2
-                  then cElement
-                  else cElement ++ "." ++ fromJust ffType2
-          return Atom
-            { _atom_Element      = read cElement
-            , _atom_Label        = label
-            , _atom_IsPseudo     = False
-            , _atom_FFType       = ffType
-            , _atom_PCharge      = Just partialCharge
-            , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) [x, y, z]
-            , _atom_Connectivity = I.empty
-            }
-    bondParser :: Int -> Parser [[Int]]
-    bondParser nAtoms = do
-      _ <- manyTill anyChar (string "@<TRIPOS>BOND")
-      endOfLine
-      rawBonds <- many1 bondLineParser
-      let rawBondsSwaped = map swap rawBonds
-          rawBondsComplete = rawBonds ++ rawBondsSwaped
-          sortedBonds =
-            [ foldr (\(o, t) acc -> if o == i then t : acc else acc) [] rawBondsComplete
-            | i <- [ 0 .. nAtoms - 1]
-            ]
-      return sortedBonds
-      where
-        bondLineParser :: Parser (Int, Int)
-        bondLineParser = do
-          skipSpace
-          _ <- decimal
-          skipSpace
-          originAtom <- decimal
-          skipSpace
-          targetAtom <- decimal
-          skipSpace
-          _ <- (show <$> decimal) <|> many1 letter
-          _ <- many' (char ' ' <|> char '\t')
-          endOfLine
-          return (originAtom - 1, targetAtom - 1)
--}
+    --
+    -- Parse the @<TRIPOS>BOND part. Unfortunately, the bonds in the MOL2 format are unidirectiorial
+    -- and need to be flipped to.
+    bondParser :: Maybe Int -> Parser (IntMap IntSet)
+    bondParser nBonds = do
+      let -- How often to parse bond fields depends on if the number of bonds has been specified.
+          nParser =
+            case nBonds of
+              Nothing -> many'
+              Just n  -> count n
+      _header  <- manyTill anyChar (string "@<TRIPOS>BOND") <* endOfLine
+      uniBonds <- nParser $ do
+        -- Bond id, which does not matter.
+        _id    <- skipSpace' *> (decimal :: Parser Int)
+        -- Origin atom index
+        origin <- skipSpace' *> ((\a -> a - 1) <$> decimal :: Parser Int)
+        -- Target atom index
+        target <- skipSpace' *> ((\a -> a - 1) <$> decimal :: Parser Int)
+        -- Bond type, which we don't care about.
+        _type  <- skipSpace' *> takeWhile (not . isSpace) <* skipSpace
+        return (origin, target)
+      let -- Make the bonds bidirectorial
+          bondTupleSeq = S.fromList uniBonds
+          bondsForth   = groupTupleSeq bondTupleSeq
+          bondsBack    = groupTupleSeq $ swap <$> bondTupleSeq
+          bonds        = bondsForth <> bondsBack
+      return bonds
 
 parsePDB :: Parser Molecule
 parsePDB = undefined
