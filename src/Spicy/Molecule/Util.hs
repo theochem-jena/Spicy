@@ -14,6 +14,7 @@ module Spicy.Molecule.Util
 , reIndexMolecule
 , groupTupleSeq
 , groupSortBySeq
+, groupBy
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap)
