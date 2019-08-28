@@ -13,6 +13,7 @@ module Spicy.Molecule.Util
 ( checkMolecule
 , reIndexMolecule
 , groupTupleSeq
+, groupSortBySeq
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap)
@@ -260,25 +261,28 @@ elements.
 -}
 groupTupleSeq :: Seq (Int, Int) -> IntMap IntSet
 groupTupleSeq a =
-  let -- Use the first element of the tuple as keys.
-      keys :: Seq Int
-      keys         = fmap fst a
-      -- Build groups of tuples with same keys.
-      keyValGroups :: Seq (Seq (Int, Int))
-      keyValGroups = fmap (\f -> S.filter (\(k, _v) -> k == f) a) keys
-      -- Fold sequence of same key (k, v) tuples to a (IntMap IntSet) with only a single key int the
+  let -- Build groups of tuples with same keys.
+      keyValGroups = groupSortBySeq (\x y -> fst x == fst y) a
+  in  -- Fold sequence of same key (k, v) tuples to a (IntMap IntSet) with only a single key int the
       -- IntMap and then append all IntMap.
-  in  foldl' (\accIM maybeIM ->
-        case maybeIM of
-          Nothing -> accIM
-          Just im -> accIM <> im
-      ) IM.empty
-      $ fmap foldGroupedKeys keyValGroups
-      where
-        foldGroupedKeys :: Seq (Int, Int) -> Maybe (IntMap IntSet)
-        foldGroupedKeys group =
-          let headGroup = group S.!? 0
-              values    = IS.fromList . toList . fmap snd $ group
-          in  case headGroup of
-                Nothing      -> Nothing
-                Just (k, _v) -> Just $ IM.fromList [(k, values)]
+        foldl' (<>) IM.empty
+      . fmap foldGroupedKeys
+      $ keyValGroups
+  where
+    foldGroupedKeys :: Seq (Int, Int) -> IntMap IntSet
+    foldGroupedKeys group =
+      let headGroup = group S.!? 0
+          values    = IS.fromList . toList . fmap snd $ group
+      in  case headGroup of
+            Nothing      -> IM.empty
+            Just (k, _v) -> IM.fromList [(k, values)]
+
+{-|
+This function works similiar to
+[groupBy](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-List.html#v:groupBy), but on
+'Seq' and if a 'S.sort' applied first. So all elements with same grouping criterion will appear in
+the inner same 'Seq'.
+-}
+groupSortBySeq :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
+groupSortBySeq f s =
+  fmap (\e -> S.filter (f e) s) s
