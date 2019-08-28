@@ -11,10 +11,12 @@ This module provides scientific constants, conversion factors and element data.
 -}
 module Spicy.Data
 ( covalentRadii
+, covalentRadiiIM
 ) where
-import           Data.Map    (Map)
-import qualified Data.Map    as Map
-import           Spicy.Types
+import            Data.Map     (Map)
+import qualified  Data.Map     as Map
+import qualified  Data.IntMap  as IM
+import            Spicy.Types
 
 {-|
 Covalent radii of elements in Angstrom taken from
@@ -33,3 +35,9 @@ covalentRadii = Map.fromList
     (La , 2.07 ), (Ce , 2.04 ), (Pr , 2.03 ), (Nd , 2.01 ), (Pm , 1.99 ), (Sm , 1.98 ), (Eu , 1.98 ), (Gd , 1.96 ), (Tb , 1.50 ), (Dy , 1.92 ), (Ho , 1.92 ), (Er , 1.89 ), (Tm , 1.90 ), (Yb , 1.87 ),
     (Ac , 1.92 ), (Th , 2.06 ), (Pa , 2.00 ), (U  , 1.96 ), (Np , 1.90 ), (Pu , 1.87 ), (Am , 1.80 ), (Cm , 1.69 )
   ]
+
+  
+covalentRadiiIM :: IM.IntMap Double
+covalentRadiiIM = IM.fromList listOfPairs
+    where
+      listOfPairs = Map.toList $ Map.mapKeys fromEnum covalentRadii
