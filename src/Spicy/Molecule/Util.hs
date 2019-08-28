@@ -12,13 +12,15 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
 ( checkMolecule
 , reIndexMolecule
+, groupTupleSeq
 ) where
 import           Data.Foldable
-import           Data.IntMap.Lazy    (IntMap, (!?))
+import           Data.IntMap.Lazy    (IntMap)
 import qualified Data.IntMap.Lazy    as IM
 import           Data.IntSet         (IntSet, (\\))
 import qualified Data.IntSet         as IS
 import           Data.Maybe
+import           Data.Sequence       (Seq)
 import qualified Data.Sequence       as S
 import           Lens.Micro.Platform
 import           Prelude             hiding (cycle, foldl1, foldr1, head, init,
@@ -219,7 +221,7 @@ replaceIS ::
   -> IntSet     -- ^ Resulting new 'IntSet'.
 replaceIS repMap is =
   IS.map (\oK ->
-    let nK = repMap !? oK
+    let nK = repMap IM.!? oK
     in  fromMaybe oK nK
   ) is
 
@@ -233,7 +235,7 @@ replaceIMKeys ::
   -> IntMap a   -- ^ Resulting new 'IntMap' with replaced 'IM.Key's.
 replaceIMKeys repMap im =
   IM.mapKeys (\oK ->
-    let nK = repMap !? oK
+    let nK = repMap IM.!? oK
     in  fromMaybe oK nK
   ) im
 
@@ -251,3 +253,32 @@ replaceIMIS repMap imis =
   -- Replace all lookup keys
   . replaceIMKeys repMap
   $ imis
+
+{-|
+Group by the first tuple element and within this group build an IntSet of the the second tuple
+elements.
+-}
+groupTupleSeq :: Seq (Int, Int) -> IntMap IntSet
+groupTupleSeq a =
+  let -- Use the first element of the tuple as keys.
+      keys :: Seq Int
+      keys         = fmap fst a
+      -- Build groups of tuples with same keys.
+      keyValGroups :: Seq (Seq (Int, Int))
+      keyValGroups = fmap (\f -> S.filter (\(k, _v) -> k == f) a) keys
+      -- Fold sequence of same key (k, v) tuples to a (IntMap IntSet) with only a single key int the
+      -- IntMap and then append all IntMap.
+  in  foldl' (\accIM maybeIM ->
+        case maybeIM of
+          Nothing -> accIM
+          Just im -> accIM <> im
+      ) IM.empty
+      $ fmap foldGroupedKeys keyValGroups
+      where
+        foldGroupedKeys :: Seq (Int, Int) -> Maybe (IntMap IntSet)
+        foldGroupedKeys group =
+          let headGroup = group S.!? 0
+              values    = IS.fromList . toList . fmap snd $ group
+          in  case headGroup of
+                Nothing      -> Nothing
+                Just (k, _v) -> Just $ IM.fromList [(k, values)]
