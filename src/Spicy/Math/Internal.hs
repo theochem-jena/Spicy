@@ -16,17 +16,18 @@ module Spicy.Math.Internal
 ( getCoordinates
 , distMat
 ) where
-import           Control.Parallel.Strategies
-import           Data.Array.Accelerate                         as A
-import           Data.Array.Accelerate.Control.Lens
-import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
-import qualified Data.Foldable                                 as F
-import qualified Data.IntMap                                   as IM
-import qualified Data.Sequence                                 as S
-import qualified Data.Vector.Storable                          as VS
-import           Prelude                                       hiding ((/=))
-import           Spicy.Types
-
+import            Control.Parallel.Strategies
+import            Data.Array.Accelerate                         as A
+import            Data.Array.Accelerate.Control.Lens
+import            Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
+import qualified  Data.Foldable                                 as F
+import qualified  Data.IntMap                                   as IM
+import qualified  Data.Sequence                                 as S
+import qualified  Data.Vector.Storable                          as VS
+import            Prelude                                       hiding ((/=))
+import            Spicy.Types
+import            Spicy.Data
+import            Data.Maybe 
 {-|
 Get the 'Atom' '_atom_Coordinates' from a 'Molecule' and convert to a plain 'VS.Vector'. This is
 therefore basically a concatenation of all cartesian coordinates.
@@ -69,3 +70,28 @@ distMat v =
         -- Now the 3D arrays will elementwise be subtracted from each other, all results squared,
         -- the z-components folded and square root will be taken and the distance results.
         A.map sqrt . A.sum . A.map (** 2.0) $ A.zipWith (-) xVec yVec
+
+
+
+{-|
+Retrieve the atom indices as an IntMap for use with the covalentRadii map
+-}
+getElementNumbers ::  Strat -> Molecule -> IM.IntMap String
+getElementNumbers strat mol = 
+    let elementSyms = case strat of
+                        Serial    ->  IM.map _atom_Element (mol ^. molecule_Atoms )
+                        Parallel  ->  IM.map _atom_Element (mol ^. molecule_Atoms )
+                                        `using` parTraversable rdeepseq
+    in
+        elementSyms
+{-| 
+Calculate the sum of the covalent radii for the detection of bonds 
+-> boolean sparse bond matrix
+-}
+covRMat :: Molecule -> Acc (Matrix Double)
+covRMat mol = covMat
+    where
+      nrOfAtoms = IM.size $ mol ^. molecule_Atoms 
+      atoms = (mol ^. molecule_Atoms) 
+      covVector = A.generate (index1 nrOfAtoms) 
+        (\n -> fromMaybe 1.0 $ IM.lookup (unindex1 n) covalentRadii)  
