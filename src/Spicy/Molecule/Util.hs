@@ -21,7 +21,7 @@ import qualified Data.IntMap.Lazy    as IM
 import           Data.IntSet         (IntSet, (\\))
 import qualified Data.IntSet         as IS
 import           Data.Maybe
-import           Data.Sequence       (Seq)
+import           Data.Sequence       (Seq(..))
 import qualified Data.Sequence       as S
 import           Lens.Micro.Platform
 import           Prelude             hiding (cycle, foldl1, foldr1, head, init,
@@ -286,3 +286,16 @@ the inner same 'Seq'.
 groupSortBySeq :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
 groupSortBySeq f s =
   fmap (\e -> S.filter (f e) s) s
+
+{-|
+This function implements
+[groupBy](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-List.html#v:groupBy) as in
+Data.List:
+"The group function takes a list and returns a list of lists such that the concatenation of the
+result is equal to the argument. Moreover, each sublist in the result contains only equal elements."
+-}
+groupBy :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
+groupBy _ S.Empty    = S.empty
+groupBy f (x :<| xs) = (x :<| ys) :<| groupBy f zs
+  where
+    (ys, zs) = S.spanl (f x) xs
