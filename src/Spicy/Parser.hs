@@ -164,38 +164,9 @@ parseMOL2 = do
   atomsLabeled            <- atomParser nAtoms
   bonds                   <- bondParser nBonds
   let -- Construct the top layer of the molecule.
-      atoms        = IM.fromList . map (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
-      -- Sort the labeled atoms based on their substructure IDs.
-      subMolGroups :: Seq (Seq (Int, (Int, TL.Text), Atom))
-      subMolGroups =
-          groupBy (\x y -> x ^. _2 . _1 == y ^. _2 . _1)
-        . S.unstableSortOn (\(_, (subID, _), _) -> subID)
-        . S.fromList
-        $ atomsLabeled
+      atoms        = IM.fromList . toList . fmap (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
       -- From the groups of same substructure ID fragments, build molecules.
-      subMols = fmap (\g -> makeSubMolFromGroup g bonds) subMolGroups
-      -- Assume we get properly sorted groups (all subIDs are them same): Build a new molecule from
-      -- this group.
-      makeSubMolFromGroup :: Seq (Int, (Int, TL.Text), Atom) -> IntMap IntSet -> Molecule
-      makeSubMolFromGroup group bonds' =
-        let atoms'      = IM.fromList . toList . fmap (\(ind, _, atom) -> (ind, atom)) $ group
-            label'      = fromMaybe "" . (S.!? 0) . fmap (^. _2 . _2) $ group
-            atomInds    = IM.keysSet atoms'
-            -- Remove all bonds from the IntMap, that have origin on atoms not in this set and all
-            -- target atoms that are not in the set.
-            bondsCleaned :: IntMap IntSet
-            bondsCleaned =
-                IM.map (IS.filter (`IS.member` atomInds))
-              $ bonds' `IM.restrictKeys` atomInds
-        in  Molecule
-              { _molecule_Label    = label'
-              , _molecule_Atoms    = atoms'
-              , _molecule_Bonds    = bondsCleaned
-              , _molecule_SubMol   = S.empty
-              , _molecule_Energy   = Nothing
-              , _molecule_Gradient = Nothing
-              , _molecule_Hessian  = Nothing
-              }
+      subMols = makeSubMolsFromAnnoAtoms atomsLabeled bonds
   return Molecule
     { _molecule_Label    = label
     , _molecule_Atoms    = atoms
@@ -252,7 +223,7 @@ parseMOL2 = do
     --
     -- Parse the @<TRIPOS>ATOM block of MOL2. This will give:
     -- (index of the atom, (substructure ID, substructure name), atom).
-    atomParser :: Int -> Parser [(Int, (Int, TL.Text), Atom)]
+    atomParser :: Int -> Parser (Seq (Int, (Int, TL.Text), Atom))
     atomParser nAtoms = do
       _header <- manyTill anyChar (string "@<TRIPOS>ATOM") <* endOfLine
       -- Parse multiple lines of ATOM data.
@@ -297,7 +268,7 @@ parseMOL2 = do
               , _atom_Coordinates = S.fromList [x, y, z]
               }
           )
-      return atoms
+      return $ S.fromList atoms
     --
     -- Parse the @<TRIPOS>BOND part. Unfortunately, the bonds in the MOL2 format are unidirectiorial
     -- and need to be flipped to.
@@ -336,9 +307,11 @@ parsePDB = do
   atoms <- many1 atomParser
   -- bonds <- undefined --many' connectParser
   -- links <- undefined --many' linkParser
+  let -- Transform the informations from the parsers.
+      atomsIM = IM.fromList . fmap (\(ind, _, atom) -> (ind, atom)) $ atoms
   return Molecule
     { _molecule_Label    = ""
-    , _molecule_Atoms    = IM.fromList atoms
+    , _molecule_Atoms    = atomsIM
     , _molecule_Bonds    = IM.empty
     , _molecule_SubMol   = S.empty
     , _molecule_Energy   = Nothing
@@ -347,8 +320,9 @@ parsePDB = do
     }
   where
     -- This parser works a little bit different than the others, as this is a fixed columnd witdth
-    -- format and we can't rely on white spaces or fields really containing a value.
-    atomParser :: Parser (Int, Atom)
+    -- format and we can't rely on white spaces or fields really containing a value. A tuple of
+    -- following structure is returned: (Index of atom, (subMolID, subMolName), atom)
+    atomParser :: Parser (Int, (Int, TL.Text), Atom)
     atomParser = do
       -- First check, that this line really starts with an ATOM or HETATM record (6 characters).
       -- Columns 1-6: record type.
@@ -360,13 +334,13 @@ parsePDB = do
           -- Now according to the PDB specification. Fields exaclty named as in the PDF with "c" as
           -- prefix for chunk.
           -- Columns 1-6: record type.
-          (cAtom, rest1)        = TL.splitAt 6 atomLine
+          (_cAtom, rest1)       = TL.splitAt 6 atomLine
           -- Column 7-11: atom serial number
           (cSerial, rest2)      = TL.splitAt 5 rest1
           -- Column 13-16: atom name
           (cName, rest3)        = TL.splitAt 4 . TL.drop 1 $ rest2
           -- Column 17: alternate location indicator
-          (cAltLoc, rest4)      = TL.splitAt 1 rest3
+          (_cAltLoc, rest4)     = TL.splitAt 1 rest3
           -- Columnt 18-20: residue name (use this as submolecule label)
           (cResName, rest5)     = TL.splitAt 3 . TL.drop 1 $ rest4
           -- Column 22: chain identifier
@@ -392,6 +366,7 @@ parsePDB = do
           --
           -- Now parse all fields of interest using text readers.
           aSerial      = fst <$> (TL.decimal . TL.strip $ cSerial)
+          aResSeq      = fst <$> (TL.decimal . TL.strip $ cSerial)
           aElement     =
             let elemMaybe = (readMaybe :: String -> Maybe Element) . TL.unpack . TL.strip $ cElement
             in  case elemMaybe of
@@ -417,10 +392,11 @@ parsePDB = do
             <*> aCoordinates        -- _atom_Coordinates
       -- If all the non-Attoparsec parse actions succeeded, return an Attoparsec result or fail with
       -- an Attoparsec error.
-      case (aSerial, eitherAtom) of
-        (Right ind, Right a) -> return (ind, a)
-        (Left indErr, _)     -> fail indErr
-        (_, Left aErr)       -> fail aErr
+      case (aSerial, (aResSeq, cResName), eitherAtom) of
+        (Right ind, (Right sInd, _), Right a) -> return (ind, (sInd, cResName), a)
+        (Left indErr, _, _)                   -> fail indErr
+        (_, (Left sIndErr, _), _)             -> fail sIndErr
+        (_, _, Left aErr)                     -> fail aErr
 
 {-|
 Parser for the Spicy format used in this program. Represents fully all informations stored in the
