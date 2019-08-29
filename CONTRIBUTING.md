@@ -82,3 +82,7 @@ For all major functions (all that are exported in a module) there must be a unit
 Tests should be performed by a simple `stack test`.
 
 Spicy shall be able to handle large molecules up to protein size. Use [Criterion](http://hackage.haskell.org/package/criterion) benchmarks for functions, that need to handle large data structures and test for different input sizes, to check if they scale and parallelise well. Benchmarks can be executed by `stack bench`, but this can cause problems with parallel functions. Better build the executable and run it standalone as `stack exec benchmarks`.
+
+
+## Merging
+Mergin into branches except master might be done at any time by a simple merge commit. Merging into master should be done with pull requests and be reviewed.
