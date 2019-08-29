@@ -306,7 +306,7 @@ directly coming after the failed one.
 -}
 parsePDB :: Parser Molecule
 parsePDB = do
-  -- Parse the COMPND field as a label.
+  -- Parse the COMPND field as a label. Only the first line of COMPND will be used.
   label        <- do
     _             <- manyTill anyChar (string "COMPND")
     compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
