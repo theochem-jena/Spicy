@@ -306,6 +306,11 @@ directly coming after the failed one.
 -}
 parsePDB :: Parser Molecule
 parsePDB = do
+  -- Parse the COMPND field as a label.
+  label        <- do
+    _             <- manyTill anyChar (string "COMPND")
+    compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
+    return $ TL.pack compoundLabel
   -- Parse atoms only and ignore other fiels
   atomsLabeled <- S.fromList <$> many1 atomParser
   bonds        <- IM.fromList <$> many' connectParser
@@ -314,7 +319,7 @@ parsePDB = do
       atomsIM = IM.fromList . toList .  fmap (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
       subMols = makeSubMolsFromAnnoAtoms atomsLabeled bonds
   return Molecule
-    { _molecule_Label    = ""
+    { _molecule_Label    = label
     , _molecule_Atoms    = atomsIM
     , _molecule_Bonds    = bonds
     , _molecule_SubMol   = subMols
