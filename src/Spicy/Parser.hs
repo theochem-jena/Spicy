@@ -300,7 +300,9 @@ parseMOL2 = do
 
 {-|
 Parse a PDB file as described in
-<ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf>.
+<ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf>. If parsing of a single ATOM
+or CONETC line fails, the parser will stop there and ignore all the other records of same type,
+directly coming after the failed one.
 -}
 parsePDB :: Parser Molecule
 parsePDB = do
