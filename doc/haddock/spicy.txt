@@ -188,11 +188,11 @@ Uuo :: Element
 
 -- | An atom label. They may come from pdb or force field parameter files
 --   or can be assigned by other ways just to distinguish specific atoms.
-type AtomLabel = String
+type AtomLabel = Text
 
 -- | These are labels for molecular mechanics software. The strings are
 --   basically arbitrary and depending on the MM software used.
-type FFType = String
+type FFType = Text
 
 -- | An Atom in a <a>Molecule</a>. Atoms are compared by their indices only
 --   and they must therefore be unique. The coordinates of the <a>Atom</a>
@@ -252,10 +252,10 @@ atom_Coordinates :: Lens' Atom (Seq Double)
 --   need any special treatment.</li>
 --   </ul>
 data Molecule
-Molecule :: String -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Double -> Maybe (Vector Double) -> Maybe (UMatrix Double) -> Molecule
+Molecule :: Text -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Double -> Maybe (Vector Double) -> Maybe (UMatrix Double) -> Molecule
 
 -- | Comment or identifier of a molecule. Can be empty.
-[_molecule_Label] :: Molecule -> String
+[_molecule_Label] :: Molecule -> Text
 
 -- | An <a>IntMap</a> of <a>Atom</a>s, <a>Atom</a>s identified by their
 --   <a>Int</a> index.
@@ -277,7 +277,7 @@ Molecule :: String -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Doub
 
 -- | A hessian, that might have been calculated.
 [_molecule_Hessian] :: Molecule -> Maybe (UMatrix Double)
-molecule_Label :: Lens' Molecule String
+molecule_Label :: Lens' Molecule Text
 molecule_Atoms :: Lens' Molecule (IntMap Atom)
 molecule_Bonds :: Lens' Molecule (IntMap IntSet)
 molecule_SubMol :: Lens' Molecule (Seq Molecule)
@@ -303,33 +303,6 @@ instance GHC.Show.Show Spicy.Types.Element
 instance GHC.Classes.Eq Spicy.Types.Strat
 
 
-module Spicy.Parser
-
--- | Parse a .xyz file (has no connectivity, atom types or partioal
---   charges).
-parseXYZ :: Parser Molecule
-
--- | Parse a Tinker XYZ formatted file. It has coordinates and might have
---   connectivity and atom types. This format and therefore parser are not
---   using any layers (recursions of <a>Molecule</a>).
-parseTXYZ :: Parser Molecule
-
--- | Parse the "interesting" fields of a MOL2 file. This contains partial
---   charges as well as connectivity. There is no special understanding for
---   the atom types, that are available in MOL2 files. They will simply be
---   treated as the force field string.
-parseMOL2 :: Parser Molecule
-parsePDB :: Parser Molecule
-
--- | Parser for the Spicy format used in this program. Represents fully all
---   informations stored in the <a>Molecule</a> type.
-parseSpicy :: Parser Molecule
-
--- | Parse the "show" instance output for HMatrix' matrix Type, including
---   the dimension infos
-parseHMatrix :: Parser (Matrix Double)
-
-
 -- | This module provides functions to manipulate basic data structures of
 --   <a>Molecule</a>s, such as indexing.
 module Spicy.Molecule.Util
@@ -353,6 +326,46 @@ checkMolecule :: Molecule -> Either String Molecule
 --   the lower layers obey the counting scheme of the atoms of the higher
 --   layers and pseudoatoms come last.
 reIndexMolecule :: IntMap Int -> Molecule -> Either String Molecule
+
+-- | Group by the first tuple element and within this group build an IntSet
+--   of the the second tuple elements.
+groupTupleSeq :: Seq (Int, Int) -> IntMap IntSet
+
+-- | This function implements
+--   [groupBy](http:/<i>hackage.haskell.org</i>package<i>base-4.12.0.0</i>docs/Data-List.html#v:groupBy)
+--   as in Data.List: "The group function takes a list and returns a list
+--   of lists such that the concatenation of the result is equal to the
+--   argument. Moreover, each sublist in the result contains only equal
+--   elements."
+groupBy :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
+
+
+module Spicy.Parser
+
+-- | Parse a .xyz file (has no connectivity, atom types or partioal
+--   charges).
+parseXYZ :: Parser Molecule
+
+-- | Parse a Tinker XYZ formatted file. It has coordinates and might have
+--   connectivity and atom types. This format and therefore parser are not
+--   using any layers (recursions of <a>Molecule</a>).
+parseTXYZ :: Parser Molecule
+
+-- | Parse the "interesting" fields of a MOL2 file. This contains partial
+--   charges as well as connectivity. There is no special understanding for
+--   the atom types, that are available in MOL2 files. They will simply be
+--   treated as the force field string. See
+--   <a>http://chemyang.ccnu.edu.cn/ccb/server/AIMMS/mol2.pdf</a>.
+parseMOL2 :: Parser Molecule
+parsePDB :: Parser Molecule
+
+-- | Parser for the Spicy format used in this program. Represents fully all
+--   informations stored in the <a>Molecule</a> type.
+parseSpicy :: Parser Molecule
+
+-- | Parse the "show" instance output for HMatrix' matrix Type, including
+--   the dimension infos
+parseHMatrix :: Parser (Matrix Double)
 
 
 -- | A module which converts the internal Molecule representation to a

@@ -12,12 +12,13 @@ The module collects data only used for unit testing, such as the correct answers
 </span><a name="line-12"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Spicy.UnitTests.Data</span><span>
 </span><a name="line-13"></a><span class="hs-special">(</span><span>
 </span><a name="line-14"></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-15"></a><span>
-</span><a name="line-16"></a><span>
-</span><a name="line-17"></a><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
-</span><a name="line-18"></a><span class="hs-comment">-- Atom and molecules for testing</span><span>
-</span><a name="line-19"></a><span>
-</span><a name="line-20"></a><span class="hs-comment">{-
+</span><a name="line-15"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Prelude</span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">cycle</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">foldl1</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">foldr1</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">head</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">init</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">last</span><span class="hs-special">,</span><span>
+</span><a name="line-16"></a><span>                          </span><span class="hs-identifier hs-var">maximum</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">minimum</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">tail</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">take</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">takeWhile</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">!!</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-17"></a><span>
+</span><a name="line-18"></a><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><a name="line-19"></a><span class="hs-comment">-- Atom and molecules for testing</span><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-comment">{-
 {-|
 Empty molecule.
 -}
@@ -292,4 +293,4 @@ testHFeCNxH2OSpicy = T.pack . concat $
   , &quot;    H        H6    P         1     0.40000        2.7085200000     -2.1375800000      3.5614500000  \n&quot;
   ]
 -}</span><span>
-</span><a name="line-295"></a></pre></body></html>
+</span><a name="line-296"></a></pre></body></html>

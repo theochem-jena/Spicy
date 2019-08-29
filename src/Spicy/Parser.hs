@@ -33,6 +33,7 @@ import           Data.Sequence             (Seq (..))
 import qualified Data.Sequence             as S
 import qualified Data.Text                 as TS
 import qualified Data.Text.Lazy            as TL
+import qualified Data.Text.Lazy.Read as TL
 import           Data.Tuple
 import           Lens.Micro.Platform
 import           Prelude                   hiding (cycle, foldl1, foldr1, head,
@@ -43,6 +44,8 @@ import           Spicy.Types
 import           Text.Read
 --import Data.Monoid
 --import Data.Sequence (Seq)
+import Debug.Trace
+import Control.DeepSeq
 
 
 {-|
@@ -59,6 +62,12 @@ skipSpace' = do
   _ <- takeWhile (`elem` [' ', '\t', '\f', '\v'])
   return ()
 
+{-|
+Convert strict text to lazy text.
+-}
+textS2L :: TS.Text -> TL.Text
+textS2L = TL.pack . TS.unpack
+
 ----------------------------------------------------------------------------------------------------
 {-|
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
@@ -66,10 +75,10 @@ Parse a .xyz file (has no connectivity, atom types or partioal charges).
 parseXYZ :: Parser Molecule
 parseXYZ = do
   nAtoms <- skipSpace' *> decimal
-  label  <- skipSpace *> takeWhile (/= '\n') <* skipSpace
+  label  <- skipSpace *> takeWhile (not . isEndOfLine) <* skipSpace
   atoms  <- count nAtoms xyzLineParser
   return Molecule
-    { _molecule_Label    = TL.pack . TS.unpack $ label
+    { _molecule_Label    = textS2L label
     , _molecule_Atoms    = IM.fromList $ zip [ 0 .. ] atoms
     , _molecule_Bonds    = IM.empty
     , _molecule_SubMol   = S.empty
@@ -101,10 +110,10 @@ This format and therefore parser are not using any layers (recursions of 'Molecu
 parseTXYZ :: Parser Molecule
 parseTXYZ = do
   _nAtoms     <- skipSpace' *> (decimal :: Parser Int)
-  label       <- skipSpace' *> takeWhile (/= '\n') <* skipSpace
+  label       <- skipSpace' *> takeWhile (not . isEndOfLine) <* skipSpace
   conAndAtoms <- many1 txyzLineParser
   return Molecule
-    { _molecule_Label    = TL.pack . TS.unpack $ label
+    { _molecule_Label    = textS2L label
     , _molecule_Atoms    = IM.fromList . map (\a -> (a ^. _1 . _1, a ^. _2)) $ conAndAtoms
     , _molecule_Bonds    = IM.fromList . map fst $ conAndAtoms
     , _molecule_SubMol   = S.empty
@@ -202,8 +211,7 @@ parseMOL2 = do
     moleculeParser = do
       _header     <- manyTill anyChar (string "@<TRIPOS>MOLECULE") <* endOfLine
       -- Line 1 -> "mol_name"
-      label       <- takeWhile (/= '\n') <* endOfLine
-      --traceShowM label
+      label       <- takeWhile (not . isEndOfLine) <* endOfLine
       -- Line 2 -> "num_atoms [num_bonds [num_subst [num_feat [num_sets]]]]"
       nAtoms      <- skipSpace' *> decimal
       nBonds      <- maybeOption $ skipSpace' *> decimal
@@ -239,8 +247,8 @@ parseMOL2 = do
       -- Line 5 -> "[status_bits"
       _statusBit  <- maybeOption $ skipSpace' *> many1 letter <* skipSpace
       -- Line 6 -> "[mol_comment]]"
-      _comment    <- maybeOption $ skipSpace' *> takeWhile (/= '\n') <* skipSpace
-      return (TL.pack . TS.unpack $ label, nAtoms, nBonds)
+      _comment    <- maybeOption $ skipSpace' *> takeWhile (not . isEndOfLine) <* skipSpace
+      return (textS2L label, nAtoms, nBonds)
     --
     -- Parse the @<TRIPOS>ATOM block of MOL2. This will give:
     -- (index of the atom, (substructure ID, substructure name), atom).
@@ -270,10 +278,10 @@ parseMOL2 = do
         pCharge  <- skipSpace' *> double <* skipSpace
         return
           ( index
-          , (subID, TL.pack . TS.unpack $ subName)
+          , (subID, textS2L subName)
           , Atom
               { _atom_Element     = fromMaybe H . readMaybe $ cElem
-              , _atom_Label       = TL.pack . TS.unpack $ label
+              , _atom_Label       = textS2L label
               , _atom_IsPseudo    = False
               , _atom_FFType      =
                   (TL.pack cElem)
@@ -284,7 +292,7 @@ parseMOL2 = do
                     ) $ ffdot
                   )
                   `TL.append`
-                  (fromMaybe "" $ TL.pack . TS.unpack <$> ffType)
+                  (fromMaybe "" $ textS2L <$> ffType)
               , _atom_PCharge     = Just pCharge
               , _atom_Coordinates = S.fromList [x, y, z]
               }
@@ -318,8 +326,101 @@ parseMOL2 = do
           bonds        = bondsForth <> bondsBack
       return bonds
 
+{-|
+Parse a PDB file as described in
+<ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf>.
+-}
 parsePDB :: Parser Molecule
-parsePDB = undefined
+parsePDB = do
+  -- Parse atoms only and ignore other fiels
+  atoms <- many1 atomParser
+  -- bonds <- undefined --many' connectParser
+  -- links <- undefined --many' linkParser
+  return Molecule
+    { _molecule_Label    = ""
+    , _molecule_Atoms    = IM.fromList atoms
+    , _molecule_Bonds    = IM.empty
+    , _molecule_SubMol   = S.empty
+    , _molecule_Energy   = Nothing
+    , _molecule_Gradient = Nothing
+    , _molecule_Hessian  = Nothing
+    }
+  where
+    -- This parser works a little bit different than the others, as this is a fixed columnd witdth
+    -- format and we can't rely on white spaces or fields really containing a value.
+    atomParser :: Parser (Int, Atom)
+    atomParser = do
+      -- First check, that this line really starts with an ATOM or HETATM record (6 characters).
+      -- Columns 1-6: record type.
+      _recordStart <- TL.pack <$> manyTill anyChar (string "ATOM  " <|> string "HETATM")
+      -- Then take the rest of the line, till the end of line is reached.
+      recordRest   <- textS2L <$> takeWhile (not . isEndOfLine) <* endOfLine
+      let -- Recombine the line and split it according to the PDB format specifier.
+          atomLine          = "ATOM  " `TL.append` recordRest
+          -- Now according to the PDB specification. Fields exaclty named as in the PDF with "c" as
+          -- prefix for chunk.
+          -- Columns 1-6: record type.
+          (cAtom, rest1)        = TL.splitAt 6 atomLine
+          -- Column 7-11: atom serial number
+          (cSerial, rest2)      = TL.splitAt 5 rest1
+          -- Column 13-16: atom name
+          (cName, rest3)        = TL.splitAt 4 . TL.drop 1 $ rest2
+          -- Column 17: alternate location indicator
+          (cAltLoc, rest4)      = TL.splitAt 1 rest3
+          -- Columnt 18-20: residue name (use this as submolecule label)
+          (cResName, rest5)     = TL.splitAt 3 . TL.drop 1 $ rest4
+          -- Column 22: chain identifier
+          (cChainID, rest6)     = TL.splitAt 1 rest5
+          -- Column 23-26: residue sequence number
+          (cResSeq, rest7)      = TL.splitAt 4 rest6
+          -- Column 27: Code for insertion of residue
+          (cICode, rest8)       = TL.splitAt 1 rest7
+          -- Column 31-38: Orthogonal coordinates for x in Angstrom
+          (cX, rest9)           = TL.splitAt 8 . TL.drop 3 $ rest8
+          -- Column 39-46: Orthogonal coordinates for y in Angstrom
+          (cY, rest10)          = TL.splitAt 8 rest9
+          -- Column 47-54: Orthogonal coordinates for z in Angstrom
+          (cZ, rest11)          = TL.splitAt 8 rest10
+          -- Column 55-60: Occupancy
+          (cOccupancy, rest12)  = TL.splitAt 6 rest11
+          -- Column 61-66: temperature factor
+          (cTempFactor, rest13) = TL.splitAt 6 . TL.drop 10 $ rest12
+          -- Column 77-78: element
+          (cElement, rest14)    = TL.splitAt 2 rest13
+          -- Columnt 79-80: charge on the atom
+          (cCharge, rest15)     = TL.splitAt 2 rest14
+          --
+          -- Now parse all fields of interest using text readers.
+          aSerial      = fst <$> (TL.decimal . TL.strip $ cSerial)
+          aElement     =
+            let elemMaybe = (readMaybe :: String -> Maybe Element) . TL.unpack . TL.strip $ cElement
+            in  case elemMaybe of
+                  Nothing -> Left "parsePDB: Could not read the element symbol."
+                  Just e  -> Right e
+          aLabel       = TL.strip cName
+          aFFType      = ""
+          aPCharge     =
+            let pChargeMaybe = fst <$> (TL.double . TL.strip $ cCharge)
+            in  case pChargeMaybe of
+                  Left _   -> Nothing
+                  Right pC -> Just pC
+          aCoordinates = traverse (fmap fst . TL.double . TL.strip) . S.fromList $ [cX, cY, cZ]
+          -- Use the Atom constructor applicatively to get Either String Atom. This relies on the
+          -- order of the atom arguments.
+          eitherAtom   =
+            Atom
+            <$> aElement            -- _atom_Element
+            <*> pure aLabel         -- _atom_Label
+            <*> pure False          -- _atom_IsPseudo
+            <*> pure aFFType        -- _atom_FFType
+            <*> pure aPCharge       -- _atom_FFType
+            <*> aCoordinates        -- _atom_Coordinates
+      -- If all the non-Attoparsec parse actions succeeded, return an Attoparsec result or fail with
+      -- an Attoparsec error.
+      case (aSerial, eitherAtom) of
+        (Right ind, Right a) -> return (ind, a)
+        (Left indErr, _)     -> fail indErr
+        (_, Left aErr)       -> fail aErr
 
 {-|
 Parser for the Spicy format used in this program. Represents fully all informations stored in the
