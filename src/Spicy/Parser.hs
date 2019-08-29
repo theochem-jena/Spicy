@@ -23,6 +23,7 @@ import           Control.Applicative
 import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
 import           Data.Char
+import           Data.Either
 import           Data.Foldable
 import           Data.IntMap               (IntMap)
 import qualified Data.IntMap               as IM
@@ -33,7 +34,7 @@ import           Data.Sequence             (Seq (..))
 import qualified Data.Sequence             as S
 import qualified Data.Text                 as TS
 import qualified Data.Text.Lazy            as TL
-import qualified Data.Text.Lazy.Read as TL
+import qualified Data.Text.Lazy.Read       as TL
 import           Data.Tuple
 import           Lens.Micro.Platform
 import           Prelude                   hiding (cycle, foldl1, foldr1, head,
@@ -42,10 +43,10 @@ import           Prelude                   hiding (cycle, foldl1, foldr1, head,
 import           Spicy.Molecule.Util
 import           Spicy.Types
 import           Text.Read
---import Data.Monoid
---import Data.Sequence (Seq)
-import Debug.Trace
-import Control.DeepSeq
+-- import Data.Monoid
+-- import Data.Sequence (Seq)
+-- import Debug.Trace
+-- import Control.DeepSeq
 
 
 {-|
@@ -304,16 +305,17 @@ Parse a PDB file as described in
 parsePDB :: Parser Molecule
 parsePDB = do
   -- Parse atoms only and ignore other fiels
-  atoms <- many1 atomParser
-  -- bonds <- undefined --many' connectParser
+  atomsLabeled <- S.fromList <$> many1 atomParser
+  bonds        <- IM.fromList <$> many' connectParser
   -- links <- undefined --many' linkParser
   let -- Transform the informations from the parsers.
-      atomsIM = IM.fromList . fmap (\(ind, _, atom) -> (ind, atom)) $ atoms
+      atomsIM = IM.fromList . toList .  fmap (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
+      subMols = makeSubMolsFromAnnoAtoms atomsLabeled bonds
   return Molecule
     { _molecule_Label    = ""
     , _molecule_Atoms    = atomsIM
-    , _molecule_Bonds    = IM.empty
-    , _molecule_SubMol   = S.empty
+    , _molecule_Bonds    = bonds
+    , _molecule_SubMol   = subMols
     , _molecule_Energy   = Nothing
     , _molecule_Gradient = Nothing
     , _molecule_Hessian  = Nothing
@@ -344,11 +346,11 @@ parsePDB = do
           -- Columnt 18-20: residue name (use this as submolecule label)
           (cResName, rest5)     = TL.splitAt 3 . TL.drop 1 $ rest4
           -- Column 22: chain identifier
-          (cChainID, rest6)     = TL.splitAt 1 rest5
+          (_cChainID, rest6)    = TL.splitAt 1 rest5
           -- Column 23-26: residue sequence number
           (cResSeq, rest7)      = TL.splitAt 4 rest6
           -- Column 27: Code for insertion of residue
-          (cICode, rest8)       = TL.splitAt 1 rest7
+          (_cICode, rest8)      = TL.splitAt 1 rest7
           -- Column 31-38: Orthogonal coordinates for x in Angstrom
           (cX, rest9)           = TL.splitAt 8 . TL.drop 3 $ rest8
           -- Column 39-46: Orthogonal coordinates for y in Angstrom
@@ -356,17 +358,17 @@ parsePDB = do
           -- Column 47-54: Orthogonal coordinates for z in Angstrom
           (cZ, rest11)          = TL.splitAt 8 rest10
           -- Column 55-60: Occupancy
-          (cOccupancy, rest12)  = TL.splitAt 6 rest11
+          (_cOccupancy, rest12) = TL.splitAt 6 rest11
           -- Column 61-66: temperature factor
-          (cTempFactor, rest13) = TL.splitAt 6 . TL.drop 10 $ rest12
+          (_cTempFactor, rest13)= TL.splitAt 6 . TL.drop 10 $ rest12
           -- Column 77-78: element
           (cElement, rest14)    = TL.splitAt 2 rest13
           -- Columnt 79-80: charge on the atom
-          (cCharge, rest15)     = TL.splitAt 2 rest14
+          (cCharge, _rest15)    = TL.splitAt 2 rest14
           --
           -- Now parse all fields of interest using text readers.
           aSerial      = fst <$> (TL.decimal . TL.strip $ cSerial)
-          aResSeq      = fst <$> (TL.decimal . TL.strip $ cSerial)
+          aResSeq      = fst <$> (TL.decimal . TL.strip $ cResSeq)
           aElement     =
             let elemMaybe = (readMaybe :: String -> Maybe Element) . TL.unpack . TL.strip $ cElement
             in  case elemMaybe of
@@ -397,6 +399,40 @@ parsePDB = do
         (Left indErr, _, _)                   -> fail indErr
         (_, (Left sIndErr, _), _)             -> fail sIndErr
         (_, _, Left aErr)                     -> fail aErr
+    --
+    -- Parse CONECT fields of the PDB. PDB bonds are bidirectorial, so no swapping required.
+    connectParser :: Parser (Int, IntSet)
+    connectParser = do
+      -- First check, that this line really starts with a CONECT record (6 characters).
+      -- Columns 1-6: record type.
+      _recordStart <- TL.pack <$> manyTill anyChar (string "CONECT")
+      -- Then take the rest of the line, till the end of line is reached.
+      recordRest   <- textS2L <$> takeWhile (not . isEndOfLine) <* endOfLine
+      let -- Recombine the line and split them according to PDB standard.
+          conectLine = "CONECT" `TL.append` recordRest
+          -- Columns 1-6: "CONECT"
+          (_cConect, rest1)  = TL.splitAt 6 conectLine
+          -- Columns 7-11: serial of origin atom.
+          (cOrigin, rest2)   = TL.splitAt 5 rest1
+          -- Columns 12-16, 17-21, 22-26,27-31: serial of a target atoms.
+          (cTarget1, rest3)  = TL.splitAt 5 rest2
+          (cTarget2, rest4)  = TL.splitAt 5 rest3
+          (cTarget3, rest5)  = TL.splitAt 5 rest4
+          (cTarget4, _rest6) = TL.splitAt 5 rest5
+          --
+          -- Now parse all fields of interest using text readers.
+          pOrigin  = fst <$> (TL.decimal . TL.strip $ cOrigin)
+          pTargets :: Either String IntSet
+          pTargets =
+              fmap IS.fromList
+            . sequence
+            . filter isRight
+            . map (fmap fst . TL.decimal . TL.strip)
+            $ [cTarget1, cTarget2, cTarget3, cTarget4]
+      case (pOrigin, pTargets) of
+        (Right o, Right t) -> return (o, t)
+        (Left oErr, _)     -> fail oErr
+        (_, Left tErr)     -> fail tErr
 
 {-|
 Parser for the Spicy format used in this program. Represents fully all informations stored in the
