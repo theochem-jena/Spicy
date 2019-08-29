@@ -14,6 +14,7 @@ module Spicy.Molecule.Util
 , reIndexMolecule
 , groupTupleSeq
 , groupBy
+, makeSubMolsFromAnnoAtoms
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap)
@@ -21,8 +22,9 @@ import qualified Data.IntMap.Lazy    as IM
 import           Data.IntSet         (IntSet, (\\))
 import qualified Data.IntSet         as IS
 import           Data.Maybe
-import           Data.Sequence       (Seq(..))
+import           Data.Sequence       (Seq (..))
 import qualified Data.Sequence       as S
+import qualified Data.Text.Lazy      as TL
 import           Lens.Micro.Platform
 import           Prelude             hiding (cycle, foldl1, foldr1, head, init,
                                       last, maximum, minimum, tail, take,
@@ -311,3 +313,61 @@ groupBy _ S.Empty    = S.empty
 groupBy f (x :<| xs) = (x :<| ys) :<| groupBy f zs
   where
     (ys, zs) = S.spanl (f x) xs
+
+{-|
+Group a common parser structure based on a submolecule identifier.
+-}
+groupAnnoAtomsAsSubMols ::
+     Seq (Int, (Int, TL.Text), Atom)       -- ^ A plain 'Seq' of all 'Atom's in the 'Molecule'.
+                                           --   They are annoated in a Tuple as:
+                                           --   @(atomIndex, (subMolID, subMolName), atom)@
+                                           --
+  -> Seq (Seq (Int, (Int, TL.Text), Atom)) -- ^ Groups of annotated submolecules, which share a
+                                           --   common subMolID.
+groupAnnoAtomsAsSubMols annoAtoms =
+    groupBy (\x y -> x ^. _2 . _1 == y ^. _2 . _1)
+  . S.unstableSortOn (\(_, (subID, _), _) -> subID)
+  $ annoAtoms
+
+{-|
+Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete 'Molecule'.
+Then form a proper submolecule. This function relies on the group of being a proper submolecule and
+will hapilly accept groups that are not.
+-}
+makeSubMolFromGroup ::
+     Seq (Int, (Int, TL.Text), Atom) -- ^ A group of annotated atoms in the style of:
+                                     --   @(atomIndex, (subMolID, subMolName), atom)@
+  -> IntMap IntSet                   -- ^ Bond type data structure of the whole molecule.
+  -> Molecule                        -- ^ A newly formed submolecule.
+makeSubMolFromGroup group bonds =
+  let atoms      = IM.fromList . toList . fmap (\(ind, _, atom) -> (ind, atom)) $ group
+      label      = fromMaybe "" . (S.!? 0) . fmap (^. _2 . _2) $ group
+      atomInds   = IM.keysSet atoms
+      -- Remove all bonds from the IntMap, that have origin on atoms not in this set and all
+      -- target atoms that are not in the set.
+      bondsCleaned :: IntMap IntSet
+      bondsCleaned =
+          IM.map (IS.filter (`IS.member` atomInds))
+        $ bonds `IM.restrictKeys` atomInds
+  in  Molecule
+        { _molecule_Label    = label
+        , _molecule_Atoms    = atoms
+        , _molecule_Bonds    = bondsCleaned
+        , _molecule_SubMol   = S.empty
+        , _molecule_Energy   = Nothing
+        , _molecule_Gradient = Nothing
+        , _molecule_Hessian  = Nothing
+        }
+
+{-|
+From some common parser informations, form the sub molecules.
+-}
+makeSubMolsFromAnnoAtoms ::
+     Seq (Int, (Int, TL.Text), Atom) -- ^ A plain 'Seq' of all 'Atom's in the 'Molecule'. They are
+                                     --   annoated in a Tuple as:
+                                     --   @(atomIndex, (subMolID, subMolName), atom)@
+  -> IntMap IntSet                   -- ^ Bonds for the whole 'Molecule'. See '_molecule_Bonds'.
+  -> Seq Molecule                    -- ^ The submolecules.
+makeSubMolsFromAnnoAtoms annoAtoms bonds =
+  let subMolAtomGroups = groupAnnoAtomsAsSubMols annoAtoms
+  in  fmap (\g -> makeSubMolFromGroup g bonds) subMolAtomGroups
