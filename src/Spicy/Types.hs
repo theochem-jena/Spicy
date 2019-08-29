@@ -136,15 +136,6 @@ Starting from a top level molecule, all atoms and bonds of the system are expect
 this top layer (except pseudoatoms of deeper layers). Therefore if atoms are in a deeper layers of
 the recursion, their information is not used to describe a higher layer. Instead, all atoms of
 deeper layers (except pseudoatoms) must be also replicated in a higher layer.
-
-Two possible types of index countings are possible:
-
-  - __/'Global'/__: All atoms in the system (which should be present at the top layer molecule) except
-    pseudoatoms are counted in the top layer. The fragments might therefore not start at atom with
-    index 0, but depending on where they are in a higher level with higher numbers. Pseudoatoms are
-    counted after all other atoms are counted.
-  - __/'Individual'/__: Counting happens for each molecule individually. In this counting scheme,
-    pseudoatoms do not need any special treatment.
 -}
 data Molecule = Molecule
   { _molecule_Label    :: Text                     -- ^ Comment or identifier of a molecule. Can be

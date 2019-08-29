@@ -237,20 +237,6 @@ atom_Coordinates :: Lens' Atom (Seq Double)
 --   recursion, their information is not used to describe a higher layer.
 --   Instead, all atoms of deeper layers (except pseudoatoms) must be also
 --   replicated in a higher layer.
---   
---   Two possible types of index countings are possible:
---   
---   <ul>
---   <li><b><i><tt>Global</tt></i></b>: All atoms in the system (which
---   should be present at the top layer molecule) except pseudoatoms are
---   counted in the top layer. The fragments might therefore not start at
---   atom with index 0, but depending on where they are in a higher level
---   with higher numbers. Pseudoatoms are counted after all other atoms are
---   counted.</li>
---   <li><b><i><tt>Individual</tt></i></b>: Counting happens for each
---   molecule individually. In this counting scheme, pseudoatoms do not
---   need any special treatment.</li>
---   </ul>
 data Molecule
 Molecule :: Text -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Double -> Maybe (Vector Double) -> Maybe (UMatrix Double) -> Molecule
 
@@ -339,6 +325,9 @@ groupTupleSeq :: Seq (Int, Int) -> IntMap IntSet
 --   elements."
 groupBy :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
 
+-- | From some common parser informations, form the sub molecules.
+makeSubMolsFromAnnoAtoms :: Seq (Int, (Int, Text), Atom) -> IntMap IntSet -> Seq Molecule
+
 
 module Spicy.Parser
 
@@ -357,6 +346,12 @@ parseTXYZ :: Parser Molecule
 --   treated as the force field string. See
 --   <a>http://chemyang.ccnu.edu.cn/ccb/server/AIMMS/mol2.pdf</a>.
 parseMOL2 :: Parser Molecule
+
+-- | Parse a PDB file as described in
+--   <a>ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf</a>.
+--   If parsing of a single ATOM or CONETC line fails, the parser will stop
+--   there and ignore all the other records of same type, directly coming
+--   after the failed one.
 parsePDB :: Parser Molecule
 
 -- | Parser for the Spicy format used in this program. Represents fully all

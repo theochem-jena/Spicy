@@ -144,7 +144,7 @@ reIndexMolecule repMap mol = do
 Reindex the '_molecule_Atoms' and '_molecule_Bonds' of a single layer of a molecule (ignoring
 anything in the '_molecule_SubMol' field). While the completeness of the reindexing is checked and
 incompleteness of the replacement 'IntMap' 'Int' will result in 'Left' 'String', it is not checked
-if the 'Atom''s indexing is sane and indices are unique.
+if the 'Atom's indexing is sane and indices are unique.
 -}
 reIndexMoleculeLayer ::
      IntMap Int             -- ^ 'IntMap' with mappings from old indices to new indices (bonds and
@@ -201,7 +201,7 @@ checkRepMapCompleteIM repMap im =
 
 
 {-|
-Check if 'IntMap' is complete to replace all values in an 'IntMap' 'InSet' type construction
+Check if 'IntMap' is complete to replace all values in an 'IntMap' 'IntSet' type construction
 (replacing both the lookup keys in the 'IntMap', as well as all values in the 'IntSet'). Gives
 'True' if complete and 'False' otherwise.
 -}

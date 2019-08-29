@@ -30,7 +30,7 @@ respect to force field types, which should always be remembered when usings its 
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
 -}</span><span>
 </span><a name="line-32"></a><span class="hs-identifier">writeXYZ</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
-</span><a name="line-33"></a><a name="writeXYZ"><a href="Spicy.MolWriter.html#writeXYZ"><span class="hs-identifier">writeXYZ</span></a></a><span> </span><a name="local-6989586621679259541"><a href="#local-6989586621679259541"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
+</span><a name="line-33"></a><a name="writeXYZ"><a href="Spicy.MolWriter.html#writeXYZ"><span class="hs-identifier">writeXYZ</span></a></a><span> </span><a name="local-6989586621679268631"><a href="#local-6989586621679268631"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
 </span><a name="line-34"></a><span class="hs-comment">{-
   -- Header section with number of atoms and comment
   T.unlines
@@ -58,7 +58,7 @@ for visualisation but obviously not for MM.
 This format ingores all deeper level layers of a molecule.
 -}</span><span>
 </span><a name="line-60"></a><span class="hs-identifier">writeTXYZ</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
-</span><a name="line-61"></a><a name="writeTXYZ"><a href="Spicy.MolWriter.html#writeTXYZ"><span class="hs-identifier">writeTXYZ</span></a></a><span> </span><a name="local-6989586621679259542"><a href="#local-6989586621679259542"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
+</span><a name="line-61"></a><a name="writeTXYZ"><a href="Spicy.MolWriter.html#writeTXYZ"><span class="hs-identifier">writeTXYZ</span></a></a><span> </span><a name="local-6989586621679268632"><a href="#local-6989586621679268632"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
 </span><a name="line-62"></a><span class="hs-comment">{-
   let atoms        = mol ^. molecule_Atoms
       nAtoms       = VB.length atoms
@@ -112,7 +112,7 @@ files that have correct topology and geometry, but visualisation programs wont b
 correct elements.
 -}</span><span>
 </span><a name="line-114"></a><span class="hs-identifier">writeMOL2</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
-</span><a name="line-115"></a><a name="writeMOL2"><a href="Spicy.MolWriter.html#writeMOL2"><span class="hs-identifier">writeMOL2</span></a></a><span> </span><a name="local-6989586621679259543"><a href="#local-6989586621679259543"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
+</span><a name="line-115"></a><a name="writeMOL2"><a href="Spicy.MolWriter.html#writeMOL2"><span class="hs-identifier">writeMOL2</span></a></a><span> </span><a name="local-6989586621679268633"><a href="#local-6989586621679268633"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
 </span><a name="line-116"></a><span class="hs-comment">{-
   let atoms  = mol ^. molecule_Atoms
       nAtoms = VB.length atoms
@@ -192,14 +192,14 @@ correct elements.
 -}</span><span>
 </span><a name="line-193"></a><span>
 </span><a name="line-194"></a><span class="hs-identifier">writePDB</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
-</span><a name="line-195"></a><a name="writePDB"><a href="Spicy.MolWriter.html#writePDB"><span class="hs-identifier">writePDB</span></a></a><span> </span><a name="local-6989586621679259544"><a href="#local-6989586621679259544"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
+</span><a name="line-195"></a><a name="writePDB"><a href="Spicy.MolWriter.html#writePDB"><span class="hs-identifier">writePDB</span></a></a><span> </span><a name="local-6989586621679268634"><a href="#local-6989586621679268634"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
 </span><a name="line-196"></a><span>
 </span><a name="line-197"></a><span class="hs-comment">{-|
 Write Spicy format, which is a custom format (not stable yet), containing all informations, that are
 internally used to represent a molecule.
 -}</span><span>
 </span><a name="line-201"></a><span class="hs-identifier">writeSpicy</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">String</span><span>
-</span><a name="line-202"></a><a name="writeSpicy"><a href="Spicy.MolWriter.html#writeSpicy"><span class="hs-identifier">writeSpicy</span></a></a><span> </span><a name="local-6989586621679259545"><a href="#local-6989586621679259545"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
+</span><a name="line-202"></a><a name="writeSpicy"><a href="Spicy.MolWriter.html#writeSpicy"><span class="hs-identifier">writeSpicy</span></a></a><span> </span><a name="local-6989586621679268635"><a href="#local-6989586621679268635"><span class="hs-identifier">_mol</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">undefined</span><span>
 </span><a name="line-203"></a><span class="hs-comment">{-
   &quot;#Spicy-Format v0.2\n&quot; ++
   &quot;\n&quot; ++

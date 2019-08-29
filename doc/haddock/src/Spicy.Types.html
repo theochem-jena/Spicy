@@ -136,46 +136,37 @@ Starting from a top level molecule, all atoms and bonds of the system are expect
 this top layer (except pseudoatoms of deeper layers). Therefore if atoms are in a deeper layers of
 the recursion, their information is not used to describe a higher layer. Instead, all atoms of
 deeper layers (except pseudoatoms) must be also replicated in a higher layer.
-
-Two possible types of index countings are possible:
-
-  - __/'Global'/__: All atoms in the system (which should be present at the top layer molecule) except
-    pseudoatoms are counted in the top layer. The fragments might therefore not start at atom with
-    index 0, but depending on where they are in a higher level with higher numbers. Pseudoatoms are
-    counted after all other atoms are counted.
-  - __/'Individual'/__: Counting happens for each molecule individually. In this counting scheme,
-    pseudoatoms do not need any special treatment.
 -}</span><span>
-</span><a name="line-149"></a><span class="hs-keyword">data</span><span> </span><a name="Molecule"><a href="Spicy.Types.html#Molecule"><span class="hs-identifier">Molecule</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="Molecule"><a href="Spicy.Types.html#Molecule"><span class="hs-identifier">Molecule</span></a></a><span>
-</span><a name="line-150"></a><span>  </span><span class="hs-special">{</span><span> </span><a name="_molecule_Label"><a href="Spicy.Types.html#_molecule_Label"><span class="hs-identifier">_molecule_Label</span></a></a><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Text</span><span>                     </span><span class="hs-comment">-- ^ Comment or identifier of a molecule. Can be</span><span>
-</span><a name="line-151"></a><span>                                                   </span><span class="hs-comment">--   empty.</span><span>
-</span><a name="line-152"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Atoms"><a href="Spicy.Types.html#_molecule_Atoms"><span class="hs-identifier">_molecule_Atoms</span></a></a><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><a href="Spicy.Types.html#Atom"><span class="hs-identifier hs-type">Atom</span></a><span>              </span><span class="hs-comment">-- ^ An 'IntMap' of 'Atom's, 'Atom's identified</span><span>
-</span><a name="line-153"></a><span>                                                   </span><span class="hs-comment">--   by their 'Int' index.</span><span>
-</span><a name="line-154"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Bonds"><a href="Spicy.Types.html#_molecule_Bonds"><span class="hs-identifier">_molecule_Bonds</span></a></a><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>            </span><span class="hs-comment">-- ^ An IntMap, mapping the index of an 'Atom' in</span><span>
-</span><a name="line-155"></a><span>                                                   </span><span class="hs-comment">--   the 'Molecule' to the indices of all</span><span>
-</span><a name="line-156"></a><span>                                                   </span><span class="hs-comment">--   'Atom's, to which it binds.</span><span>
-</span><a name="line-157"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_SubMol"><a href="Spicy.Types.html#_molecule_SubMol"><span class="hs-identifier">_molecule_SubMol</span></a></a><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Seq</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>             </span><span class="hs-comment">-- ^ A Molecule might contain other molecules.</span><span>
-</span><a name="line-158"></a><span>                                                   </span><span class="hs-comment">--   These might be fragments or higher level</span><span>
-</span><a name="line-159"></a><span>                                                   </span><span class="hs-comment">--   ONIOM layers.</span><span>
-</span><a name="line-160"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Energy"><a href="Spicy.Types.html#_molecule_Energy"><span class="hs-identifier">_molecule_Energy</span></a></a><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-identifier hs-type">Double</span><span>             </span><span class="hs-comment">-- ^ An energy, that might have been calculated.</span><span>
-</span><a name="line-161"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Gradient"><a href="Spicy.Types.html#_molecule_Gradient"><span class="hs-identifier">_molecule_Gradient</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">VS.Vector</span><span> </span><span class="hs-identifier hs-type">Double</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- ^ A gradient, that might have been calculated.</span><span>
-</span><a name="line-162"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Hessian"><a href="Spicy.Types.html#_molecule_Hessian"><span class="hs-identifier">_molecule_Hessian</span></a></a><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-special">(</span><a href="Spicy.Types.html#UMatrix"><span class="hs-identifier hs-type">UMatrix</span></a><span> </span><span class="hs-identifier hs-type">Double</span><span class="hs-special">)</span><span>   </span><span class="hs-comment">-- ^ A hessian, that might have been calculated.</span><span>
-</span><a name="line-163"></a><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Generic</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Show</span><span class="hs-special">)</span><span>
-</span><a name="line-164"></a><span class="hs-identifier hs-var">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier hs-var">Molecule</span><span>
-</span><a name="line-165"></a><span>
-</span><a name="line-166"></a><span class="hs-comment">{-|
+</span><a name="line-140"></a><span class="hs-keyword">data</span><span> </span><a name="Molecule"><a href="Spicy.Types.html#Molecule"><span class="hs-identifier">Molecule</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="Molecule"><a href="Spicy.Types.html#Molecule"><span class="hs-identifier">Molecule</span></a></a><span>
+</span><a name="line-141"></a><span>  </span><span class="hs-special">{</span><span> </span><a name="_molecule_Label"><a href="Spicy.Types.html#_molecule_Label"><span class="hs-identifier">_molecule_Label</span></a></a><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Text</span><span>                     </span><span class="hs-comment">-- ^ Comment or identifier of a molecule. Can be</span><span>
+</span><a name="line-142"></a><span>                                                   </span><span class="hs-comment">--   empty.</span><span>
+</span><a name="line-143"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Atoms"><a href="Spicy.Types.html#_molecule_Atoms"><span class="hs-identifier">_molecule_Atoms</span></a></a><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><a href="Spicy.Types.html#Atom"><span class="hs-identifier hs-type">Atom</span></a><span>              </span><span class="hs-comment">-- ^ An 'IntMap' of 'Atom's, 'Atom's identified</span><span>
+</span><a name="line-144"></a><span>                                                   </span><span class="hs-comment">--   by their 'Int' index.</span><span>
+</span><a name="line-145"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Bonds"><a href="Spicy.Types.html#_molecule_Bonds"><span class="hs-identifier">_molecule_Bonds</span></a></a><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IntMap</span><span> </span><span class="hs-identifier hs-type">IntSet</span><span>            </span><span class="hs-comment">-- ^ An IntMap, mapping the index of an 'Atom' in</span><span>
+</span><a name="line-146"></a><span>                                                   </span><span class="hs-comment">--   the 'Molecule' to the indices of all</span><span>
+</span><a name="line-147"></a><span>                                                   </span><span class="hs-comment">--   'Atom's, to which it binds.</span><span>
+</span><a name="line-148"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_SubMol"><a href="Spicy.Types.html#_molecule_SubMol"><span class="hs-identifier">_molecule_SubMol</span></a></a><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Seq</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>             </span><span class="hs-comment">-- ^ A Molecule might contain other molecules.</span><span>
+</span><a name="line-149"></a><span>                                                   </span><span class="hs-comment">--   These might be fragments or higher level</span><span>
+</span><a name="line-150"></a><span>                                                   </span><span class="hs-comment">--   ONIOM layers.</span><span>
+</span><a name="line-151"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Energy"><a href="Spicy.Types.html#_molecule_Energy"><span class="hs-identifier">_molecule_Energy</span></a></a><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-identifier hs-type">Double</span><span>             </span><span class="hs-comment">-- ^ An energy, that might have been calculated.</span><span>
+</span><a name="line-152"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Gradient"><a href="Spicy.Types.html#_molecule_Gradient"><span class="hs-identifier">_molecule_Gradient</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">VS.Vector</span><span> </span><span class="hs-identifier hs-type">Double</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- ^ A gradient, that might have been calculated.</span><span>
+</span><a name="line-153"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_molecule_Hessian"><a href="Spicy.Types.html#_molecule_Hessian"><span class="hs-identifier">_molecule_Hessian</span></a></a><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-special">(</span><a href="Spicy.Types.html#UMatrix"><span class="hs-identifier hs-type">UMatrix</span></a><span> </span><span class="hs-identifier hs-type">Double</span><span class="hs-special">)</span><span>   </span><span class="hs-comment">-- ^ A hessian, that might have been calculated.</span><span>
+</span><a name="line-154"></a><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Generic</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Show</span><span class="hs-special">)</span><span>
+</span><a name="line-155"></a><span class="hs-identifier hs-var">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier hs-var">Molecule</span><span>
+</span><a name="line-156"></a><span>
+</span><a name="line-157"></a><span class="hs-comment">{-|
 Trajectories are simply 'Seq'uences of 'Molecule's.
 -}</span><span>
-</span><a name="line-169"></a><span class="hs-keyword">type</span><span> </span><a name="Trajectory"><a href="Spicy.Types.html#Trajectory"><span class="hs-identifier">Trajectory</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-type">Seq</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>
-</span><a name="line-170"></a><span>
-</span><a name="line-171"></a><span>
-</span><a name="line-172"></a><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
-</span><a name="line-173"></a><span class="hs-comment">{- $compChemTypes
+</span><a name="line-160"></a><span class="hs-keyword">type</span><span> </span><a name="Trajectory"><a href="Spicy.Types.html#Trajectory"><span class="hs-identifier">Trajectory</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-type">Seq</span><span> </span><a href="Spicy.Types.html#Molecule"><span class="hs-identifier hs-type">Molecule</span></a><span>
+</span><a name="line-161"></a><span>
+</span><a name="line-162"></a><span>
+</span><a name="line-163"></a><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><a name="line-164"></a><span class="hs-comment">{- $compChemTypes
 Data types to describe the calculation niveau. They are hierarchically organised and try to cover
 everything, so that Spicy is fully aware of the calculation niveau. This has the advantage, that
 users basically do not need to know the input of a specific program to perform a Spicy calculation.
 -}</span><span>
-</span><a name="line-178"></a><span class="hs-comment">{-
+</span><a name="line-169"></a><span class="hs-comment">{-
 {-|
 Define commonon tasks for quantum chemistry software.
 -}
@@ -683,4 +674,4 @@ data Methods = Methods
   } deriving (Eq, Show)
 makeLenses ''Methods
 -}</span><span>
-</span><a name="line-686"></a></pre></body></html>
+</span><a name="line-677"></a></pre></body></html>
