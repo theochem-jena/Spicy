@@ -150,7 +150,7 @@ parseTXYZ = do
           )
     -- Parse multiple non-line-breaking whitespace separated decimals.
     columnDecimal :: Parser Int
-    columnDecimal = skipSpace' *> decimal <* skipSpace'
+    columnDecimal = skipSpace' *> ((\a -> a - 1) <$> decimal) <* skipSpace'
 
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
