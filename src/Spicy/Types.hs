@@ -10,10 +10,10 @@ Portability : POSIX, Windows
 Spicy.Types contains the definition of all classes and data types, that are used in Spicy. Mainly it
 takes care of the description of molecules (structure, topology, potential energy surface, ...).
 -}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Spicy.Types
 ( Strat(..)
 , AccVector(..)
@@ -46,12 +46,12 @@ import qualified Data.ByteString.Lazy.UTF8 as BL
 import           Data.IntMap.Lazy          (IntMap)
 import           Data.IntSet               (IntSet)
 import           Data.Sequence             (Seq)
+import           Data.Text.Lazy            (Text)
 import           GHC.Generics              (Generic)
 import           Lens.Micro.Platform       hiding ((.=))
-import           Prelude              hiding (cycle, foldl1, foldr1, head, init,
-import           Data.Text.Lazy       (Text)
-                                       last, maximum, minimum, tail, take,
-                                       takeWhile, (!!))
+import           Prelude                   hiding (cycle, foldl1, foldr1, head,
+                                            init, last, maximum, minimum, tail,
+                                            take, takeWhile, (!!))
 
 
 {-|

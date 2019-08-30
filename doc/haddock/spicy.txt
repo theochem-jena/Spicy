@@ -60,9 +60,15 @@ data Strat
 Serial :: Strat
 Parallel :: Strat
 
--- | Alias for an unboxed matrix from the Array library. This type can
---   easily be converted to Accelerate's array type.
-type UMatrix a = Array (Int, Int) a
+-- | 'newtype' wrapper to Accelerate's <a>Vector</a>s.
+newtype AccVector a
+AccVector :: Vector a -> AccVector a
+[getAccVector] :: AccVector a -> Vector a
+
+-- | 'newtype' wrapper to Accelerate's <a>Matrix</a>s.
+newtype AccMatrix a
+AccMatrix :: Matrix a -> AccMatrix a
+[getAccMatrix] :: AccMatrix a -> Matrix a
 
 -- | All chemical elements. Have them very clear because force fields and
 --   pdb names may interfer and are just arbitrary strings.
@@ -238,7 +244,7 @@ atom_Coordinates :: Lens' Atom (Seq Double)
 --   Instead, all atoms of deeper layers (except pseudoatoms) must be also
 --   replicated in a higher layer.
 data Molecule
-Molecule :: Text -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Double -> Maybe (Vector Double) -> Maybe (UMatrix Double) -> Molecule
+Molecule :: Text -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Double -> Maybe (AccVector Double) -> Maybe (AccMatrix Double) -> Molecule
 
 -- | Comment or identifier of a molecule. Can be empty.
 [_molecule_Label] :: Molecule -> Text
@@ -259,24 +265,28 @@ Molecule :: Text -> IntMap Atom -> IntMap IntSet -> Seq Molecule -> Maybe Double
 [_molecule_Energy] :: Molecule -> Maybe Double
 
 -- | A gradient, that might have been calculated.
-[_molecule_Gradient] :: Molecule -> Maybe (Vector Double)
+[_molecule_Gradient] :: Molecule -> Maybe (AccVector Double)
 
 -- | A hessian, that might have been calculated.
-[_molecule_Hessian] :: Molecule -> Maybe (UMatrix Double)
+[_molecule_Hessian] :: Molecule -> Maybe (AccMatrix Double)
 molecule_Label :: Lens' Molecule Text
 molecule_Atoms :: Lens' Molecule (IntMap Atom)
 molecule_Bonds :: Lens' Molecule (IntMap IntSet)
 molecule_SubMol :: Lens' Molecule (Seq Molecule)
 molecule_Energy :: Lens' Molecule (Maybe Double)
-molecule_Gradient :: Lens' Molecule (Maybe (Vector Double))
-molecule_Hessian :: Lens' Molecule (Maybe (UMatrix Double))
+molecule_Gradient :: Lens' Molecule (Maybe (AccVector Double))
+molecule_Hessian :: Lens' Molecule (Maybe (AccMatrix Double))
 
 -- | Trajectories are simply <a>Seq</a>uences of <a>Molecule</a>s.
 type Trajectory = Seq Molecule
 instance GHC.Show.Show Spicy.Types.Molecule
+instance Data.Aeson.Types.ToJSON.ToJSON Spicy.Types.Molecule
+instance Data.Aeson.Types.FromJSON.FromJSON Spicy.Types.Molecule
 instance GHC.Generics.Generic Spicy.Types.Molecule
 instance GHC.Classes.Eq Spicy.Types.Molecule
 instance GHC.Show.Show Spicy.Types.Atom
+instance Data.Aeson.Types.ToJSON.ToJSON Spicy.Types.Atom
+instance Data.Aeson.Types.FromJSON.FromJSON Spicy.Types.Atom
 instance GHC.Generics.Generic Spicy.Types.Atom
 instance GHC.Classes.Eq Spicy.Types.Atom
 instance Control.DeepSeq.NFData Spicy.Types.Element
@@ -286,7 +296,19 @@ instance GHC.Classes.Ord Spicy.Types.Element
 instance GHC.Read.Read Spicy.Types.Element
 instance GHC.Classes.Eq Spicy.Types.Element
 instance GHC.Show.Show Spicy.Types.Element
+instance (Data.Array.Accelerate.Array.Sugar.Elt a, GHC.Classes.Eq a) => GHC.Classes.Eq (Spicy.Types.AccMatrix a)
+instance Data.Array.Accelerate.Array.Sugar.Elt a => GHC.Show.Show (Spicy.Types.AccMatrix a)
+instance GHC.Generics.Generic (Spicy.Types.AccMatrix a)
+instance (Data.Array.Accelerate.Array.Sugar.Elt a, GHC.Classes.Eq a) => GHC.Classes.Eq (Spicy.Types.AccVector a)
+instance Data.Array.Accelerate.Array.Sugar.Elt a => GHC.Show.Show (Spicy.Types.AccVector a)
+instance GHC.Generics.Generic (Spicy.Types.AccVector a)
 instance GHC.Classes.Eq Spicy.Types.Strat
+instance Data.Aeson.Types.ToJSON.ToJSON Spicy.Types.Element
+instance Data.Aeson.Types.FromJSON.FromJSON Spicy.Types.Element
+instance (Data.Aeson.Types.ToJSON.ToJSON a, Data.Array.Accelerate.Array.Sugar.Elt a) => Data.Aeson.Types.ToJSON.ToJSON (Spicy.Types.AccMatrix a)
+instance (Data.Aeson.Types.FromJSON.FromJSON a, Data.Array.Accelerate.Array.Sugar.Elt a) => Data.Aeson.Types.FromJSON.FromJSON (Spicy.Types.AccMatrix a)
+instance (Data.Aeson.Types.ToJSON.ToJSON a, Data.Array.Accelerate.Array.Sugar.Elt a) => Data.Aeson.Types.ToJSON.ToJSON (Spicy.Types.AccVector a)
+instance (Data.Aeson.Types.FromJSON.FromJSON a, Data.Array.Accelerate.Array.Sugar.Elt a) => Data.Aeson.Types.FromJSON.FromJSON (Spicy.Types.AccVector a)
 
 
 -- | This module provides functions to manipulate basic data structures of
@@ -393,10 +415,9 @@ writeTXYZ :: Molecule -> Text
 writeMOL2 :: Molecule -> Text
 writePDB :: Molecule -> Text
 
--- | Write Spicy format, which is a custom format (not stable yet),
---   containing all informations, that are internally used to represent a
---   molecule.
-writeSpicy :: Molecule -> String
+-- | Write Spicy format, which is an AESON generated JSON document,
+--   directly representing the data type of <a>Molecule</a>.
+writeSpicy :: Molecule -> Text
 
 
 -- | Definitions of auxiliary functions to deal with the GHC bug, making it
