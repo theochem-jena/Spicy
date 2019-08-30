@@ -5,3 +5,4 @@ Test.hs
 *.so.*
 *.cabal
 package.yaml
+goldentests/output
