@@ -24,6 +24,8 @@ import           Data.Text.Lazy (Text)
 import           Prelude        hiding (cycle, foldl1, foldr1, head, init, last,
                                  maximum, minimum, tail, take, takeWhile, (!!))
 import           Spicy.Types
+import qualified Data.Text.Lazy.Encoding as T
+import Data.Aeson.Encode.Pretty
 
 
 {-|
@@ -112,7 +114,7 @@ files that have correct topology and geometry, but visualisation programs wont b
 correct elements.
 -}
 writeMOL2 :: Molecule -> Text
-writeMOL2 _mol = undefined
+writeMOL2 mol = decodeUtf8 . encodePretty $ mol
 {-
   let atoms  = mol ^. molecule_Atoms
       nAtoms = VB.length atoms
@@ -195,64 +197,8 @@ writePDB :: Molecule -> Text
 writePDB _mol = undefined
 
 {-|
-Write Spicy format, which is a custom format (not stable yet), containing all informations, that are
-internally used to represent a molecule.
+Write Spicy format, which is an AESON generated JSON document, directly representing the data type
+of 'Molecule'.
 -}
-writeSpicy :: Molecule -> String
-writeSpicy _mol = undefined
-{-
-  "#Spicy-Format v0.2\n" ++
-  "\n" ++
-  "#Spicy-Molecule\n" ++
-  "  Label:\n" ++
-  "    " ++ (m ^. molecule_Label) ++ "\n" ++
-  case energy of
-    Nothing -> ""
-    Just e ->
-      "  Energy / Hartree:\n" ++
-      "    " ++ printf "%20.10e\n" e
-  ++
-  case gradient of
-    Nothing -> ""
-    Just g ->
-      "  Gradient / Hartee/Bohr:\n" ++
-      (concat . map ("  " ++) . map writeSafeListToLine . chunksOf 3 . V.toList $ g)
-      --( concat . map ((++ "\n") . ("    " ++) . show) . chunksOf 3 . toList $ g )
-  ++
-  case hessian of
-    Nothing -> ""
-    Just h ->
-      "  Hessian / a.u.:\n" ++
-      ( concat . map ((++ "\n") . ("    " ++)) . splitOn "\n" . show $ h )
-  ++
-  "\n" ++
-  "#Spicy-Atoms\n" ++
-  ( concat . map
-      ( \a ->
-          printf "  %3s  " (show $ a ^. atom_Element) ++
-          printf "  %6s  " (a ^. atom_Label) ++
-          printf "  %1s  " (if (a ^. atom_IsPseudo) then "P" else "") ++
-          printf "  %6s  " (a ^. atom_FFType) ++
-          printf "  %8s  "
-            ( case (a ^. atom_PCharge) of
-                Nothing -> "No"
-                Just c  -> printf "%8.5f" c
-            ) ++
-          (\(x, y, z) -> printf "  %16.10f  %16.10f  %16.10f  " x y z)
-            (indexAtomCoordinates $ a ^. atom_Coordinates) ++
-          (concat . map (printf "  %6d  ") . I.toList $ a ^. atom_Connectivity) ++
-          "\n"
-      ) $ V.toList atoms
-    )
-  where
-    atoms = m ^. molecule_Atoms
-    energy = m ^. molecule_Energy
-    gradient = m ^. molecule_Gradient
-    hessian = m ^. molecule_Hessian
-    writeSafeListToLine :: (Floating a, PrintfArg a) => [a] -> String
-    writeSafeListToLine [] = ""
-    writeSafeListToLine [x] = printf "  %8.5f\n" x
-    writeSafeListToLine (x:xs) =
-      printf "  %8.5f  " x ++
-      writeSafeListToLine xs
--}
+writeSpicy :: Molecule -> Text
+writeSpicy mol = T.decodeUtf8 . encodePretty $ mol
