@@ -110,12 +110,11 @@ trouble, as all the others will rely on working parsers and are golden tests, to
 testParser :: TestTree
 testParser = testGroup "Parser"
   [ testParserTXYZ1
-  -- , testParserXYZ1
+  , testParserXYZ1
   -- , testParserMOL21
   -- , testParserPDB1
   -- , testParserSpicy1
   ]
-
 
 testParserTXYZ1 :: TestTree
 testParserTXYZ1 =
@@ -134,11 +133,24 @@ testParserTXYZ1 =
         outputFile
         parseAndWrite
 
-{-
 testParserXYZ1 :: TestTree
-testParserXYZ1 = testCase "Molden XYZ (1)" $
-  (maybeResult $ parse parseXYZ testHFeCNxH2OXYZ) @?= Just moleculeHFeCNxH2OXYZ
+testParserXYZ1 =
+  let testName      = "Molden XYZ (1)"
+      goldenFile    = "goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden"
+      inputFile     = "goldentests/input/FePorphyrine.xyz"
+      outputFile    = "goldentests/output/FePorphyrine__testParserXYZ1.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case (parse parseXYZ raw) of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
 
+{-
 testParserMOL21 :: TestTree
 testParserMOL21 = testCase "SyByl MOL2 (1)" $
  (maybeResult $ parse parseMOL2 testHFeCNxH2OMOL2) @?= Just moleculeHFeCNxH2OMOL2
