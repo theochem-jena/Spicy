@@ -7,6 +7,9 @@ Maintainer  : phillip.seeber@uni-jena.de
 Stability   : experimental
 Portability : POSIX, Windows
 
+This module provides parsers for chemical file formats. For the internal representation no parser is
+provided, as this is a JSON structured file, which should be parsed by
+[aeson](http://hackage.haskell.org/package/aeson)'s @decodeEither@.
 -}
 {-# LANGUAGE OverloadedStrings #-}
 module Spicy.Parser
@@ -15,12 +18,8 @@ module Spicy.Parser
 , parseTXYZ
 , parseMOL2
 , parsePDB
-, parseSpicy
--- * Generic formats
-, parseHMatrix
 ) where
 import           Control.Applicative
-import qualified Data.Array.Accelerate     as A
 import           Data.Attoparsec.Text.Lazy
 import           Data.Char
 import           Data.Either
@@ -440,137 +439,3 @@ parsePDB = do
         (Right o, Right t) -> return (o, t)
         (Left oErr, _)     -> fail oErr
         (_, Left tErr)     -> fail tErr
-
-{-|
-Parser for the Spicy format used in this program. Represents fully all informations stored in the
-'Molecule' type.
--}
-parseSpicy :: Parser Molecule
-parseSpicy = undefined {- do
-  _ <- string "#Spicy-Format v0.2"
-  endOfLine
-  skipSpace
-  _ <- string "#Spicy-Molecule"
-  endOfLine
-  _ <- string "  Label:"
-  endOfLine
-  _ <- string "    "
-  mLabel <- takeTill isEndOfLine
-  skipSpace
-  mEnergy <- maybeOption parseEnergy
-  mGradient <- maybeOption parseGradient
-  mHessian <- maybeOption parseHessian
-  skipSpace
-  _ <- string "#Spicy-Atoms"
-  skipSpace
-  mAtoms <- many1 parseAtoms
-  return Molecule
-    { _molecule_Label    = TS.unpack mLabel
-    , _molecule_Atoms    = R.fromList (R.Z R.:. length mAtoms) mAtoms
-    , _molecule_Energy   = mEnergy
-    , _molecule_Gradient = mGradient
-    , _molecule_Hessian  = mHessian
-    }
-  where
-    parseEnergy = do
-      _ <- manyTill anyChar (string "Energy / Hartree:")
-      skipSpace
-      energy <- double
-      return energy
-    parseGradient = do
-      _ <- manyTill anyChar (string "Gradient / Hartee/Bohr:")
-      skipSpace
-      gradient <- many1 $ do
-        skipSpace
-        gVal <- double
-        return gVal
-      return $ R.fromListUnboxed (R.Z R.:. (length gradient)) gradient
-    parseHessian = do
-      _ <- manyTill anyChar (string "Hessian / a.u.:")
-      skipSpace
-      hessian <- parseHMatrix
-      return hessian
-    parseAtoms = do
-      -- indendation
-      _ <- many' (char ' ' <|> char '\t')
-      -- chemical element
-      cElement <- many1 letter
-      --
-      _ <- count 4 (char ' ')
-      -- label of the atom
-      label <- count 6 anyChar
-
-      --
-      _ <- count 4 (char ' ')
-      -- pseudo label
-      pseudo <- anyChar
-      --
-      _ <- count 4 (char ' ')
-      -- FFType
-      ffType <- count 6 anyChar
-      pChargeTest <- maybeOption $ do
-        skipSpace
-        (string "No")
-      pCharge <- if pChargeTest == Nothing
-        then Just <$> do
-          _ <- many' (char ' ' <|> char '\t')
-          double
-        else return Nothing
-      _ <- many' (char ' ' <|> char '\t')
-      coordVec <- count 3 $ do
-        coordComponent <- double
-        _ <- many' (char ' ' <|> char '\t')
-        return coordComponent
-      _ <- many' (char ' ' <|> char '\t')
-      connectivity <- many' $ do
-        conAtom <- decimal
-        _ <- many' (char ' ' <|> char '\t')
-        return conAtom
-      endOfLine
-      return Atom
-        { _atom_Element      = read cElement
-        , _atom_Label        = T.unpack . T.strip . T.pack $ label
-        , _atom_IsPseudo     = if pseudo == 'P' then True else False
-        , _atom_FFType       = T.unpack . T.strip . T.pack $ ffType
-        , _atom_PCharge      = pCharge
-        , _atom_Coordinates  = R.fromListUnboxed (R.Z R.:. 3) coordVec
-        , _atom_Connectivity = I.fromList connectivity
-        }
--}
-
-----------------------------------------------------------------------------------------------------
-{-|
-Parse the "show" instance output for HMatrix' matrix Type, including the dimension infos
--}
-parseHMatrix :: Parser (A.Matrix Double)
-parseHMatrix = undefined {- do
-  skipSpace
-  _ <- char '('
-  dimX <- decimal
-  _ <- char '>'
-  _ <- char '<'
-  dimY <- decimal
-  _ <- char ')'
-  skipSpace
-  _ <- char '['
-  _ <- many' (char ' ' <|> char '\t')
-  rows <- do
-    count dimX $ do
-      singleRow <- count dimY parseElement
-      skipSpace
-      return singleRow
-  _ <- char ']'
-  --return $ fromRows . map fromList $ rows
-  return $ R.fromListUnboxed (R.Z R.:. dimX R.:. dimY) . concat $ rows
-  where
-    parseElement :: Parser Double
-    parseElement = do
-      _ <- many' (char ' ' <|> char '\t')
-      _ <- option ',' (char ',')
-      _ <- many' (char ' ' <|> char '\t')
-      element <- double
-      _ <- many' (char ' ' <|> char '\t')
-      _ <- option ',' (char ',')
-      _ <- many' (char ' ' <|> char '\t')
-      return element
--}
