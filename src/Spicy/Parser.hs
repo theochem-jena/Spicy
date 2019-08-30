@@ -350,9 +350,9 @@ parsePDB = do
           -- Column 17: alternate location indicator
           (_cAltLoc, rest4)     = TL.splitAt 1 rest3
           -- Columnt 18-20: residue name (use this as submolecule label)
-          (cResName, rest5)     = TL.splitAt 3 . TL.drop 1 $ rest4
+          (cResName, rest5)     = TL.splitAt 3 rest4
           -- Column 22: chain identifier
-          (_cChainID, rest6)    = TL.splitAt 1 rest5
+          (_cChainID, rest6)    = TL.splitAt 1 . TL.drop 1 $ rest5
           -- Column 23-26: residue sequence number
           (cResSeq, rest7)      = TL.splitAt 4 rest6
           -- Column 27: Code for insertion of residue
