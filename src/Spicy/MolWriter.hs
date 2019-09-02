@@ -19,12 +19,12 @@ module Spicy.MolWriter
 , writePDB
 , writeSpicy
 ) where
-import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as T
-import qualified Data.Vector    as VB
+import           Data.Aeson.Encode.Pretty
+import           Data.Text.Lazy           (Text)
+import qualified Data.Text.Lazy           as T
+import qualified Data.Text.Lazy.Encoding  as T
+import qualified Data.Vector              as VB
 import           Spicy.Types
-import qualified Data.Text.Lazy.Encoding as T
-import Data.Aeson.Encode.Pretty
 
 {-|
 Portable new line character.
@@ -132,7 +132,7 @@ files that have correct topology and geometry, but visualisation programs wont b
 correct elements.
 -}
 writeMOL2 :: Molecule -> Text
-writeMOL2 mol = decodeUtf8 . encodePretty $ mol
+writeMOL2 mol = T.decodeUtf8 . encodePretty $ mol
 {-
   let atoms  = mol ^. molecule_Atoms
       nAtoms = VB.length atoms
