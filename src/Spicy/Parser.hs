@@ -302,6 +302,9 @@ Parse a PDB file as described in
 <ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf>. If parsing of a single ATOM
 or CONETC line fails, the parser will stop there and ignore all the other records of same type,
 directly coming after the failed one.
+
+/This is not an entirely valid PDB parser. You will run into problems for very large structures,
+/where atom indices exist multiple times./
 -}
 parsePDB :: Parser Molecule
 parsePDB = do
@@ -337,10 +340,6 @@ parsePDB = do
       _recordStart <- TL.pack <$> manyTill anyChar (string "\nATOM  " <|> string "\nHETATM")
       -- Then take the rest of the line, till the end of line is reached.
       recordRest   <- textS2L <$> takeWhile (not . isEndOfLine)
-      -- The next line might be a TER record. This needs to be included in the ATOM parser, as it
-      -- will fail once, otherwise. This failure means, that a TER record will terminate ATOM
-      -- parsing, even if more ATOMs are coming.
-      _terRecord   <- maybeOption $ string "\nTER" <* takeWhile (not . isEndOfLine)
       let -- Recombine the line and split it according to the PDB format specifier.
           atomLine          = "ATOM  " `TL.append` recordRest
           -- Now according to the PDB specification. Fields exaclty named as in the PDF with "c" as
@@ -356,7 +355,7 @@ parsePDB = do
           -- Columnt 18-20: residue name (use this as submolecule label)
           (cResName, rest5)     = TL.splitAt 3 rest4
           -- Column 22: chain identifier
-          (_cChainID, rest6)    = TL.splitAt 1 . TL.drop 1 $ rest5
+          (cChainID, rest6)     = TL.splitAt 1 . TL.drop 1 $ rest5
           -- Column 23-26: residue sequence number
           (cResSeq, rest7)      = TL.splitAt 4 rest6
           -- Column 27: Code for insertion of residue
@@ -379,6 +378,16 @@ parsePDB = do
           -- Now parse all fields of interest using text readers.
           aSerial      = fst <$> (TL.decimal . TL.strip $ cSerial)
           aResSeq      = fst <$> (TL.decimal . TL.strip $ cResSeq)
+          aChainID     =
+            let cID = map ((\x -> x - 65) . fromEnum) . TL.unpack . TL.toUpper $ cChainID
+            in  case cID of
+                  []    -> 0
+                  (x:_) -> x
+          -- Modify the residue sequence ID with the chainID, to avoid combining fragments with same
+          -- ID but different chains. Add 10000 per letter (A=0, B=10000, C=20000, ...) to avoid
+          -- wrong fragmentation. The ResSeq is not unique and can occur multiple times in different
+          -- chains.
+          aChainResSeq = (\x -> x + aChainID * 10000) <$> aResSeq
           aElement     =
             let elemMaybe =
                     (readMaybe :: String -> Maybe Element)
@@ -409,7 +418,7 @@ parsePDB = do
             <*> aCoordinates        -- _atom_Coordinates
       -- If all the non-Attoparsec parse actions succeeded, return an Attoparsec result or fail with
       -- an Attoparsec error.
-      case (aSerial, (aResSeq, cResName), eitherAtom) of
+      case (aSerial, (aChainResSeq, cResName), eitherAtom) of
         (Right ind, (Right sInd, _), Right a) -> return (ind, (sInd, cResName), a)
         (Left indErr, _, _)                   -> fail indErr
         (_, (Left sIndErr, _), _)             -> fail sIndErr
