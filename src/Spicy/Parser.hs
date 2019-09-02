@@ -337,6 +337,10 @@ parsePDB = do
       _recordStart <- TL.pack <$> manyTill anyChar (string "\nATOM  " <|> string "\nHETATM")
       -- Then take the rest of the line, till the end of line is reached.
       recordRest   <- textS2L <$> takeWhile (not . isEndOfLine)
+      -- The next line might be a TER record. This needs to be included in the ATOM parser, as it
+      -- will fail once, otherwise. This failure means, that a TER record will terminate ATOM
+      -- parsing, even if more ATOMs are coming.
+      _terRecord   <- maybeOption $ string "\nTER" <* takeWhile (not . isEndOfLine)
       let -- Recombine the line and split it according to the PDB format specifier.
           atomLine          = "ATOM  " `TL.append` recordRest
           -- Now according to the PDB specification. Fields exaclty named as in the PDF with "c" as
@@ -376,7 +380,12 @@ parsePDB = do
           aSerial      = fst <$> (TL.decimal . TL.strip $ cSerial)
           aResSeq      = fst <$> (TL.decimal . TL.strip $ cResSeq)
           aElement     =
-            let elemMaybe = (readMaybe :: String -> Maybe Element) . TL.unpack . TL.strip $ cElement
+            let elemMaybe =
+                    (readMaybe :: String -> Maybe Element)
+                  . TL.unpack
+                  . TL.toTitle
+                  . TL.strip
+                  $ cElement
             in  case elemMaybe of
                   Nothing -> Left "parsePDB: Could not read the element symbol."
                   Just e  -> Right e
