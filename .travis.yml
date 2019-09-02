@@ -35,7 +35,7 @@ before_install:
 - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
 - echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main" | sudo tee -a /etc/apt/sources.list
 - sudo apt-get update -qq
-- sudo apt-get install varnish -y
+- sudo apt-get install llvm-8-dev llvm-8-tools -y
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
