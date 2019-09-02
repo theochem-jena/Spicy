@@ -126,7 +126,7 @@ parseTXYZ = do
     -- suitable to construct the 'IntMap' is returned additional to the pure atoms.
     txyzLineParser :: Parser ((Int, IntSet), Atom)
     txyzLineParser = do
-      index           <- skipSpace' *> ((\a -> a - 1) <$> decimal)
+      index           <- skipSpace' *> decimal
       cElement        <- skipSpace' *> many1 letter
       x               <- skipSpace' *> double
       y               <- skipSpace' *> double
@@ -150,7 +150,7 @@ parseTXYZ = do
           )
     -- Parse multiple non-line-breaking whitespace separated decimals.
     columnDecimal :: Parser Int
-    columnDecimal = skipSpace' *> ((\a -> a - 1) <$> decimal) <* skipSpace'
+    columnDecimal = skipSpace' *> decimal <* skipSpace'
 
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
@@ -228,7 +228,7 @@ parseMOL2 = do
       _header <- manyTill anyChar (string "@<TRIPOS>ATOM") <* endOfLine
       -- Parse multiple lines of ATOM data.
       atoms   <- count nAtoms $ do -- atomLineParser
-        index    <- skipSpace' *> ((\a -> a - 1) <$> decimal)
+        index    <- skipSpace' *> decimal
         -- Most often this will be the element symbol.
         label    <- skipSpace' *> takeWhile (not . isHorizontalSpace)
         -- x, y and z coordinates
@@ -284,9 +284,9 @@ parseMOL2 = do
         -- Bond id, which does not matter.
         _id    <- skipSpace' *> (decimal :: Parser Int)
         -- Origin atom index
-        origin <- skipSpace' *> ((\a -> a - 1) <$> decimal :: Parser Int)
+        origin <- skipSpace' *> (decimal :: Parser Int)
         -- Target atom index
-        target <- skipSpace' *> ((\a -> a - 1) <$> decimal :: Parser Int)
+        target <- skipSpace' *> (decimal :: Parser Int)
         -- Bond type, which we don't care about.
         _type  <- skipSpace' *> takeWhile (not . isSpace) <* skipSpace
         return (origin, target)
