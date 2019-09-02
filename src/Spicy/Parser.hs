@@ -79,7 +79,7 @@ parseXYZ = do
   atoms  <- count nAtoms xyzLineParser
   return Molecule
     { _molecule_Label    = textS2L label
-    , _molecule_Atoms    = IM.fromList $ zip [ 0 .. ] atoms
+    , _molecule_Atoms    = IM.fromList $ zip [ 1 .. ] atoms
     , _molecule_Bonds    = IM.empty
     , _molecule_SubMol   = S.empty
     , _molecule_Energy   = Nothing
