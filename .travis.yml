@@ -8,6 +8,9 @@
 # Copy these contents into the root directory of your Github project in a file
 # named .travis.yml
 
+#
+sudo: required
+
 # Choose a build environment
 dist: bionic
 
@@ -22,8 +25,16 @@ cache:
 # Ensure necessary system libraries are present
 addons:
   apt:
+    sources:
+      - llvm-toolchain-bionic-8
+      - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main'
+        key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
     packages:
       - libgmp-dev
+      - llvm-6.0-dev
+      - llvm-6.0-tools
+      - llvm-8.0-dev
+      - llvm-8.0-tools
 
 before_install:
 # Download and unpack the stack executable
