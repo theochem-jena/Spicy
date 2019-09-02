@@ -306,7 +306,7 @@ directly coming after the failed one.
 parsePDB :: Parser Molecule
 parsePDB = do
   -- Parse the COMPND field as a label. Only the first line of COMPND will be used.
-  label        <- do
+  label        <- maybeOption $ do
     _             <- manyTill anyChar (string "COMPND")
     compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
     return $ TL.pack compoundLabel
@@ -318,7 +318,7 @@ parsePDB = do
       atomsIM = IM.fromList . toList .  fmap (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
       subMols = makeSubMolsFromAnnoAtoms atomsLabeled bonds
   return Molecule
-    { _molecule_Label    = label
+    { _molecule_Label    = fromMaybe "" label
     , _molecule_Atoms    = atomsIM
     , _molecule_Bonds    = bonds
     , _molecule_SubMol   = subMols
