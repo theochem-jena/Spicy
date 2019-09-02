@@ -25,13 +25,10 @@ cache:
 # Ensure necessary system libraries are present
 addons:
   apt:
-    sources:
-      - llvm-toolchain-bionic-8
     packages:
       - libgmp-dev
       - llvm-6.0-dev
       - llvm-6.0-tools
-      - llvm-8-dev
 
 before_install:
 # Install LLVM 8.0
