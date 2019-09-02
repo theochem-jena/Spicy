@@ -334,7 +334,7 @@ parsePDB = do
     atomParser = do
       -- First check, that this line really starts with an ATOM or HETATM record (6 characters).
       -- Columns 1-6: record type.
-      _recordStart <- TL.pack <$> manyTill anyChar (string "ATOM  " <|> string "HETATM")
+      _recordStart <- TL.pack <$> manyTill anyChar (string "\nATOM  " <|> string "\nHETATM")
       -- Then take the rest of the line, till the end of line is reached.
       recordRest   <- textS2L <$> takeWhile (not . isEndOfLine) <* endOfLine
       let -- Recombine the line and split it according to the PDB format specifier.
