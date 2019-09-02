@@ -336,7 +336,7 @@ parsePDB = do
       -- Columns 1-6: record type.
       _recordStart <- TL.pack <$> manyTill anyChar (string "\nATOM  " <|> string "\nHETATM")
       -- Then take the rest of the line, till the end of line is reached.
-      recordRest   <- textS2L <$> takeWhile (not . isEndOfLine) <* endOfLine
+      recordRest   <- textS2L <$> takeWhile (not . isEndOfLine)
       let -- Recombine the line and split it according to the PDB format specifier.
           atomLine          = "ATOM  " `TL.append` recordRest
           -- Now according to the PDB specification. Fields exaclty named as in the PDF with "c" as
