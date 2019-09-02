@@ -111,6 +111,7 @@ testParser :: TestTree
 testParser = testGroup "Parser"
   [ testParserTXYZ1
   , testParserXYZ1
+  , testParserXYZ2
   -- , testParserMOL21
   -- , testParserPDB1
   -- , testParserSpicy1
@@ -143,6 +144,23 @@ testParserXYZ1 =
         raw <- T.readFile inputFile
         case (parse parseXYZ raw) of
           Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
+
+testParserXYZ2 :: TestTree
+testParserXYZ2 =
+  let testName      = "Molden XYZ Trajectory (1)"
+      goldenFile    = "goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden"
+      inputFile     = "goldentests/input/HeteroTraj.xyz"
+      outputFile    = "goldentests/output/HeteroTraj__testParserXYZ2.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case (parse (many1 parseXYZ) raw) of
+          Done _ mol -> T.writeFile outputFile . T.concat . map writeSpicy $ mol
           Fail _ _ e -> T.writeFile outputFile . T.pack $ e
   in  goldenVsFile
         testName
