@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 31fcf66f2bc977781c3ef31eda75a2bfcbbe87793a43477b5ffe65d758f9aaec
+-- hash: 74af3b3c9adefd21a46efcc7fe6eb662eb08607aa1af0a7470ff87f5e2ba0aaa
 
 name:           spicy
 version:        0.0.0.1
@@ -60,6 +60,8 @@ library
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , aeson >=1.4.4.0
+    , aeson-pretty >=0.8.7
     , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
@@ -93,6 +95,8 @@ executable benchmarks-exe
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , aeson >=1.4.4.0
+    , aeson-pretty >=0.8.7
     , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
@@ -128,6 +132,8 @@ executable spicy
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , aeson >=1.4.4.0
+    , aeson-pretty >=0.8.7
     , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
@@ -162,6 +168,8 @@ executable unittests-exe
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , aeson >=1.4.4.0
+    , aeson-pretty >=0.8.7
     , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
@@ -200,6 +208,8 @@ test-suite unittests
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , aeson >=1.4.4.0
+    , aeson-pretty >=0.8.7
     , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
@@ -238,6 +248,8 @@ benchmark benchmarks
     , accelerate-io-vector >=0.1.0.0 && <=0.2.0.0
     , accelerate-llvm >=1.3.0.0 && <=1.4.0.0
     , accelerate-llvm-native >=1.3.0.0 && <=1.4.0.0
+    , aeson >=1.4.4.0
+    , aeson-pretty >=0.8.7
     , array >=0.5.3.0
     , attoparsec >=0.13.1.0
     , base >=4.7 && <5
