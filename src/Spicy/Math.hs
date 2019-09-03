@@ -62,7 +62,7 @@ vAngle :: (Floating a) => Seq a -> Seq a -> a
 vAngle a b = acos $ (a <.> b) / ((vLength a) * (vLength b))
 
 {-|
-3D cross product of 2 'Seqs'
+3D cross product of 2 'Seq's.
 -}
 vCross :: Seq Double -> Seq Double -> Either String (Seq Double)
 vCross a b = do
@@ -102,7 +102,7 @@ Convert a 'Maybe' value to an 'Either' value.
 -}
 maybeToEither ::
      a          -- ^ 'Left' a will be returned if 'Maybe' was 'Nothing'.
-  -> Maybe b    -- ^ 'Right' 'b' will be returned if 'Maybe' was 'Just' 'b'
+  -> Maybe b    -- ^ 'Right' b will be returned if 'Maybe' was 'Just' b.
   -> Either a b
 maybeToEither e Nothing  = Left e
 maybeToEither _ (Just a) = Right a
