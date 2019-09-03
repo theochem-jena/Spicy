@@ -19,7 +19,6 @@ extra-source-files:
   - LICENSE
   - goldentests/input/*
   - goldentests/goldenfiles/*
-  - goldentests/output
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
