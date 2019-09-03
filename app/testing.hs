@@ -225,9 +225,9 @@ testParserMOL21 =
 testParserSpicy1 :: TestTree
 testParserSpicy1=
   let testName      = "Spicy JSON Parser (1)"
-      goldenFile    = "goldentests/goldenfiles/6cvr__testParserPDB2.json.golden"
+      goldenFile    = "goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden"
       inputFile     = "goldentests/input/6cvr.json"
-      outputFile    = "goldentests/output/6cvr__testParserPDB2.json"
+      outputFile    = "goldentests/output/6cvr__testParserSpicy1.json"
       parseAndWrite = do
         raw <- B.readFile inputFile
         case eitherDecode raw of
