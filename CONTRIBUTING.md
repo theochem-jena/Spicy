@@ -39,7 +39,7 @@ reIndexBonds repMap bondsMap
     lostKeysIS = oldSets \\ repKeys
   ```
 
-Before pull requests, make sure to rebuild the complete Haddock documentation with `stack haddock --haddock-arguments "--odir=./doc/haddock"`.
+Before pull requests, make sure to rebuild the complete Haddock documentation with `stack haddock --haddock-arguments "--odir=./docs"`.
 
 ### Function Declaration and Indentation
 Line width maximum is 100 characters, both for comments and for code. Generally functions should not be longer than 30 lines (excluding comments and possibly multiline records). If a function cannot be expressed in 30 lines, split it into atomic functions. Short functions are easier to understand, debug and reuse. Expections might be parsers and writers for text processing or wrapper interactions in a process.
@@ -82,3 +82,7 @@ For all major functions (all that are exported in a module) there must be a unit
 Tests should be performed by a simple `stack test`.
 
 Spicy shall be able to handle large molecules up to protein size. Use [Criterion](http://hackage.haskell.org/package/criterion) benchmarks for functions, that need to handle large data structures and test for different input sizes, to check if they scale and parallelise well. Benchmarks can be executed by `stack bench`, but this can cause problems with parallel functions. Better build the executable and run it standalone as `stack exec benchmarks`.
+
+
+## Merging
+Mergin into branches except master might be done at any time by a simple merge commit. Merging into master should be done with pull requests and be reviewed.

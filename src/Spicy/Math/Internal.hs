@@ -27,6 +27,13 @@ import qualified  Data.Vector.Storable                          as VS
 import            Prelude                                       hiding ((/=))
 import            Spicy.Types
 import qualified  Spicy.Data                                    as D
+import           Prelude                                       hiding (cycle,
+                                                                foldl1, foldr1,
+                                                                head, init,
+                                                                last, maximum,
+                                                                minimum, tail,
+                                                                take, takeWhile,
+                                                                (!!), (/=))
 
 
 {-| 

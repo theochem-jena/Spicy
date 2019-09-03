@@ -17,6 +17,8 @@ import            Data.Map     (Map)
 import qualified  Data.Map     as Map
 import qualified  Data.IntMap  as IM
 import            Spicy.Types
+import           Prelude     hiding (cycle, foldl1, foldr1, head, init, last,
+                              maximum, minimum, tail, take, takeWhile, (!!))
 
 {-|
 Covalent radii of elements in Angstrom taken from

@@ -12,15 +12,23 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
 ( checkMolecule
 , reIndexMolecule
+, groupTupleSeq
+, groupBy
+, makeSubMolsFromAnnoAtoms
 ) where
 import           Data.Foldable
-import           Data.IntMap.Lazy    (IntMap, (!?))
+import           Data.IntMap.Lazy    (IntMap)
 import qualified Data.IntMap.Lazy    as IM
 import           Data.IntSet         (IntSet, (\\))
 import qualified Data.IntSet         as IS
 import           Data.Maybe
+import           Data.Sequence       (Seq (..))
 import qualified Data.Sequence       as S
+import qualified Data.Text.Lazy      as TL
 import           Lens.Micro.Platform
+import           Prelude             hiding (cycle, foldl1, foldr1, head, init,
+                                      last, maximum, minimum, tail, take,
+                                      takeWhile, (!!))
 import           Spicy.Types
 
 {-
@@ -136,7 +144,7 @@ reIndexMolecule repMap mol = do
 Reindex the '_molecule_Atoms' and '_molecule_Bonds' of a single layer of a molecule (ignoring
 anything in the '_molecule_SubMol' field). While the completeness of the reindexing is checked and
 incompleteness of the replacement 'IntMap' 'Int' will result in 'Left' 'String', it is not checked
-if the 'Atom''s indexing is sane and indices are unique.
+if the 'Atom's indexing is sane and indices are unique.
 -}
 reIndexMoleculeLayer ::
      IntMap Int             -- ^ 'IntMap' with mappings from old indices to new indices (bonds and
@@ -193,7 +201,7 @@ checkRepMapCompleteIM repMap im =
 
 
 {-|
-Check if 'IntMap' is complete to replace all values in an 'IntMap' 'InSet' type construction
+Check if 'IntMap' is complete to replace all values in an 'IntMap' 'IntSet' type construction
 (replacing both the lookup keys in the 'IntMap', as well as all values in the 'IntSet'). Gives
 'True' if complete and 'False' otherwise.
 -}
@@ -216,7 +224,7 @@ replaceIS ::
   -> IntSet     -- ^ Resulting new 'IntSet'.
 replaceIS repMap is =
   IS.map (\oK ->
-    let nK = repMap !? oK
+    let nK = repMap IM.!? oK
     in  fromMaybe oK nK
   ) is
 
@@ -230,7 +238,7 @@ replaceIMKeys ::
   -> IntMap a   -- ^ Resulting new 'IntMap' with replaced 'IM.Key's.
 replaceIMKeys repMap im =
   IM.mapKeys (\oK ->
-    let nK = repMap !? oK
+    let nK = repMap IM.!? oK
     in  fromMaybe oK nK
   ) im
 
@@ -248,3 +256,118 @@ replaceIMIS repMap imis =
   -- Replace all lookup keys
   . replaceIMKeys repMap
   $ imis
+
+{-|
+Group by the first tuple element and within this group build an IntSet of the the second tuple
+elements.
+-}
+groupTupleSeq :: Seq (Int, Int) -> IntMap IntSet
+groupTupleSeq a =
+  let -- Build groups of tuples with same keys.
+      keyValGroups :: Seq (Seq (Int, Int))
+      keyValGroups  = groupBy (\x y -> fst x == fst y) . S.sortOn fst $ a
+      -- Transform the grouped key value structures to a Seq (IntMap IntSet), where each IntMap has
+      -- just one key.
+      atomicIntMaps :: Either String (Seq (IntMap IntSet))
+      atomicIntMaps = traverse imisFromGroupedSequence keyValGroups
+      -- Fold all atom IntMap in the sequence into one.
+      completeMap  = foldl' (<>) IM.empty <$> atomicIntMaps
+  in  -- The only way this function can fail, is if keys would not properly be groupled. This cannot
+      -- happen if 'groupBy' is called correclty before 'imisFromGroupedSequence'. Therefore default
+      -- to the empty IntMap if this case, that cannot happen, happens.
+      case completeMap of
+        Left _   -> IM.empty
+        Right im -> im
+
+{-|
+Create the IntMap IntSet structure from a group of 'IM.Key' value pairs. This means, that the first
+elements of the tuple, all need to be the same 'IM.key'. If they are not the assumptions of this
+function are not met and a 'Left' 'String' as error will be returned. The result will be an IntMap
+with a single 'IM.Key'.
+-}
+imisFromGroupedSequence :: Seq (Int, Int) -> Either String (IntMap IntSet)
+imisFromGroupedSequence group
+  | S.null group = Right IM.empty
+  | keyCheck     =
+      case headKey of
+        Nothing -> Right IM.empty
+        Just k  -> Right $ IM.fromList [(k, values)]
+  | otherwise    =
+      Left "imisFromGroupedSequence: The keys are not all the same."
+  where
+    headGroup = group S.!? 0
+    keys      = fst <$> group
+    headKey   = fst <$> headGroup
+    keyCheck  = all (== headKey) (pure <$> keys)
+    values    = IS.fromList . toList . fmap snd $ group
+
+{-|
+This function implements
+[groupBy](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-List.html#v:groupBy) as in
+Data.List:
+"The group function takes a list and returns a list of lists such that the concatenation of the
+result is equal to the argument. Moreover, each sublist in the result contains only equal elements."
+-}
+groupBy :: (a -> a -> Bool) -> Seq a -> Seq (Seq a)
+groupBy _ S.Empty    = S.empty
+groupBy f (x :<| xs) = (x :<| ys) :<| groupBy f zs
+  where
+    (ys, zs) = S.spanl (f x) xs
+
+{-|
+Group a common parser structure based on a submolecule identifier.
+-}
+groupAnnoAtomsAsSubMols ::
+     Seq (Int, (Int, TL.Text), Atom)       -- ^ A plain 'Seq' of all 'Atom's in the 'Molecule'.
+                                           --   They are annoated in a Tuple as:
+                                           --   @(atomIndex, (subMolID, subMolName), atom)@
+                                           --
+  -> Seq (Seq (Int, (Int, TL.Text), Atom)) -- ^ Groups of annotated submolecules, which share a
+                                           --   common subMolID.
+groupAnnoAtomsAsSubMols annoAtoms =
+    groupBy (\x y -> x ^. _2 . _1 == y ^. _2 . _1)
+  . S.unstableSortOn (\(_, (subID, _), _) -> subID)
+  $ annoAtoms
+
+{-|
+Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete 'Molecule'.
+Then form a proper submolecule. This function relies on the group of being a proper submolecule and
+will hapilly accept groups that are not.
+-}
+makeSubMolFromGroup ::
+     Seq (Int, (Int, TL.Text), Atom) -- ^ A group of annotated atoms in the style of:
+                                     --   @(atomIndex, (subMolID, subMolName), atom)@
+  -> IntMap IntSet                   -- ^ Bond type data structure of the whole molecule.
+  -> Molecule                        -- ^ A newly formed submolecule.
+makeSubMolFromGroup group bonds =
+  let atoms      = IM.fromList . toList . fmap (\(ind, _, atom) -> (ind, atom)) $ group
+      label      = fromMaybe "" . (S.!? 0) . fmap (^. _2 . _2) $ group
+      atomInds   = IM.keysSet atoms
+      -- Remove all bonds from the IntMap, that have origin on atoms not in this set and all
+      -- target atoms that are not in the set.
+      bondsCleaned :: IntMap IntSet
+      bondsCleaned =
+          IM.map (IS.filter (`IS.member` atomInds))
+        $ bonds `IM.restrictKeys` atomInds
+  in  Molecule
+        { _molecule_Label    = label
+        , _molecule_Atoms    = atoms
+        , _molecule_Bonds    = bondsCleaned
+        , _molecule_SubMol   = S.empty
+        , _molecule_Energy   = Nothing
+        , _molecule_Gradient = Nothing
+        , _molecule_Hessian  = Nothing
+        }
+
+{-|
+From some common parser informations, form the sub molecules.
+-}
+makeSubMolsFromAnnoAtoms ::
+     Seq (Int, (Int, TL.Text), Atom) -- ^ A plain 'Seq' of all 'Atom's in the 'Molecule'. They are
+                                     --   annoated in a Tuple as:
+                                     --   @(atomIndex, (subMolID, subMolName), atom)@
+  -> IntMap IntSet                   -- ^ Bonds for the whole 'Molecule'. See '_molecule_Bonds'.
+  -> Seq Molecule                    -- ^ The submolecules.
+makeSubMolsFromAnnoAtoms annoAtoms bonds =
+  let subMolAtomGroups = groupAnnoAtomsAsSubMols annoAtoms
+  in  fmap (\g -> makeSubMolFromGroup g bonds) subMolAtomGroups

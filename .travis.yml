@@ -1,0 +1,52 @@
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
+
+#
+sudo: required
+
+# Choose a build environment
+dist: bionic
+
+# Do not choose a language; we provide our own build tools.
+language: generic
+
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.stack
+  - $HOME/.ghc
+  - $HOME/.cabal
+
+# Ensure necessary system libraries are present
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - llvm-6.0-dev
+      - llvm-6.0-tools
+
+before_install:
+# Install LLVM 8.0
+- wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+- echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main" | sudo tee -a /etc/apt/sources.list
+- sudo apt-get update -qq
+- sudo apt-get install llvm-8-dev llvm-8-tools -y
+# Download and unpack the stack executable
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+# Build dependencies
+- stack --no-terminal --install-ghc test --only-dependencies
+
+script:
+# Build the package, its tests, and its docs and run the tests
+- stack --no-terminal test --haddock --no-haddock-deps
