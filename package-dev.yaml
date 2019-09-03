@@ -18,7 +18,8 @@ extra-source-files:
   - README.md
   - LICENSE
   - goldentests/input/*
-  #- goldentests/output/*
+  - goldentests/goldenfiles/*
+  - goldentests/output
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
