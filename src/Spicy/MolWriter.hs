@@ -19,12 +19,11 @@ module Spicy.MolWriter
 , writePDB
 , writeSpicy
 ) where
+import           Prelude                  hiding (cycle, foldl1, foldr1, head,
 import           Data.Aeson.Encode.Pretty
 import           Data.Text.Lazy           (Text)
 import qualified Data.Text.Lazy.Encoding  as T
-import           Prelude                  hiding (cycle, foldl1, foldr1, head,
-                                           init, last, maximum, minimum, tail,
-                                           take, takeWhile, (!!))
+import           Data.Text.Lazy           (Text)
 import           Spicy.Types
 
 

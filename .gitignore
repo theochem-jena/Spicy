@@ -3,6 +3,4 @@ Temp
 Test.hs
 *.so
 *.so.*
-*.cabal
-package.yaml
 goldentests/output

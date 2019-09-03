@@ -63,7 +63,7 @@ distMat v =
         dim       = 3 :: Exp Int
         -- Reshape the 3N cartesion input vector to a 3xN matrix with the number of atoms N on
         -- x-axis and (x_n, y_n, z_n) on the y-axis.
-        n3Vec     = reshape (lift $ A.Z :. n :. dim) $ v
+        n3Vec     = reshape (lift $ A.Z :. n :. dim) v
         -- The x-Axis is now a repetition of the atoms on the y-Axis (which were previously
         -- the x-axis) and z now stores the 3 compotents of the coordinates.
         xVec      = A.replicate (lift $ Z :. n :. All :. All) n3Vec
