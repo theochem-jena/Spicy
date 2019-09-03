@@ -11,7 +11,6 @@ A module which converts the internal Molecule representation to a string, which 
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
-{-# LANGUAGE OverloadedStrings #-}
 module Spicy.MolWriter
 ( writeXYZ
 , writeTXYZ
@@ -19,11 +18,12 @@ module Spicy.MolWriter
 , writePDB
 , writeSpicy
 ) where
-import           Prelude                  hiding (cycle, foldl1, foldr1, head,
 import           Data.Aeson.Encode.Pretty
 import           Data.Text.Lazy           (Text)
 import qualified Data.Text.Lazy.Encoding  as T
-import           Data.Text.Lazy           (Text)
+import           Prelude                  hiding (cycle, foldl1, foldr1, head,
+                                           init, last, maximum, minimum, tail,
+                                           take, takeWhile, (!!))
 import           Spicy.Types
 
 
