@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 74af3b3c9adefd21a46efcc7fe6eb662eb08607aa1af0a7470ff87f5e2ba0aaa
+-- hash: 6dfd900a3342ec3956e707e4567868a48d3107574ac350c07346dd39177601cd
 
 name:           spicy
 version:        0.0.0.1
@@ -20,16 +20,30 @@ build-type:     Simple
 extra-source-files:
     README.md
     LICENSE
+    goldentests/input/1hfe.pdb
+    goldentests/input/6cvr.json
+    goldentests/input/6cvr.pdb
+    goldentests/input/FePorphyrine.mol2
     goldentests/input/FePorphyrine.txyz
     goldentests/input/FePorphyrine.xyz
     goldentests/input/HeteroTraj.xyz
     goldentests/input/N2_bonded.xyz
     goldentests/input/N2_nonbonded.xyz
+    goldentests/input/Peptid.json
+    goldentests/input/Peptid.mol2
+    goldentests/input/Peptid.pdb
     goldentests/input/RuKomplex.txyz
     goldentests/input/SulfateInSolution.txyz
     goldentests/input/SulfateInSolution.xyz
     goldentests/input/TolueneCl2.txyz
     goldentests/input/TolueneCl2.xyz
+    goldentests/goldenfiles/1hfe__testParserPDB1.json.golden
+    goldentests/goldenfiles/6cvr__testParserPDB2.json.golden
+    goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden
+    goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden
+    goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden
+    goldentests/goldenfiles/Peptid__testParserMOL21.json.golden
+    goldentests/goldenfiles/RuKomplex__testParserTXYZ1.json.golden
 
 source-repository head
   type: git
@@ -45,7 +59,6 @@ library
       Spicy.MolWriter
       Spicy.Parser
       Spicy.Types
-      Spicy.UnitTests.Data
       Spicy.Wrapper.ORCA
       Spicy.Wrapper.ORCA.Methods
   other-modules:

@@ -11,7 +11,6 @@ A module which converts the internal Molecule representation to a string, which 
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
-{-# LANGUAGE OverloadedStrings #-}
 module Spicy.MolWriter
 ( writeXYZ
 , writeTXYZ
@@ -21,30 +20,12 @@ module Spicy.MolWriter
 ) where
 import           Data.Aeson.Encode.Pretty
 import           Data.Text.Lazy           (Text)
-import qualified Data.Text.Lazy           as T
 import qualified Data.Text.Lazy.Encoding  as T
-import qualified Data.Vector              as VB
+import           Prelude                  hiding (cycle, foldl1, foldr1, head,
+                                           init, last, maximum, minimum, tail,
+                                           take, takeWhile, (!!))
 import           Spicy.Types
 
-{-|
-Portable new line character.
--}
-nL :: Text
-nL = T.unlines [""]
-
-{-|
-'T.unlines' like behaviour for 'VB.Vector's of 'Text'. Every single element of the 'VB.Vector' will
-have its own line.
--}
-vUnlines :: VB.Vector Text -> Text
-vUnlines a = VB.foldl' (\acc x -> acc `T.append` x `T.append` nL) "" a
-
-{-|
-'T.concat' like behaviour for 'VB.Vector's of 'Text'. No new line characters will be added, but
-already existing ones will be used.
--}
-vConcat :: VB.Vector Text -> Text
-vConcat a = VB.foldl' T.append "" a
 
 {-|
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.

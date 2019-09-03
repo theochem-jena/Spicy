@@ -4,10 +4,18 @@ parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
 {-# LANGUAGE OverloadedStrings #-}
-import           Data.Sequence    (Seq)
-import qualified Data.Sequence    as S
+import           Data.Aeson
+import           Data.Attoparsec.Text.Lazy
+import qualified Data.ByteString.Lazy      as B
+import           Data.Sequence             (Seq)
+import qualified Data.Sequence             as S
+import qualified Data.Text.Lazy            as T
+import qualified Data.Text.Lazy.IO         as T
 import           Spicy.Math
+import           Spicy.MolWriter
+import           Spicy.Parser
 import           Test.Tasty
+import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 
 
@@ -19,8 +27,8 @@ main = defaultMain tests
 
 tests :: TestTree
 tests = testGroup "All tests"
-  [ testMath
-  -- , testParser
+  [ testParser
+  , testMath
   -- , testMolecularSystem
   ]
 
@@ -48,7 +56,7 @@ testDotProduct =
   let vecA = S.fromList [1, 2 ,3]  :: Seq Double
       vecB = S.fromList [-7, 8, 9] :: Seq Double
       dotProduct = 36
-  in  testCase "Math Dot Product" $
+  in  testCase "Vector Dot Product" $
         vecA <.> vecB @?= dotProduct
 
 {-|
@@ -97,41 +105,143 @@ testVCross =
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for Parser
-{-
 {-|
-These tests are HUnit tests within the Tasty framework. Correct results and answers are stored in
-Spicy.UnitTests.Data, to make sure the parsers work absolutely indepent from environmet. If one of
-these tests fail, you are in trouble, as all the others will rely on working parsers and are Golden
-Tests instead of UnitTests.
+These tests are golden tests within the Tasty framework. If one of these tests fail, you are in
+trouble, as all the others will rely on working parsers and are golden tests, too.
 -}
 testParser :: TestTree
 testParser = testGroup "Parser"
   [ testParserTXYZ1
   , testParserXYZ1
+  , testParserXYZ2
+  , testParserPDB1
+  , testParserPDB2
   , testParserMOL21
-  , testParserSpicy
+  , testParserSpicy1
   ]
 
-
 testParserTXYZ1 :: TestTree
-testParserTXYZ1 = testCase "Tinker XYZ (1)" $
-  (maybeResult $ parse parseTXYZ textHFeCNxH2OTXYZ) @?= Just moleculeHFeCNxH2OTXYZ
+testParserTXYZ1 =
+  let testName      = "Tinker TXYZ (1)"
+      goldenFile    = "goldentests/goldenfiles/RuKomplex__testParserTXYZ1.json.golden"
+      inputFile     = "goldentests/input/RuKomplex.txyz"
+      outputFile    = "goldentests/output/RuKomplex__testParserTXYZ1.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse parseTXYZ raw of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
 
 testParserXYZ1 :: TestTree
-testParserXYZ1 = testCase "Molden XYZ (1)" $
-  (maybeResult $ parse parseXYZ testHFeCNxH2OXYZ) @?= Just moleculeHFeCNxH2OXYZ
+testParserXYZ1 =
+  let testName      = "Molden XYZ (1)"
+      goldenFile    = "goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden"
+      inputFile     = "goldentests/input/FePorphyrine.xyz"
+      outputFile    = "goldentests/output/FePorphyrine__testParserXYZ1.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse parseXYZ raw of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
+
+testParserXYZ2 :: TestTree
+testParserXYZ2 =
+  let testName      = "Molden XYZ Trajectory (1)"
+      goldenFile    = "goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden"
+      inputFile     = "goldentests/input/HeteroTraj.xyz"
+      outputFile    = "goldentests/output/HeteroTraj__testParserXYZ2.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse (many1 parseXYZ) raw of
+          Done _ mol -> T.writeFile outputFile . T.concat . map writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
+
+testParserPDB1 :: TestTree
+testParserPDB1 =
+  let testName      = "PDB 1HFE Hydrogenase (1)"
+      goldenFile    = "goldentests/goldenfiles/1hfe__testParserPDB1.json.golden"
+      inputFile     = "goldentests/input/1hfe.pdb"
+      outputFile    = "goldentests/output/1hfe__testParserPDB1.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse parsePDB raw of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
+
+testParserPDB2 :: TestTree
+testParserPDB2 =
+  let testName      = "PDB 6CVR Aprataxin (2)"
+      goldenFile    = "goldentests/goldenfiles/6cvr__testParserPDB2.json.golden"
+      inputFile     = "goldentests/input/6cvr.pdb"
+      outputFile    = "goldentests/output/6cvr__testParserPDB2.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse parsePDB raw of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
 
 testParserMOL21 :: TestTree
-testParserMOL21 = testCase "SyByl MOL2 (1)" $
- (maybeResult $ parse parseMOL2 testHFeCNxH2OMOL2) @?= Just moleculeHFeCNxH2OMOL2
+testParserMOL21 =
+  let testName      = "SyByl MOL2 (1)"
+      goldenFile    = "goldentests/goldenfiles/Peptid__testParserMOL21.json.golden"
+      inputFile     = "goldentests/input/Peptid.mol2"
+      outputFile    = "goldentests/output/Peptid__testParserMOL21.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse parseMOL2 raw of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
 
-testParserSpicy :: TestTree
-testParserSpicy = testCase "Spicy format (1)" $
-  (maybeResult $ parse parseSpicy testHFeCNxH2OSpicy) @?= Just moleculeHFeCNxH2O
+testParserSpicy1 :: TestTree
+testParserSpicy1=
+  let testName      = "Spicy JSON Parser (1)"
+      goldenFile    = "goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden"
+      inputFile     = "goldentests/input/6cvr.json"
+      outputFile    = "goldentests/output/6cvr__testParserSpicy1.json"
+      parseAndWrite = do
+        raw <- B.readFile inputFile
+        case eitherDecode raw of
+          Left err    -> T.writeFile outputFile . T.pack $ err
+          Right spicy -> T.writeFile outputFile . writeSpicy $ spicy
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem
-
+{-
 testMolecularSystem :: TestTree
 testMolecularSystem = testGroup "Molecular System"
   [ testGuessBonds1

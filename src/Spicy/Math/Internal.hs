@@ -24,7 +24,13 @@ import qualified Data.Foldable                                 as F
 import qualified Data.IntMap                                   as IM
 import qualified Data.Sequence                                 as S
 import qualified Data.Vector.Storable                          as VS
-import           Prelude                                       hiding ((/=))
+import           Prelude                                       hiding (cycle,
+                                                                foldl1, foldr1,
+                                                                head, init,
+                                                                last, maximum,
+                                                                minimum, tail,
+                                                                take, takeWhile,
+                                                                (!!), (/=))
 import           Spicy.Types
 
 {-|
