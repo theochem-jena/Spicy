@@ -11,6 +11,7 @@ A module which converts the internal Molecule representation to a string, which 
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Spicy.MolWriter
 ( writeXYZ
 , writeTXYZ
@@ -19,36 +20,52 @@ module Spicy.MolWriter
 , writeSpicy
 ) where
 import           Data.Aeson.Encode.Pretty
-import           Data.Text.Lazy           (Text)
-import qualified Data.Text.Lazy.Encoding  as T
-import           Prelude                  hiding (cycle, foldl1, foldr1, head,
-                                           init, last, maximum, minimum, tail,
-                                           take, takeWhile, (!!))
+import           Data.Attoparsec.Text.Lazy (isEndOfLine)
+import qualified Data.IntMap.Lazy          as IM
+import           Data.Maybe
+import qualified Data.Sequence             as S
+import           Data.Text.Lazy            (Text)
+import qualified Data.Text.Lazy            as T
+import qualified Data.Text.Lazy.Encoding   as T
+import           Lens.Micro.Platform
+import           Prelude                   hiding (cycle, foldl1, foldr1, head,
+                                            init, last, maximum, minimum, tail,
+                                            take, takeWhile, (!!))
 import           Spicy.Types
+import           Text.Printf
 
 
 {-|
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
+This function assumes a sane molecule, which means that 'checkMolecule' must have passed.
 -}
 writeXYZ :: Molecule -> Text
-writeXYZ _mol = undefined
-{-
-  -- Header section with number of atoms and comment
-  T.unlines
-    [ T.pack . show $ (VB.length $ mol ^. molecule_Atoms)
-    , T.pack $ mol ^. molecule_Label
-    ]
-  `T.append`
-  -- Body with element symbols and XYZ coordinates
-  (vUnlines . VB.map a2xyz $ mol ^. molecule_Atoms)
-  where
-    -- Write informations about a single atom to a line
-    a2xyz :: Atom -> Text
-    a2xyz a =
-      (T.pack . printf "%-4s" . show $ a ^. atom_Element)
+writeXYZ mol =
+  let -- Line 1 of the header contains the number of atoms
+      headerL1 = T.pack . show . IM.size $ mol ^. molecule_Atoms
+      -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
+      headerL2 = T.filter (not . isEndOfLine) $ mol ^. molecule_Label
+      atomLs   =
+        IM.foldr' (\atom acc ->
+          (T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
+            (show $ atom ^. atom_Element)
+            (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
+            (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
+            (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
+          )
+          `T.append`
+          acc
+        ) "" $ mol ^. molecule_Atoms
+
+  in  T.unlines
+        [ headerL1
+        , headerL2
+        ]
       `T.append`
-      (vConcat . VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
--}
+      atomLs
+
+
+
 
 {-|
 Write a Tinker XYZ from a 'Molecule'. The writer trusts the '_atom_FFType' to be
