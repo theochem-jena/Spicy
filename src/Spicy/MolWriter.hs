@@ -63,9 +63,6 @@ writeXYZ mol =
       `T.append`
       atomLs
 
-
-
-
 {-|
 Write a Tinker XYZ from a 'Molecule'. The writer trusts the '_atom_FFType' to be
 correct (if set) and will simply write them out. Therefore it is possible, that wrong atom types can
