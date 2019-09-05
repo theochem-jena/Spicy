@@ -56,7 +56,6 @@ writeXYZ mol =
           `T.append`
           acc
         ) "" $ mol ^. molecule_Atoms
-
   in  T.unlines
         [ headerL1
         , headerL2
