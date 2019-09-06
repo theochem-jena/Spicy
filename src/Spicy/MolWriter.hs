@@ -34,42 +34,41 @@ import           Prelude                   hiding (cycle, foldl1, foldr1, head,
 import           Spicy.Types
 import           Text.Printf
 import Data.Foldable
+import Spicy.Molecule.Util
+import Data.Either
+import qualified Data.IntSet as IS
 
 
 {-|
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
 -}
 writeXYZ :: Molecule -> Either String Text
-writeXYZ mol
-  | coordCheck = Right xyzText
-  | otherwise  =
-      Left "writeXYZ: Atomic coordinates damaged. Some of the atoms seem to have not 3 coordinates."
+writeXYZ mol = toXYZ <$> checkMolecule mol
   where
-    -- Check if each atom has exactly 3 coordinates.
-    coordCheck = all (\a -> S.length (a ^. atom_Coordinates) == 3) $ mol ^. molecule_Atoms
-    -- Line 1 of the header contains the number of atoms
-    headerL1   = T.pack . show . IM.size $ mol ^. molecule_Atoms
-    -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
-    headerL2   = T.filter (not . isEndOfLine) $ mol ^. molecule_Label
-    atomLs     =
-      IM.foldr' (\atom acc ->
-        (T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
-          (show $ atom ^. atom_Element)
-          (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
-          (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
-          (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
-        )
-        `T.append`
-        acc
-      ) "" $ mol ^. molecule_Atoms
-    -- The assembled text, repesenting a valid XYZ file.
-    xyzText    =
-      T.unlines
-        [ headerL1
-        , headerL2
-        ]
-      `T.append`
-      atomLs
+    -- Assemble a XYZ file from a molecule
+    toXYZ :: Molecule -> Text
+    toXYZ m =
+      let -- Line 1 of the header contains the number of atoms
+          headerL1   = T.pack . show . IM.size $ m ^. molecule_Atoms
+          -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
+          headerL2   = T.filter (not . isEndOfLine) $ m ^. molecule_Label
+          atomLs     =
+            IM.foldr' (\atom acc ->
+              (T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
+                (show $ atom ^. atom_Element)
+                (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
+                (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
+                (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
+              )
+              `T.append`
+              acc
+            ) "" $ m ^. molecule_Atoms
+      in  T.unlines
+            [ headerL1
+            , headerL2
+            ]
+          `T.append`
+          atomLs
 
 {-|
 Write a Tinker XYZ from a 'Molecule'. The writer trusts the '_atom_FFType' to be
@@ -79,8 +78,55 @@ for visualisation but obviously not for MM.
 
 This format ingores all deeper level layers of a molecule.
 -}
-writeTXYZ :: Molecule -> Text
-writeTXYZ _mol = undefined
+writeTXYZ :: Molecule -> Either String Text
+writeTXYZ mol = toTXYZ <$> checkMolecule mol
+  where
+    toTXYZ :: Molecule -> Text
+    toTXYZ m =
+      let -- The header line contains the number of atoms and separated by a space a comment.
+          headerL1 =
+            (T.pack . show . IM.size $ mol ^. molecule_Atoms)
+            `T.append`
+            "  "
+            `T.append`
+            (T.filter (not . isEndOfLine) $ mol ^. molecule_Label)
+            `T.append`
+            "\n"
+          -- The atom lines contain:
+          --   - serial number of the atom
+          --   - element symbol of the atom
+          --   - XYZ coordinates in angstrom
+          --   - The integer number of the atom type
+          --   - The indices of all atoms, where to bind to
+          atomLs   =
+            IM.foldrWithKey' (\key atom acc ->
+              -- Print the serial element XYZ FFType
+              ( T.pack $ printf "%6d    %2s    %12.8F    %12.8F    %12.8F    %6s"
+                  key
+                  (show $ atom ^. atom_Element)
+                  (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
+                  (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
+                  (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
+                  (T.filter (not . isEndOfLine) $ atom ^. atom_FFType)
+              )
+              `T.append`
+              -- Print the bond targets
+              T.stripEnd
+              ( IS.foldr' (\x xs ->
+                  (T.pack $ printf "    %6d" x)
+                  `T.append`
+                  xs
+                ) "" $ fromMaybe IS.empty ((m ^. molecule_Bonds) IM.!? key)
+              )
+              `T.append`
+              "\n"
+              `T.append`
+              acc
+            ) "" (m ^. molecule_Atoms)
+      in  headerL1
+          `T.append`
+          atomLs
+
 {-
   let atoms        = mol ^. molecule_Atoms
       nAtoms       = VB.length atoms
