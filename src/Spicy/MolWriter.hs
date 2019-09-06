@@ -33,30 +33,38 @@ import           Prelude                   hiding (cycle, foldl1, foldr1, head,
                                             take, takeWhile, (!!))
 import           Spicy.Types
 import           Text.Printf
+import Data.Foldable
 
 
 {-|
 Write a Molden XYZ file from a molecule. This format ignores all deep level layers of a molecule.
-This function assumes a sane molecule, which means that 'checkMolecule' must have passed.
 -}
-writeXYZ :: Molecule -> Text
-writeXYZ mol =
-  let -- Line 1 of the header contains the number of atoms
-      headerL1 = T.pack . show . IM.size $ mol ^. molecule_Atoms
-      -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
-      headerL2 = T.filter (not . isEndOfLine) $ mol ^. molecule_Label
-      atomLs   =
-        IM.foldr' (\atom acc ->
-          (T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
-            (show $ atom ^. atom_Element)
-            (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
-            (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
-            (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
-          )
-          `T.append`
-          acc
-        ) "" $ mol ^. molecule_Atoms
-  in  T.unlines
+writeXYZ :: Molecule -> Either String Text
+writeXYZ mol
+  | coordCheck = Right xyzText
+  | otherwise  =
+      Left "writeXYZ: Atomic coordinates damaged. Some of the atoms seem to have not 3 coordinates."
+  where
+    -- Check if each atom has exactly 3 coordinates.
+    coordCheck = all (\a -> S.length (a ^. atom_Coordinates) == 3) $ mol ^. molecule_Atoms
+    -- Line 1 of the header contains the number of atoms
+    headerL1   = T.pack . show . IM.size $ mol ^. molecule_Atoms
+    -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
+    headerL2   = T.filter (not . isEndOfLine) $ mol ^. molecule_Label
+    atomLs     =
+      IM.foldr' (\atom acc ->
+        (T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
+          (show $ atom ^. atom_Element)
+          (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
+          (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
+          (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
+        )
+        `T.append`
+        acc
+      ) "" $ mol ^. molecule_Atoms
+    -- The assembled text, repesenting a valid XYZ file.
+    xyzText    =
+      T.unlines
         [ headerL1
         , headerL2
         ]
