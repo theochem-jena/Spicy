@@ -98,7 +98,7 @@ parseXYZ = do
         { _atom_Element     = fromMaybe H . readMaybe $ cElement
         , _atom_Label       = ""
         , _atom_IsPseudo    = False
-        , _atom_FFType      = ""
+        , _atom_FFType      = XYZ
         , _atom_PCharge     = Nothing
         , _atom_Coordinates = S.fromList [x, y, z]
         }
@@ -131,7 +131,7 @@ parseTXYZ = do
       x               <- skipSpace' *> double
       y               <- skipSpace' *> double
       z               <- skipSpace' *> double
-      mFFType         <- skipSpace' *> maybeOption decimal
+      mFFType         <- skipSpace' *> maybeOption (decimal :: Parser Int)
       connectivityRaw <- skipSpace' *> many' columnDecimal
       endOfLine
       return
@@ -142,8 +142,8 @@ parseTXYZ = do
             , _atom_IsPseudo     = False
             , _atom_FFType       =
                 case mFFType of
-                  Nothing -> ""
-                  Just a  -> TL.pack . show $ (a :: Int)
+                  Nothing -> TXYZ 0
+                  Just a  -> TXYZ a
             , _atom_PCharge      = Nothing
             , _atom_Coordinates  = S.fromList [x, y, z]
             }
@@ -254,7 +254,7 @@ parseMOL2 = do
               { _atom_Element     = fromMaybe H . readMaybe $ cElem
               , _atom_Label       = textS2L label
               , _atom_IsPseudo    = False
-              , _atom_FFType      =
+              , _atom_FFType      = Mol2 $
                   (TL.pack cElem)
                   `TL.append`
                   ( TL.pack . (\c -> case c of
@@ -399,7 +399,7 @@ parsePDB = do
                   Nothing -> Left "parsePDB: Could not read the element symbol."
                   Just e  -> Right e
           aLabel       = TL.strip cName
-          aFFType      = ""
+          aFFType      = PDB aLabel
           aPCharge     =
             let pChargeMaybe = fst <$> (TL.double . TL.strip $ cCharge)
             in  case pChargeMaybe of
