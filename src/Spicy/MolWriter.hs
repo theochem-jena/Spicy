@@ -21,7 +21,10 @@ module Spicy.MolWriter
 ) where
 import           Data.Aeson.Encode.Pretty
 import           Data.Attoparsec.Text.Lazy (isEndOfLine)
+import           Data.Either
+import           Data.Foldable
 import qualified Data.IntMap.Lazy          as IM
+import qualified Data.IntSet               as IS
 import           Data.Maybe
 import qualified Data.Sequence             as S
 import           Data.Text.Lazy            (Text)
@@ -31,12 +34,9 @@ import           Lens.Micro.Platform
 import           Prelude                   hiding (cycle, foldl1, foldr1, head,
                                             init, last, maximum, minimum, tail,
                                             take, takeWhile, (!!))
+import           Spicy.Molecule.Util
 import           Spicy.Types
 import           Text.Printf
-import Data.Foldable
-import Spicy.Molecule.Util
-import Data.Either
-import qualified Data.IntSet as IS
 
 
 {-|
@@ -79,8 +79,13 @@ for visualisation but obviously not for MM.
 This format ingores all deeper level layers of a molecule.
 -}
 writeTXYZ :: Molecule -> Either String Text
-writeTXYZ mol = toTXYZ <$> checkMolecule mol
+writeTXYZ mol
+  | ffTypeCheck = toTXYZ <$> checkMolecule mol
+  | otherwise   = Left "writeTXYZ: Not all atoms have Tinker XYZ style atom types."
   where
+    -- Check if all atoms have TXYZ atom types.
+    ffTypeCheck = all (== TXYZ 0) . IM.map (\a -> a ^. atom_FFType) $ mol ^. molecule_Atoms
+    -- Write the molecule as a TXYZ formatted file.
     toTXYZ :: Molecule -> Text
     toTXYZ m =
       let -- The header line contains the number of atoms and separated by a space a comment.
@@ -107,7 +112,10 @@ writeTXYZ mol = toTXYZ <$> checkMolecule mol
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
-                  (T.filter (not . isEndOfLine) $ atom ^. atom_FFType)
+                  ( case atom ^. atom_FFType of
+                      TXYZ i -> i
+                      _      -> 0
+                  )
               )
               `T.append`
               -- Print the bond targets

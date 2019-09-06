@@ -10,7 +10,10 @@
                     -6.3e-2,
                     0
                 ],
-                "_atom_FFType": "N.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "N"
@@ -25,7 +28,10 @@
                     -6.3e-2,
                     0
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CA"
@@ -40,7 +46,10 @@
                     -6.3e-2,
                     1.4776
                 ],
-                "_atom_FFType": "C.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "C"
@@ -55,7 +64,10 @@
                     -0.7271,
                     1.8962
                 ],
-                "_atom_FFType": "O.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "O.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": "O"
@@ -70,7 +82,10 @@
                     1.1596,
                     -0.7573
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CB"
@@ -85,7 +100,10 @@
                     2.07,
                     -0.1662
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "1HB"
@@ -100,7 +118,10 @@
                     1.2914,
                     -1.6874
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "2HB"
@@ -115,7 +136,10 @@
                     1.0447,
                     -1.1113
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CG"
@@ -130,7 +154,10 @@
                     8.06e-2,
                     -1.5956
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "1HG"
@@ -145,7 +172,10 @@
                     1.075,
                     -0.2022
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "2HG"
@@ -160,7 +190,10 @@
                     2.1711,
                     -2.0401
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CD"
@@ -175,7 +208,10 @@
                     3.149,
                     -1.5755
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "1HD"
@@ -190,7 +226,10 @@
                     2.1326,
                     -2.9793
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "2HD"
@@ -205,7 +244,10 @@
                     2.0188,
                     -2.2949
                 ],
-                "_atom_FFType": "N.pl3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.pl3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "NE"
@@ -220,7 +262,10 @@
                     1.8148,
                     -1.4981
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HE"
@@ -235,7 +280,10 @@
                     2.15,
                     -3.5044
                 ],
-                "_atom_FFType": "C.cat",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.cat"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CZ"
@@ -250,7 +298,10 @@
                     2.0442,
                     -3.8252
                 ],
-                "_atom_FFType": "N.pl3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.pl3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "NH1"
@@ -265,7 +316,10 @@
                     2.0621,
                     -4.4747
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HH1"
@@ -280,7 +334,10 @@
                     1.8231,
                     -3.103
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "1HH1"
@@ -295,7 +352,10 @@
                     2.4273,
                     -4.634
                 ],
-                "_atom_FFType": "N.pl3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.pl3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "NH2"
@@ -310,7 +370,10 @@
                     2.5964,
                     -4.7461
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "1HH2"
@@ -325,7 +388,10 @@
                     2.477,
                     -5.4244
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "2HH2"
@@ -340,7 +406,10 @@
                     0.2062,
                     0.8639
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "H"
@@ -355,7 +424,10 @@
                     -0.9946,
                     -0.4731
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HA"
@@ -370,7 +442,10 @@
                     1.37e-2,
                     -0.8765
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HN"
@@ -385,7 +460,10 @@
                     0.6829,
                     2.3703
                 ],
-                "_atom_FFType": "N.am",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.am"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "N"
@@ -400,7 +478,10 @@
                     0.6827,
                     3.7765
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CA"
@@ -415,7 +496,10 @@
                     -0.7772,
                     4.2521
                 ],
-                "_atom_FFType": "C.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "C"
@@ -430,7 +514,10 @@
                     -1.3119,
                     4.9959
                 ],
-                "_atom_FFType": "O.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "O.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": "O"
@@ -445,7 +532,10 @@
                     1.6052,
                     4.609
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CB"
@@ -460,7 +550,10 @@
                     2.5835,
                     4.1225
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HB1"
@@ -475,7 +568,10 @@
                     1.1826,
                     4.7081
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HB2"
@@ -490,7 +586,10 @@
                     1.8485,
                     5.9902
                 ],
-                "_atom_FFType": "C.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CG"
@@ -505,7 +604,10 @@
                     1.4104,
                     6.3962
                 ],
-                "_atom_FFType": "O.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "O.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": "OD1"
@@ -520,7 +622,10 @@
                     2.5889,
                     6.8029
                 ],
-                "_atom_FFType": "N.am",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.am"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "ND2"
@@ -535,7 +640,10 @@
                     3.027,
                     6.4823
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HD21"
@@ -550,7 +658,10 @@
                     2.8061,
                     7.7342
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HD22"
@@ -565,7 +676,10 @@
                     0.9841,
                     3.8191
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HA"
@@ -580,7 +694,10 @@
                     -0.1522,
                     2.027
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "H"
@@ -595,7 +712,10 @@
                     -1.5211,
                     3.8562
                 ],
-                "_atom_FFType": "N.am",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "N.am"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": "N"
@@ -610,7 +730,10 @@
                     -2.9004,
                     4.3054
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CA"
@@ -625,7 +748,10 @@
                     -3.7649,
                     3.8717
                 ],
-                "_atom_FFType": "C.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "C"
@@ -640,7 +766,10 @@
                     -4.6183,
                     4.5708
                 ],
-                "_atom_FFType": "O.2",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "O.2"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": "O"
@@ -655,7 +784,10 @@
                     -2.9246,
                     5.3998
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HA"
@@ -670,7 +802,10 @@
                     -1.2015,
                     2.7919
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CD"
@@ -685,7 +820,10 @@
                     -0.5533,
                     3.2036
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HD1"
@@ -700,7 +838,10 @@
                     -0.6722,
                     1.9818
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HD2"
@@ -715,7 +856,10 @@
                     -2.5503,
                     2.366
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CG"
@@ -730,7 +874,10 @@
                     -3.0013,
                     1.6023
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HG1"
@@ -745,7 +892,10 @@
                     -2.4755,
                     1.9576
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HG2"
@@ -760,7 +910,10 @@
                     -3.3768,
                     3.6507
                 ],
-                "_atom_FFType": "C.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "C.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": "CB"
@@ -775,7 +928,10 @@
                     -4.4512,
                     3.4494
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HB1"
@@ -790,7 +946,10 @@
                     -3.118,
                     4.2899
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HB2"
@@ -805,7 +964,10 @@
                     -3.5285,
                     2.6233
                 ],
-                "_atom_FFType": "O.3",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "O.3"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": "OXT"
@@ -820,7 +982,10 @@
                     -2.7881,
                     2.0168
                 ],
-                "_atom_FFType": "H",
+                "_atom_FFType": {
+                    "tag": "Mol2",
+                    "contents": "H"
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": "HO"
@@ -1199,7 +1364,10 @@
                             -6.3e-2,
                             0
                         ],
-                        "_atom_FFType": "N.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "N"
@@ -1214,7 +1382,10 @@
                             -6.3e-2,
                             0
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CA"
@@ -1229,7 +1400,10 @@
                             -6.3e-2,
                             1.4776
                         ],
-                        "_atom_FFType": "C.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "C"
@@ -1244,7 +1418,10 @@
                             -0.7271,
                             1.8962
                         ],
-                        "_atom_FFType": "O.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "O.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "O",
                         "_atom_Label": "O"
@@ -1259,7 +1436,10 @@
                             1.1596,
                             -0.7573
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CB"
@@ -1274,7 +1454,10 @@
                             2.07,
                             -0.1662
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "1HB"
@@ -1289,7 +1472,10 @@
                             1.2914,
                             -1.6874
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "2HB"
@@ -1304,7 +1490,10 @@
                             1.0447,
                             -1.1113
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CG"
@@ -1319,7 +1508,10 @@
                             8.06e-2,
                             -1.5956
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "1HG"
@@ -1334,7 +1526,10 @@
                             1.075,
                             -0.2022
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "2HG"
@@ -1349,7 +1544,10 @@
                             2.1711,
                             -2.0401
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CD"
@@ -1364,7 +1562,10 @@
                             3.149,
                             -1.5755
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "1HD"
@@ -1379,7 +1580,10 @@
                             2.1326,
                             -2.9793
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "2HD"
@@ -1394,7 +1598,10 @@
                             2.0188,
                             -2.2949
                         ],
-                        "_atom_FFType": "N.pl3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.pl3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "NE"
@@ -1409,7 +1616,10 @@
                             1.8148,
                             -1.4981
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HE"
@@ -1424,7 +1634,10 @@
                             2.15,
                             -3.5044
                         ],
-                        "_atom_FFType": "C.cat",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.cat"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CZ"
@@ -1439,7 +1652,10 @@
                             2.0442,
                             -3.8252
                         ],
-                        "_atom_FFType": "N.pl3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.pl3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "NH1"
@@ -1454,7 +1670,10 @@
                             2.0621,
                             -4.4747
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HH1"
@@ -1469,7 +1688,10 @@
                             1.8231,
                             -3.103
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "1HH1"
@@ -1484,7 +1706,10 @@
                             2.4273,
                             -4.634
                         ],
-                        "_atom_FFType": "N.pl3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.pl3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "NH2"
@@ -1499,7 +1724,10 @@
                             2.5964,
                             -4.7461
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "1HH2"
@@ -1514,7 +1742,10 @@
                             2.477,
                             -5.4244
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "2HH2"
@@ -1529,7 +1760,10 @@
                             0.2062,
                             0.8639
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "H"
@@ -1544,7 +1778,10 @@
                             -0.9946,
                             -0.4731
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HA"
@@ -1559,7 +1796,10 @@
                             1.37e-2,
                             -0.8765
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HN"
@@ -1748,7 +1988,10 @@
                             0.6829,
                             2.3703
                         ],
-                        "_atom_FFType": "N.am",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.am"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "N"
@@ -1763,7 +2006,10 @@
                             0.6827,
                             3.7765
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CA"
@@ -1778,7 +2024,10 @@
                             -0.7772,
                             4.2521
                         ],
-                        "_atom_FFType": "C.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "C"
@@ -1793,7 +2042,10 @@
                             -1.3119,
                             4.9959
                         ],
-                        "_atom_FFType": "O.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "O.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "O",
                         "_atom_Label": "O"
@@ -1808,7 +2060,10 @@
                             1.6052,
                             4.609
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CB"
@@ -1823,7 +2078,10 @@
                             2.5835,
                             4.1225
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HB1"
@@ -1838,7 +2096,10 @@
                             1.1826,
                             4.7081
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HB2"
@@ -1853,7 +2114,10 @@
                             1.8485,
                             5.9902
                         ],
-                        "_atom_FFType": "C.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CG"
@@ -1868,7 +2132,10 @@
                             1.4104,
                             6.3962
                         ],
-                        "_atom_FFType": "O.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "O.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "O",
                         "_atom_Label": "OD1"
@@ -1883,7 +2150,10 @@
                             2.5889,
                             6.8029
                         ],
-                        "_atom_FFType": "N.am",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.am"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "ND2"
@@ -1898,7 +2168,10 @@
                             3.027,
                             6.4823
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HD21"
@@ -1913,7 +2186,10 @@
                             2.8061,
                             7.7342
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HD22"
@@ -1928,7 +2204,10 @@
                             0.9841,
                             3.8191
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HA"
@@ -1943,7 +2222,10 @@
                             -0.1522,
                             2.027
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "H"
@@ -2058,7 +2340,10 @@
                             -1.5211,
                             3.8562
                         ],
-                        "_atom_FFType": "N.am",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "N.am"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "N",
                         "_atom_Label": "N"
@@ -2073,7 +2358,10 @@
                             -2.9004,
                             4.3054
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CA"
@@ -2088,7 +2376,10 @@
                             -3.7649,
                             3.8717
                         ],
-                        "_atom_FFType": "C.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "C"
@@ -2103,7 +2394,10 @@
                             -4.6183,
                             4.5708
                         ],
-                        "_atom_FFType": "O.2",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "O.2"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "O",
                         "_atom_Label": "O"
@@ -2118,7 +2412,10 @@
                             -2.9246,
                             5.3998
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HA"
@@ -2133,7 +2430,10 @@
                             -1.2015,
                             2.7919
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CD"
@@ -2148,7 +2448,10 @@
                             -0.5533,
                             3.2036
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HD1"
@@ -2163,7 +2466,10 @@
                             -0.6722,
                             1.9818
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HD2"
@@ -2178,7 +2484,10 @@
                             -2.5503,
                             2.366
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CG"
@@ -2193,7 +2502,10 @@
                             -3.0013,
                             1.6023
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HG1"
@@ -2208,7 +2520,10 @@
                             -2.4755,
                             1.9576
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HG2"
@@ -2223,7 +2538,10 @@
                             -3.3768,
                             3.6507
                         ],
-                        "_atom_FFType": "C.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "C.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "C",
                         "_atom_Label": "CB"
@@ -2238,7 +2556,10 @@
                             -4.4512,
                             3.4494
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HB1"
@@ -2253,7 +2574,10 @@
                             -3.118,
                             4.2899
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HB2"
@@ -2268,7 +2592,10 @@
                             -3.5285,
                             2.6233
                         ],
-                        "_atom_FFType": "O.3",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "O.3"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "O",
                         "_atom_Label": "OXT"
@@ -2283,7 +2610,10 @@
                             -2.7881,
                             2.0168
                         ],
-                        "_atom_FFType": "H",
+                        "_atom_FFType": {
+                            "tag": "Mol2",
+                            "contents": "H"
+                        },
                         "_atom_IsPseudo": false,
                         "_atom_Element": "H",
                         "_atom_Label": "HO"
