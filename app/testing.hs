@@ -12,8 +12,8 @@ import qualified Data.Sequence             as S
 import qualified Data.Text.Lazy            as T
 import qualified Data.Text.Lazy.IO         as T
 import           Spicy.Math
-import           Spicy.MolWriter
 import           Spicy.Parser
+import           Spicy.Writer.Molecule
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
