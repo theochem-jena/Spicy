@@ -116,6 +116,7 @@ testParser = testGroup "Parser"
   , testParserXYZ2
   , testParserPDB1
   , testParserPDB2
+  , testParserPDB3
   , testParserMOL21
   , testParserSpicy1
   ]
@@ -194,6 +195,23 @@ testParserPDB2 =
       goldenFile    = "goldentests/goldenfiles/6cvr__testParserPDB2.json.golden"
       inputFile     = "goldentests/input/6cvr.pdb"
       outputFile    = "goldentests/output/6cvr__testParserPDB2.json"
+      parseAndWrite = do
+        raw <- T.readFile inputFile
+        case parse parsePDB raw of
+          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
+          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        outputFile
+        parseAndWrite
+
+testParserPDB3 :: TestTree
+testParserPDB3 =
+  let testName      = "PDB 4NDG Aprataxin (pentavalent vanadium) (3)"
+      goldenFile    = "goldentests/goldenfiles/4ndg__testParserPDB3.json.golden"
+      inputFile     = "goldentests/input/4ndg.pdb"
+      outputFile    = "goldentests/output/4ndg__testParserPDB3.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parsePDB raw of
