@@ -364,9 +364,9 @@ groupAnnoAtomsAsSubMols annoAtoms =
   $ annoAtoms
 
 {-|
-Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete 'Molecule'.
-Then form a proper submolecule. This function relies on the group of being a proper submolecule and
-will hapilly accept groups that are not.
+Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete
+'Molecule'. Then form a proper submolecule. This function relies on the group of being a proper
+submolecule and will hapilly accept groups that are not.
 -}
 makeSubMolFromGroup ::
      Seq (Int, (Int, TL.Text), Atom) -- ^ A group of annotated atoms in the style of:
