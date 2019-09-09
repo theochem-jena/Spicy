@@ -12,6 +12,7 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
 ( checkMolecule
 , reIndexMolecule
+, reIndex2BaseMolecule
 , groupTupleSeq
 , groupBy
 , makeSubMolsFromAnnoAtoms
@@ -118,6 +119,36 @@ iMdisjoint ::
   -> IntMap b
   -> Bool
 iMdisjoint a b = IM.null $ a `IM.intersection` b
+
+{-|
+This reindexes all structures in a 'Molecule' with predefined counting scheme. This means counting
+of 'Atom's will start at 0 and be consecutive. This also influences bonds in '_molecule_Bonds' and
+layers in '_molecule_SubMol'. Pseudoatoms will be taken care of.
+-}
+reIndex2BaseMolecule :: Molecule -> Either String Molecule
+reIndex2BaseMolecule mol =
+  let allAtomIndices = getAtomIndices mol
+      repMap         =
+          IM.fromAscList
+        . (\old -> zip old [0 .. ])
+        . IS.toList
+        $ allAtomIndices
+  in reIndexMolecule repMap mol
+
+{-|
+Get the indices of all 'Atom's in a 'Molecule', including those of sublayers in '_molecule_SubMol'
+and pseudoatoms therein. This assumes a sane 'Molecule' according to 'checkMolecule'.
+-}
+getAtomIndices :: Molecule -> IntSet
+getAtomIndices mol =
+  let -- The indices of all atoms of the current layer
+      thisLayerIndices = IM.keysSet $ mol ^. molecule_Atoms
+      -- The indices of all sublayers + this layer.
+      allIndices =
+          foldr' (<>) thisLayerIndices
+        . fmap (getAtomIndices)
+        $ mol ^. molecule_SubMol
+  in allIndices
 
 {-|
 Reindex a complete 'Molecule', including all its deeper layers in '_molecule_SubMol') by mappings
