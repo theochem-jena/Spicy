@@ -61,7 +61,7 @@ before_install:
 - export PATH=$HOME/.local/bin:$PATH
 - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 # Find the location of libnvvm
-- find -name "libnvvm.*" $CUDA_HOME
+- find $CUDA_HOME -name "libnvvm.*" 
 
 install:
 # Build dependencies
