@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fc5a775664cb1e36ca3638ab937c9016c9d2bd4edfd082c6703f2e441000ea49
+-- hash: 466fb82074cb377119a9ac36886a2196dd8a418e9aa993493ae26f0ec0ce2296
 
 name:           spicy
 version:        0.0.0.1
@@ -39,6 +39,7 @@ extra-source-files:
     goldentests/input/TolueneCl2.txyz
     goldentests/input/TolueneCl2.xyz
     goldentests/goldenfiles/1hfe__testParserPDB1.json.golden
+    goldentests/goldenfiles/4ndg__testParserPDB3.json.golden
     goldentests/goldenfiles/6cvr__testParserPDB2.json.golden
     goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden
     goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden
