@@ -33,6 +33,13 @@ import qualified  Spicy.Data                                    as D
 
 
 {-| 
+Helper function to get the first element of a triple. Taken from utility-ht == 0.0.14: 
+https://hackage.haskell.org/package/utility-ht-0.0.14/docs/src/Data-Tuple-HT.html#fst3
+-}
+fst3 :: (a,b,c) -> a
+fst3 (x,_,_) = x
+
+{-| 
 Get the 'Atom' '_atom_Coordinates' from a 'Molecule' and convert to a plain 'VS.Vector'. This is
 therefore basically a concatenation of all cartesian coordinates.
 -}
@@ -118,23 +125,34 @@ covRMat rFactor covRadii =
   in  A.map (* rFactor) $ A.zipWith (+) xCovMat yCovMat  
 
 
-
 {-|
 Build the boolean bond matrix from the cov
 -}
 boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matrix Bool)
 boolBondMatrix covRMatrix distMatrix = A.zipWith (A.<=) distMatrix covRMatrix
 
+
 {-| 
 Map the boolean bond matrix to an IntMap to get the connectivity and find fragments in the later
 run.
 -}
--- findBondPairs :: Molecule -> Acc (A.Matrix Bool) -> IM.IntMap Int
--- findBondPairs molA bbMatrix = bondIM
---   where
---       -- Get the element numbers in the given molecule
---       elementNums = IM.map (fromEnum . _atom_Element) (molA ^. molecule_Atoms )
---       -- 
-      
-      
---       bondIM = IM.empty
+findBondPairs :: Molecule -> Acc (A.Matrix Bool) -> IM.IntMap Int
+findBondPairs molA bbMatrix =
+    -- Get the ordered element indices in the given molecule
+    let atoms       = molA ^. molecule_Atoms
+        -- Get the indices from the IntMap of atoms --> [Int]
+        idxList     = VS.fromList (IM.keys atoms :: [Int])
+        -- Convert to an Acc Vector --> Acc (A.Vector Int)
+        elementIdxs = AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
+        -- Build the index matrix in x-direction
+        xMat :: Acc (A.Matrix Int)
+        xMat        = A.replicate (lift $ Z :. IM.size atoms :. All) $ A.use elementIdxs 
+        yMat :: Acc (A.Matrix Int)
+        yMat        = A.transpose xMat  
+              
+        keyElems    = A.filter (\ (a,b,c) -> unlift a)  $ A.zip3 bbMatrix xMat yMat
+    in  IM.empty
+
+
+isFstTrue :: (Bool, a, b) -> Exp Bool
+isFstTrue (b, _, _) = A.lift b
