@@ -10,11 +10,14 @@ Portability : POSIX, Windows
 Spicy.Types contains the definition of all classes and data types, that are used in Spicy. Mainly it
 takes care of the description of molecules (structure, topology, potential energy surface, ...).
 -}
-{-# LANGUAGE DeriveAnyClass  #-}
-{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Spicy.Types
 ( Strat(..)
-, UMatrix
+, AccVector(..)
+, AccMatrix(..)
 , Element(..)
 , AtomLabel
 , FFType
@@ -36,13 +39,19 @@ module Spicy.Types
 , Trajectory
 ) where
 import           Control.DeepSeq
-import           Data.IntMap.Lazy      (IntMap)
-import           Data.IntSet           (IntSet)
-import qualified Data.Vector.Storable  as VS
-import           GHC.Generics          (Generic)
-import           Lens.Micro.Platform
-import qualified Data.Array.Unboxed as AU
-import Data.Sequence (Seq)
+import           Data.Aeson
+import           Data.Aeson.Encode.Pretty
+import qualified Data.Array.Accelerate     as A
+import qualified Data.ByteString.Lazy.UTF8 as BL
+import           Data.IntMap.Lazy          (IntMap)
+import           Data.IntSet               (IntSet)
+import           Data.Sequence             (Seq)
+import           Data.Text.Lazy            (Text)
+import           GHC.Generics              (Generic)
+import           Lens.Micro.Platform       hiding ((.=))
+import           Prelude                   hiding (cycle, foldl1, foldr1, head,
+                                            init, last, maximum, minimum, tail,
+                                            take, takeWhile, (!!))
 
 
 {-|
@@ -51,8 +60,8 @@ output.
 -}
 class NiceShow a where
   niceShow    :: a -> String -- ^ Printing the isolated object
-  niceComplex :: a -> String -- ^ Printing the object in the complex form,
-                             --   where everything is meant to be printed at once as overview
+  niceComplex :: a -> String -- ^ Printing the object in the complex form, where everything is meant
+                             --   to be printed at once as overview
 
 {-|
 Use serial or parallel processing for large data structures. This helps deciding on a per use base,
@@ -62,10 +71,43 @@ operations by Control.Parallel.Strategies should provide this switch in Spicy.
 data Strat = Serial | Parallel deriving Eq
 
 {-|
-Alias for an unboxed matrix from the Array library. This type can easily be converted to
-Accelerate's array type.
+'newtype' wrapper to Accelerate's 'A.Vector's.
 -}
-type UMatrix a = AU.Array (Int, Int) a
+newtype AccVector a = AccVector { getAccVector :: A.Vector a } deriving (Generic, Show, Eq)
+instance (ToJSON a, A.Elt a) => ToJSON (AccVector a) where
+  toJSON vec =
+    let plainVec        = getAccVector vec
+        (A.Z A.:. xDim) = A.arrayShape plainVec
+        elements        = A.toList plainVec
+    in  object
+          [ "shape"    .= xDim
+          , "elements" .= elements
+          ]
+instance (FromJSON a, A.Elt a) => FromJSON (AccVector a) where
+  parseJSON = withObject "AccVector" $ \vec -> do
+    xDim     <- vec .: "shape"
+    elements <- vec .: "elements"
+    return . AccVector $ A.fromList (A.Z A.:. xDim) elements
+
+{-|
+'newtype' wrapper to Accelerate's 'A.Matrix's.
+-}
+newtype AccMatrix a = AccMatrix { getAccMatrix :: A.Matrix a } deriving (Generic, Show, Eq)
+instance (ToJSON a, A.Elt a) => ToJSON (AccMatrix a) where
+  toJSON mat =
+    let plainMat                  = getAccMatrix mat
+        (A.Z A.:. xDim A.:. yDim) = A.arrayShape plainMat
+        elements                  = A.toList plainMat
+    in  object
+          [ "shape"    .= (xDim, yDim)
+          , "elements" .= elements
+          ]
+instance (FromJSON a, A.Elt a) => FromJSON (AccMatrix a) where
+  parseJSON = withObject "AccVector" $ \mat -> do
+    (xDim, yDim) <- mat .: "shape"
+    elements     <- mat .: "elements"
+    return . AccMatrix $ A.fromList (A.Z A.:. xDim A.:. yDim) elements
+
 
 ----------------------------------------------------------------------------------------------------
 {- $moleculeTypes
@@ -90,18 +132,21 @@ data Element =
   Cs  | Ba  | La  | Ce  | Pr  | Nd  | Pm  | Sm  | Eu  | Gd  | Tb  | Dy  | Ho  | Er  | Tm  | Yb  | Lu  | Hf  | Ta  | W   | Re  | Os  | Ir  | Pt  | Au  | Hg  | Tl  | Pb  | Bi  | Po  | At  | Rn  |
   Fr  | Ra  | Ac  | Th  | Pa  | U   | Np  | Pu  | Am  | Cm  | Bk  | Cf  | Es  | Fm  | Md  | No  | Lr  | Rf  | Db  | Sg  | Bh  | Hs  | Mt  | Ds  | Rg  | Cn  | Uut | Fl  | Uup | Lv  | Uus | Uuo
   deriving (Show, Eq, Read, Ord, Enum, Generic, NFData)
+instance ToJSON Element where
+  toEncoding = genericToEncoding defaultOptions
+instance FromJSON Element
 
 {-|
 An atom label. They may come from pdb or force field parameter files or can be assigned by other
 ways just to distinguish specific atoms.
 -}
-type AtomLabel = String
+type AtomLabel = Text
 
 {-|
 These are labels for molecular mechanics software. The strings are basically arbitrary and depending
 on the MM software used.
 -}
-type FFType = String
+type FFType = Text
 
 {-|
 An Atom in a 'Molecule'. Atoms are compared by their indices only and they must therefore be unique.
@@ -119,8 +164,13 @@ data Atom = Atom
   , _atom_PCharge     :: Maybe Double -- ^ Possibly a partial charge.
   , _atom_Coordinates :: Seq Double   -- ^ Coordinates of the atom, cartesian in R³. Relies on
                                       --   the parser to fill with exactly 3 values.
-  } deriving (Eq, Generic, Show)
+  } deriving (Eq, Generic)
 makeLenses ''Atom
+instance Show Atom where
+  show = BL.toString . encodePretty
+instance ToJSON Atom where
+  toEncoding = genericToEncoding defaultOptions
+instance FromJSON Atom
 
 {-|
 A molecule, which might be the whole system, an ONIOM layer or a fragment of the system, each
@@ -131,18 +181,9 @@ Starting from a top level molecule, all atoms and bonds of the system are expect
 this top layer (except pseudoatoms of deeper layers). Therefore if atoms are in a deeper layers of
 the recursion, their information is not used to describe a higher layer. Instead, all atoms of
 deeper layers (except pseudoatoms) must be also replicated in a higher layer.
-
-Two possible types of index countings are possible:
-
-  - __/'Global'/__: All atoms in the system (which should be present at the top layer molecule) except
-    pseudoatoms are counted in the top layer. The fragments might therefore not start at atom with
-    index 0, but depending on where they are in a higher level with higher numbers. Pseudoatoms are
-    counted after all other atoms are counted.
-  - __/'Individual'/__: Counting happens for each molecule individually. In this counting scheme,
-    pseudoatoms do not need any special treatment.
 -}
 data Molecule = Molecule
-  { _molecule_Label    :: String                   -- ^ Comment or identifier of a molecule. Can be
+  { _molecule_Label    :: Text                     -- ^ Comment or identifier of a molecule. Can be
                                                    --   empty.
   , _molecule_Atoms    :: IntMap Atom              -- ^ An 'IntMap' of 'Atom's, 'Atom's identified
                                                    --   by their 'Int' index.
@@ -153,10 +194,15 @@ data Molecule = Molecule
                                                    --   These might be fragments or higher level
                                                    --   ONIOM layers.
   , _molecule_Energy   :: Maybe Double             -- ^ An energy, that might have been calculated.
-  , _molecule_Gradient :: Maybe (VS.Vector Double) -- ^ A gradient, that might have been calculated.
-  , _molecule_Hessian  :: Maybe (UMatrix Double)   -- ^ A hessian, that might have been calculated.
-  } deriving (Eq, Generic, Show)
+  , _molecule_Gradient :: Maybe (AccVector Double) -- ^ A gradient, that might have been calculated.
+  , _molecule_Hessian  :: Maybe (AccMatrix Double) -- ^ A hessian, that might have been calculated.
+  } deriving (Eq, Generic)
 makeLenses ''Molecule
+instance Show Molecule where
+  show = BL.toString . encodePretty
+instance ToJSON Molecule where
+  toEncoding = genericToEncoding defaultOptions
+instance FromJSON Molecule
 
 {-|
 Trajectories are simply 'Seq'uences of 'Molecule's.

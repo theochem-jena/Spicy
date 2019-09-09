@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Spicy.Molecule
+Description : Handling molecular informations
+Copyright   : Phillip Seeber, 2019
+License     : GPL-3
+Maintainer  : phillip.seeber@uni-jena.de
+Stability   : experimental
+Portability : POSIX, Windows
+
+This module deals with the partitioning of the system, creation of bonds, assignment of
+substructeres to layers and creation of ghost atoms. Following conventions shall apply:
+
+    * highest level region has highest index
+
+    * lowest level region has index 0 and contains the complete system
+-}</span><span>
+</span><a name="line-17"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Spicy.Molecule</span><span>
+</span><a name="line-18"></a><span class="hs-special">(</span><span>
+</span><a name="line-19"></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-20"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Prelude</span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">cycle</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">foldl1</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">foldr1</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">head</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">init</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">last</span><span class="hs-special">,</span><span>
+</span><a name="line-21"></a><span>                          </span><span class="hs-identifier hs-var">maximum</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">minimum</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">tail</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">take</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">takeWhile</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">!!</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-22"></a></pre></body></html>

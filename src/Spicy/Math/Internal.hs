@@ -16,17 +16,22 @@ module Spicy.Math.Internal
 ( getCoordinates
 , distMat
 ) where
-import            Control.Parallel.Strategies
-import            Data.Array.Accelerate                         as A
-import            Data.Array.Accelerate.Control.Lens
-import            Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
-import qualified  Data.Foldable                                 as F
-import qualified  Data.IntMap                                   as IM
-import qualified  Data.Sequence                                 as S
-import qualified  Data.Vector.Storable                          as VS
-import            Prelude                                       hiding ((/=))
-import            Spicy.Types
-import qualified  Spicy.Data                                    as D
+import           Control.Parallel.Strategies
+import           Data.Array.Accelerate                         as A
+import           Data.Array.Accelerate.Control.Lens
+import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
+import qualified Data.Foldable                                 as F
+import qualified Data.IntMap                                   as IM
+import qualified Data.Sequence                                 as S
+import qualified Data.Vector.Storable                          as VS
+import           Prelude                                       hiding (cycle,
+                                                                foldl1, foldr1,
+                                                                head, init,
+                                                                last, maximum,
+                                                                minimum, tail,
+                                                                take, takeWhile,
+                                                                (!!), (/=))
+import           Spicy.Types
 
 
 {-| 
