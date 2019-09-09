@@ -55,10 +55,6 @@ extra-deps:
   - git:    https://github.com/tmcdonell/lens-accelerate.git
     commit: b74eb8098735b1ad6cff3c5655af03d3f29b9f8e
 
-  # Accelerate BLAS and LAPACK
-  - git:    https://github.com/tmcdonell/accelerate-blas.git
-    commit: d6c6d0e0d3b882fcadc8e0565e5d6325c1b1c71c
-
   # Accelerate-IO
   - git:    https://github.com/AccelerateHS/accelerate-io
     commit: e83461b194bb046a6f129a6be7f0e865653ed365
@@ -73,9 +69,8 @@ extra-deps:
 
 # Override default flag values for local packages and extra-deps
 flags:
-  accelerate-blas:
-   llvm-ptx: false
-   llvm-cpu: false
+  accelerate-llvm-ptx:
+   nvvm: false
 
 # Extra package databases containing global packages
 # extra-package-dbs: []

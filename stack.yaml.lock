@@ -81,20 +81,6 @@ packages:
     git: https://github.com/tmcdonell/lens-accelerate.git
     commit: b74eb8098735b1ad6cff3c5655af03d3f29b9f8e
 - completed:
-    cabal-file:
-      size: 6952
-      sha256: 54bd2b7c0ff2ec3a5fb186bf413000af54c32d16e878de140026d31675cca753
-    name: accelerate-blas
-    version: 0.3.0.0
-    git: https://github.com/tmcdonell/accelerate-blas.git
-    pantry-tree:
-      size: 4502
-      sha256: 272afaa9df20ec63804b27226ab410fb2029ba5fac534dda3631db33fd80f155
-    commit: d6c6d0e0d3b882fcadc8e0565e5d6325c1b1c71c
-  original:
-    git: https://github.com/tmcdonell/accelerate-blas.git
-    commit: d6c6d0e0d3b882fcadc8e0565e5d6325c1b1c71c
-- completed:
     subdir: accelerate-io
     cabal-file:
       size: 1757
