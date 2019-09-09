@@ -61,7 +61,7 @@ before_install:
 - export PATH=$HOME/.local/bin:$PATH
 - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 # Find the location of libnvvm
-- find $CUDA_HOME -name "libnvvm.*" 
+- find $CUDA_HOME -name "libnvvm.*"
 
 install:
 # Build dependencies
@@ -70,4 +70,4 @@ install:
 script:
 # Build the package, its tests, and its docs and run the tests
 - stack build --no-terminal --test
-- stack build --no-terminal --flag spicy:cuda
+- stack build --no-terminal --flag spicy:cuda --extra-lib-dirs /usr/local/cuda-10.1/nvvm/lib64
