@@ -15,23 +15,21 @@ wrapped in the 'Spicy.Math' module.
 module Spicy.Math.Internal
 ( getCoordinates
 , distMat
+, covRMat
+, boolBondMatrix
+, getCovalentRadii
 ) where
-import           Control.Parallel.Strategies
-import           Data.Array.Accelerate                         as A
-import           Data.Array.Accelerate.Control.Lens
-import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
-import qualified Data.Foldable                                 as F
-import qualified Data.IntMap                                   as IM
-import qualified Data.Sequence                                 as S
-import qualified Data.Vector.Storable                          as VS
-import           Prelude                                       hiding (cycle,
-                                                                foldl1, foldr1,
-                                                                head, init,
-                                                                last, maximum,
-                                                                minimum, tail,
-                                                                take, takeWhile,
-                                                                (!!), (/=))
-import           Spicy.Types
+import            Control.Parallel.Strategies
+import            Data.Array.Accelerate                         as A
+import            Data.Array.Accelerate.Control.Lens
+import            Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
+import qualified  Data.Foldable                                 as F
+import qualified  Data.IntMap                                   as IM
+import qualified  Data.Sequence                                 as S
+import qualified  Data.Vector.Storable                          as VS
+import            Prelude                                       hiding ((/=))
+import            Spicy.Types
+import qualified  Spicy.Data                                    as D
 
 
 {-| 
@@ -68,7 +66,7 @@ distMat v =
       -- The x-Axis is now a repetition of the atoms on the y-Axis (which were previously
       -- the x-axis) and z now stores the 3 compotents of the coordinates.
       xVec      = A.replicate (lift $ Z :. n :. All :. All) n3Vec
-      -- Transpose the 3D array to swap x- and y-axis and also have the numbers of the atoms on x
+      -- Transpose the 3D array to swap x- and y-axis and also have the numbersbuildExamples of the atoms on x
       -- again. Strangely the lenses start counting in reverse index order.
       yVec      = transposeOn _2 _3 xVec
   in  -- Overlay the two 3D arrays. The x-y-plane is a table correlating all atom indices with
@@ -90,7 +88,7 @@ getCovalentRadii mol = covRadii
     -- Get the number of elements in the IntMap
     nrOfAtoms   = IM.size elementNums
     -- Lookup the respective covalent radii from the Spicy.Data.covalentRadiiIM (IntMap)
-    -- and assign them to the corresponding atom index
+    -- and assign them to the correspondingbuildExamples atom index
     covRadiiMB  = traverse (`IM.lookup` D.covalentRadiiIM) elementNums
     -- Test if there is some Nothing value in the IntMap (Maybe Double)
     -- If so, give an error message; Else, lift the IntMap out of the Maybe monad -
@@ -113,14 +111,30 @@ covRMat rFactor covRadii =
       -- Build the matrices by replication of the vector in the y direction
       xCovMat             = A.replicate (lift $ Z :. nrOfAtoms :. All) covRadii
       -- The corresponding "y"-matrix is formed by simple transposition the xy plane
-      yCovMat             = A.transposeOn _1 _2 xCovMat  
+      yCovMat             = A.transpose xCovMat  
   -- Get the result by zipping the "3D stack of 2D matrices" using the summation operator
   -- and multiplication by 1.3 (see Literature for the factor)
   -- https://doi.org/10.1063/1.1515483
   in  A.map (* rFactor) $ A.zipWith (+) xCovMat yCovMat  
 
 
+
 {-|
 Build the boolean bond matrix from the cov
 -}
--- bondMatrix :: A.Acc (A.Matrix Double) -> A.Acc (A.Matrix Bool)
+boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matrix Bool)
+boolBondMatrix covRMatrix distMatrix = A.zipWith (A.<=) distMatrix covRMatrix
+
+{-| 
+Map the boolean bond matrix to an IntMap to get the connectivity and find fragments in the later
+run.
+-}
+-- findBondPairs :: Molecule -> Acc (A.Matrix Bool) -> IM.IntMap Int
+-- findBondPairs molA bbMatrix = bondIM
+--   where
+--       -- Get the element numbers in the given molecule
+--       elementNums = IM.map (fromEnum . _atom_Element) (molA ^. molecule_Atoms )
+--       -- 
+      
+      
+--       bondIM = IM.empty
