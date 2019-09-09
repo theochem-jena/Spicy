@@ -12,7 +12,7 @@ file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are 
 respect to force field types, which should always be remembered when usings its results.
 -}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Spicy.MolWriter
+module Spicy.Writer.Molecule
 ( writeXYZ
 , writeTXYZ
 , writeMOL2
