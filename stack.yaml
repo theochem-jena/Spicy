@@ -42,10 +42,10 @@ packages:
 extra-deps:
   # Accelerate
   - github: tmcdonell/accelerate
-    commit: 1010d97f8cc8cbecff28200cf6e176455769c644
+    commit: 156b5ce9232f3d9bbb94f3054daf51e23454fb0b
 
   - github: tmcdonell/accelerate-llvm
-    commit: 60b0ebc38549e887159e0bec7493fad2231a2550
+    commit: ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9
     subdirs:
       - accelerate-llvm
       - accelerate-llvm-native
@@ -61,7 +61,7 @@ extra-deps:
 
   # Accelerate-IO
   - git:    https://github.com/AccelerateHS/accelerate-io
-    commit: b909e3e225fff5f6eadeddc8668ef65677b19f9f
+    commit: e83461b194bb046a6f129a6be7f0e865653ed365
     subdirs:
       - accelerate-io
       - accelerate-io-vector
