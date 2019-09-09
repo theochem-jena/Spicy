@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4b8284fceee6a052e38694b475d3ba856e725eff380cb8267f4bfcb6c5052f53
+-- hash: fc5a775664cb1e36ca3638ab937c9016c9d2bd4edfd082c6703f2e441000ea49
 
 name:           spicy
 version:        0.0.0.1
@@ -67,7 +67,7 @@ library
   hs-source-dirs:
       src
   default-extensions: TypeOperators TemplateHaskell BangPatterns OverloadedStrings
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -optlc=-mcpu=skylake -fllvm
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -fllvm
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
@@ -102,7 +102,7 @@ executable benchmarks-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -optlc=-mcpu=skylake -fllvm -threaded -rtsopts
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -fllvm -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
@@ -139,7 +139,7 @@ executable spicy
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -optlc=-mcpu=skylake -fllvm -threaded -rtsopts
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -fllvm -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
@@ -175,7 +175,7 @@ executable unittests-exe
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -optlc=-mcpu=skylake -fllvm -threaded -rtsopts
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -fllvm -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
@@ -215,7 +215,7 @@ test-suite unittests
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -optlc=-mcpu=skylake -fllvm -threaded -rtsopts
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -fllvm -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0
@@ -255,7 +255,7 @@ benchmark benchmarks
       Paths_spicy
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -optlc=-mcpu=skylake -fllvm -threaded -rtsopts
+  ghc-options: -O2 -Wall -Wno-unused-top-binds -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror -fllvm -threaded -rtsopts
   build-depends:
       accelerate >=1.3.0.0 && <=1.4.0.0
     , accelerate-io >=1.3.0.0 && <=1.4.0.0

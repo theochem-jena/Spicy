@@ -68,8 +68,8 @@ ghc-options:
   - -Wpartial-fields
   - -Wredundant-constraints
   - -Werror
-  - -optlc=-mcpu=skylake
   - -fllvm
+  #- -optlc=-mcpu=skylake
 
 library:
   source-dirs: src
