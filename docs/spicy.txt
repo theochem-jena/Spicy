@@ -315,16 +315,21 @@ instance (Data.Aeson.Types.FromJSON.FromJSON a, Data.Array.Accelerate.Array.Suga
 --   <a>Molecule</a>s, such as indexing.
 module Spicy.Molecule.Util
 
--- | Check if a single <a>Molecule</a> layer has sane indices (<a>Key</a>)
---   in the <a>IntMap</a> for <a>_molecule_Atoms</a> and
---   <a>_molecule_SubMol</a>, meaning the bonds do not include
---   <a>Atom</a>s, that do not exist. Then recursively check if the
---   <a>Atom</a>s of deeper layers are proper subsets of the higher layer,
---   both for <a>_molecule_Atoms</a> and <a>_molecule_Bonds</a>. Also
---   checks if fragments of the same layer are disjoint. Returns the
---   <a>Molecule</a> without modifications if it is sane, a string with
---   description of the found problem otherwise. This check is exhaustive
---   and potentially expensive.
+-- | Check sanity of <a>Molecule</a>, which means test the following
+--   criteria:
+--   
+--   <ul>
+--   <li>The <a>Key</a>s of the <a>_molecule_Atoms</a> <a>IntMap</a> are a
+--   superset of all <a>Key</a>s and <a>Key</a>s appearing in the
+--   <a>IntMap</a> <a>IntSet</a> of <a>_molecule_Bonds</a></li>
+--   <li>The deeper layers in <a>molecule_SubMol</a> are proper subsets of
+--   the higher layer regarding non-pseudo <a>Atom</a> indices</li>
+--   <li>Fragments of the same layer are completelty disjoint in their atom
+--   indices</li>
+--   <li>Bonds of a layer are bidirectorial</li>
+--   <li>The size of <a>_atom_Coordinates</a> is strictly 3 for all atoms
+--   of this layer</li>
+--   </ul>
 checkMolecule :: Molecule -> Either String Molecule
 
 -- | Reindex a complete <a>Molecule</a>, including all its deeper layers in
