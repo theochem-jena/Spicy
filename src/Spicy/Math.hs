@@ -13,8 +13,9 @@ other operations are implemented using Accelerate, to provide parallel operation
 
 The operations here accept some insecurities (like not checking if both vectors of a dot product
 have equal lenght) and trust the caller.
-
 -}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Spicy.Math
 ( (<.>)
 , vLength
@@ -22,11 +23,21 @@ module Spicy.Math
 , vAngle
 , vCross
 ) where
-import qualified Data.Foldable as F
-import           Data.Sequence (Seq)
-import qualified Data.Sequence as S
-import           Prelude       hiding (cycle, foldl1, foldr1, head, init, last,
-                                maximum, minimum, tail, take, takeWhile, (!!))
+import           Data.Array.Accelerate             (Matrix)
+import qualified Data.Foldable                     as F
+import           Data.Sequence                     (Seq)
+import qualified Data.Sequence                     as S
+import           Prelude                           hiding (cycle, foldl1,
+                                                    foldr1, head, init, last,
+                                                    maximum, minimum, tail,
+                                                    take, takeWhile, (!!))
+import qualified Spicy.Math.Internal               as MI
+import           Spicy.Types
+#ifdef CUDA
+import           Data.Array.Accelerate.LLVM.PTX
+#else
+import           Data.Array.Accelerate.LLVM.Native
+#endif
 
 
 {-
@@ -79,6 +90,15 @@ vCross a b = do
   where
     err = "vCross: Could not get an element from input sequence"
 
+{-|
+__PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
+-}
+distMat' :: Molecule -> Matrix Double
+distMat' mol =
+  let coordVec = MI.getCoordinates Serial mol
+  in  dM coordVec
+  where
+    dM = $(runQ MI.distMat)
 {-
 -- | Defines the normal vector of a plane, defined by 3 points
 r3VecNormalVecOfPlane3Points :: (Vector R, Vector R, Vector R) -> Vector R
