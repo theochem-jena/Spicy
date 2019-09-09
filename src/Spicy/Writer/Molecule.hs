@@ -80,7 +80,8 @@ This format ingores all deeper level layers of a molecule.
 -}
 writeTXYZ :: Molecule -> Either String Text
 writeTXYZ mol
-  | ffTypeCheck = toTXYZ <$> checkMolecule mol
+  | ffTypeCheck =
+       toTXYZ <$> (checkMolecule =<< reIndex2BaseMolecule (mol & molecule_SubMol .~ S.empty))
   | otherwise   = Left "writeTXYZ: Not all atoms have Tinker XYZ style atom types."
   where
     -- Check if all atoms have TXYZ atom types.
@@ -106,8 +107,8 @@ writeTXYZ mol
           atomLs   =
             IM.foldrWithKey' (\key atom acc ->
               -- Print the serial element XYZ FFType
-              ( T.pack $ printf "%6d    %2s    %12.8F    %12.8F    %12.8F    %6s"
-                  key
+              ( T.pack $ printf "%6d    %2s    %12.8F    %12.8F    %12.8F    %6d"
+                  (key + 1)
                   (show $ atom ^. atom_Element)
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
@@ -121,7 +122,7 @@ writeTXYZ mol
               -- Print the bond targets
               T.stripEnd
               ( IS.foldr' (\x xs ->
-                  (T.pack $ printf "    %6d" x)
+                  (T.pack $ printf "    %6d" (x + 1))
                   `T.append`
                   xs
                 ) "" $ fromMaybe IS.empty ((m ^. molecule_Bonds) IM.!? key)
