@@ -153,13 +153,59 @@ writeMOL2 mol
     toMOL2 m =
       let -- First sublayer of the molecule.
           subMols = m ^. molecule_SubMol
-      in  undefined
-    toMOLECULE :: Seq Molecule -> Text
-    toMOLECULE sM =
-      let nAtoms = sum . fmap (\m -> IM.size $ m ^. molecule_Atoms) $ sM
-          --
-          bonds  = undefined -- fmap makeBondsUnidirectorial $
-      in undefined
+      in  (toMOLECULE m)
+           `T.append`
+           (toATOM m subMols)
+    -- Write the "@<TRIPOS>MOLECULE" block.
+    toMOLECULE :: Molecule -> Text
+    toMOLECULE m =
+      let nAtoms = IM.size $ m ^. molecule_Atoms
+          -- Make the bonds unidirectorial first.
+          bonds  = makeBondsUnidirectorial $ m ^. molecule_Bonds
+          -- Then get the overall number of bonds.
+          nBonds = IM.foldr' (+) 0 . IM.map IS.size $ bonds
+      in  T.unlines
+            [ "@<TRIPOS>MOLECULE"
+            , T.filter (not . isEndOfLine) $ m ^. molecule_Label
+            , (T.pack . show $ nAtoms) `T.append` " "
+              `T.append`
+              (T.pack . show $ nBonds) `T.append` " 0 0 0"
+            , "SMALL"
+            , "USER_CHARGES"
+            , ""
+            ]
+    -- Write the @<TRIPOS>ATOM block.
+    toATOM :: Molecule -> Seq Molecule -> Text
+    toATOM m sM =
+      let annoFrags = IM.fromAscList . toList . S.zip (S.fromList [ 1 .. ]) $ sM
+          atomLines =
+            IM.foldrWithKey' (\key atom acc ->
+              let -- The index of the submol/fragment, in which the current atom can be found
+                  fragmentNum   = findAtomInSubMols key annoFrags :: Maybe Int
+                  fragment      = fragmentNum >>= (\fragKey -> IM.lookup fragKey annoFrags)
+                  fragmentLabel = _molecule_Label <$> fragment :: Maybe Text
+                  thisAtomLine  =
+                    T.stripEnd . T.pack $ printf "%7d %-6s %12.8F %12.8F %12.8F %4s %4d  %10s %8s\n"
+                      (key + 1)                                           -- Index
+                      (show $ atom ^. atom_Label)               -- Atom label
+                      (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0) -- X
+                      (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1) -- Y
+                      (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2) -- Z
+                      ( case atom ^. atom_FFType of                       -- Atom label
+                          Mol2 t -> T.unpack t
+                          _      -> show $ atom ^. atom_Element
+                      )
+                      (fromMaybe 0 fragmentNum)
+                      (fromMaybe "UNL1" $ T.unpack <$> fragmentLabel)
+                      (( case atom ^. atom_PCharge of
+                          Nothing -> ""
+                          Just c  -> printf "%8.4F" c
+                      ) :: String)
+              in  thisAtomLine `T.append` acc
+            ) "" (m ^. molecule_Atoms)
+      in  "@<TRIPOS>ATOM\n"
+          `T.append`
+          atomLines
 
 
 {-
