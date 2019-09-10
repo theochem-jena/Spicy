@@ -44,18 +44,18 @@ before_install:
 - echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main" | sudo tee -a /etc/apt/sources.list
 - sudo apt-get update -qq
 - sudo apt-get install llvm-8-dev llvm-8-tools -y
-# Install CUDA 10 toolkit
-- INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
-- wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
-- sudo dpkg -i ${INSTALLER}
-- wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
-- sudo apt-key add 7fa2af80.pub
-- sudo apt update -qq
-- sudo apt install -y cuda-core-${CUDA_SHORT/./-} cuda-cudart-dev-${CUDA_SHORT/./-} cuda-cufft-dev-${CUDA_SHORT/./-}
-- sudo apt clean
-- CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
-- LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
-- PATH=${CUDA_HOME}/bin:${PATH}
+## Install CUDA 10 toolkit -> No CUDA device available, so accelerate wont run.
+#- INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+#- wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+#- sudo dpkg -i ${INSTALLER}
+#- wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+#- sudo apt-key add 7fa2af80.pub
+#- sudo apt update -qq
+#- sudo apt install -y cuda-core-${CUDA_SHORT/./-} cuda-cudart-dev-${CUDA_SHORT/./-} cuda-cufft-dev-${CUDA_SHORT/./-}
+#- sudo apt clean
+#- CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+#- LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+#- PATH=${CUDA_HOME}/bin:${PATH}
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
@@ -68,4 +68,5 @@ install:
 script:
 # Build the package, its tests, and its docs and run the tests
 - stack build --no-terminal --test
-- stack build --no-terminal --flag spicy:cuda --test
+# Cant test. Needs compile time execution of CUDA code and Travis has no GPUs
+#- stack build --no-terminal --flag spicy:cuda --test
