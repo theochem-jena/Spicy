@@ -405,22 +405,16 @@ makeSubMolsFromAnnoAtoms annoAtoms bonds =
   in  fmap (\g -> makeSubMolFromGroup g bonds) subMolAtomGroups
 
 {-|
-The bond structure, which is defined bidirectorially can be reduced to be defined unidirectorial,
-albeit not uniquely.
+The bond structure, which is defined bidirectorially can be reduced to be defined unidirectorial. If
+you imagine this structure as the bond matrix, this is the same as taking just the upper right
+triangular matrix without the main diagonal.
 -}
 makeBondsUnidirectorial :: IntMap IntSet -> IntMap IntSet
 makeBondsUnidirectorial imis =
-    removeEmptyIMIS
-  . snd
-  $ IM.foldrWithKey' (\key is (accKeysDone, accIMISUpdated) ->
-      let -- Keys that were removed once, should not be removed again. Therefore collect them.
-          keysDone      = (key `IS.insert` accKeysDone)
-          -- Remove protected, already processed keys from the keys to remove
-          keysToRem     = is \\ keysDone
-          -- Current iteration of cleaning the IMIS
-          iterImisClean = removeInverseFromIMIS accIMISUpdated (key, keysToRem)
-      in  (keysDone, iterImisClean)
-    ) (IS.empty, imis) imis
+     removeEmptyIMIS
+  $ IM.foldrWithKey (\key valIS acc ->
+      IM.update (\_ -> Just $ IS.filter (> key) valIS) key acc
+    ) imis imis
 
 {-|
 This function takes and 'IntMap' 'IntSet' structure and a single update tuple. All values from the
