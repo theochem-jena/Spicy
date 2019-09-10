@@ -136,7 +136,7 @@ boolBondMatrix covRMatrix distMatrix = A.zipWith (A.<=) distMatrix covRMatrix
 Map the boolean bond matrix to an IntMap to get the connectivity and find fragments in the later
 run.
 -}
-findBondPairs :: Molecule -> Acc (A.Matrix Bool) -> IM.IntMap Int
+findBondPairs :: Molecule -> Acc (A.Matrix Bool) -> Acc (A.Vector (Int, Int))
 findBondPairs molA bbMatrix =
     -- Get the ordered element indices in the given molecule
     let atoms       = molA ^. molecule_Atoms
@@ -144,15 +144,16 @@ findBondPairs molA bbMatrix =
         idxList     = VS.fromList (IM.keys atoms :: [Int])
         -- Convert to an Acc Vector --> Acc (A.Vector Int)
         elementIdxs = AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
+
         -- Build the index matrix in x-direction
         xMat :: Acc (A.Matrix Int)
         xMat        = A.replicate (lift $ Z :. IM.size atoms :. All) $ A.use elementIdxs 
+        
+        -- Replicate to get the y-direction
         yMat :: Acc (A.Matrix Int)
         yMat        = A.transpose xMat  
-              
-        keyElems    = A.filter (\ (a,b,c) -> unlift a)  $ A.zip3 bbMatrix xMat yMat
-    in  IM.empty
 
+        -- Filter bond pairs using the boolean bond matrix
+        (_, o, t)   = A.unzip3 $ (^. _1) $ A.filter (^. _1) $ A.zip3 bbMatrix xMat yMat 
 
-isFstTrue :: (Bool, a, b) -> Exp Bool
-isFstTrue (b, _, _) = A.lift b
+    in  A.zip o t
