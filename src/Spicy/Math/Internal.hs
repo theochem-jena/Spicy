@@ -25,6 +25,7 @@ import            Data.Array.Accelerate.Control.Lens
 import            Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
 import qualified  Data.Foldable                                 as F
 import qualified  Data.IntMap                                   as IM
+import qualified  Data.IntSet                                   as IS
 import qualified  Data.Sequence                                 as S
 import qualified  Data.Vector.Storable                          as VS
 import            Prelude                                       hiding ((/=))
@@ -32,14 +33,14 @@ import            Spicy.Types
 import qualified  Spicy.Data                                    as D
 
 
-{-| 
-Helper function to get the first element of a triple. Taken from utility-ht == 0.0.14: 
+{-|
+Helper function to get the first element of a triple. Taken from utility-ht == 0.0.14:
 https://hackage.haskell.org/package/utility-ht-0.0.14/docs/src/Data-Tuple-HT.html#fst3
 -}
 fst3 :: (a,b,c) -> a
 fst3 (x,_,_) = x
 
-{-| 
+{-|
 Get the 'Atom' '_atom_Coordinates' from a 'Molecule' and convert to a plain 'VS.Vector'. This is
 therefore basically a concatenation of all cartesian coordinates.
 -}
@@ -89,7 +90,7 @@ Retrieve the atom indices as an IntMap for use with the covalentRadii map
 -}
 getCovalentRadii ::  Molecule -> Either String (A.Vector Double)
 getCovalentRadii mol = covRadii
-  where 
+  where
     -- Get the element numbers in the given molecule
     elementNums = IM.map (fromEnum . _atom_Element) (mol ^. molecule_Atoms )
     -- Get the number of elements in the IntMap
@@ -99,30 +100,30 @@ getCovalentRadii mol = covRadii
     covRadiiMB  = traverse (`IM.lookup` D.covalentRadiiIM) elementNums
     -- Test if there is some Nothing value in the IntMap (Maybe Double)
     -- If so, give an error message; Else, lift the IntMap out of the Maybe monad -
-    -- --> Either String or (IntMap Double) 
+    -- --> Either String or (IntMap Double)
     leftMsg     = "Getting the covalent radii failed. Typo in the elements?"
-    covRadii    = 
-      case covRadiiMB of 
+    covRadii    =
+      case covRadiiMB of
         Nothing   -> Left leftMsg
-        Just mat  -> Right $ AVS.fromVectors (Z :. nrOfAtoms) . VS.fromList $ IM.elems mat 
-                      
+        Just mat  -> Right $ AVS.fromVectors (Z :. nrOfAtoms) . VS.fromList $ IM.elems mat
+
 
 {-|
 Calculate the matrix of the sum of the covalent radii for the detection of bonds
 --> N x N matrix, symmetric
 -}
 covRMat :: Exp Double -> Acc (A.Vector Double) -> Acc (A.Matrix Double)
-covRMat rFactor covRadii = 
-  -- Get the number of atoms from the dimension of the cR vector 
+covRMat rFactor covRadii =
+  -- Get the number of atoms from the dimension of the cR vector
   let (Z :. nrOfAtoms)    = unlift . shape $ covRadii    :: Z :. Exp Int
       -- Build the matrices by replication of the vector in the y direction
       xCovMat             = A.replicate (lift $ Z :. nrOfAtoms :. All) covRadii
       -- The corresponding "y"-matrix is formed by simple transposition the xy plane
-      yCovMat             = A.transpose xCovMat  
+      yCovMat             = A.transpose xCovMat
   -- Get the result by zipping the "3D stack of 2D matrices" using the summation operator
   -- and multiplication by 1.3 (see Literature for the factor)
   -- https://doi.org/10.1063/1.1515483
-  in  A.map (* rFactor) $ A.zipWith (+) xCovMat yCovMat  
+  in  A.map (* rFactor) $ A.zipWith (+) xCovMat yCovMat
 
 
 {-|
@@ -132,7 +133,7 @@ boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matri
 boolBondMatrix covRMatrix distMatrix = A.zipWith (A.<=) distMatrix covRMatrix
 
 
-{-| 
+{-|
 Map the boolean bond matrix to an IntMap to get the connectivity and find fragments in the later
 run.
 -}
@@ -147,13 +148,19 @@ findBondPairs molA bbMatrix =
 
         -- Build the index matrix in x-direction
         xMat :: Acc (A.Matrix Int)
-        xMat        = A.replicate (lift $ Z :. IM.size atoms :. All) $ A.use elementIdxs 
-        
+        xMat        = A.replicate (lift $ Z :. IM.size atoms :. All) $ A.use elementIdxs
+
         -- Replicate to get the y-direction
         yMat :: Acc (A.Matrix Int)
-        yMat        = A.transpose xMat  
+        yMat        = A.transpose xMat
 
         -- Filter bond pairs using the boolean bond matrix
-        (_, o, t)   = A.unzip3 $ (^. _1) $ A.filter (^. _1) $ A.zip3 bbMatrix xMat yMat 
+        (_, o, t)   = A.unzip3 $ (^. _1) $ A.filter (^. _1) $ A.zip3 bbMatrix xMat yMat
 
     in  A.zip o t
+
+-- processBondPairs :: Acc (A.Vector (Int, Int)) -> IM.IntMap IS.IntSet
+-- processBondPairs otVector = 
+--   let (origin, target)  = A.unzip otVector
+
+--   in  
