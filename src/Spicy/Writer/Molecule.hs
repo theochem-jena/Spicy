@@ -26,6 +26,7 @@ import           Data.Foldable
 import qualified Data.IntMap.Lazy          as IM
 import qualified Data.IntSet               as IS
 import           Data.Maybe
+import           Data.Sequence             (Seq)
 import qualified Data.Sequence             as S
 import           Data.Text.Lazy            (Text)
 import qualified Data.Text.Lazy            as T
@@ -136,82 +137,29 @@ writeTXYZ mol
           `T.append`
           atomLs
 
-{-
-  let atoms        = mol ^. molecule_Atoms
-      nAtoms       = VB.length atoms
-      -- Index the atoms. Ignore higher
-      atomsIndexed = VB.zip (VB.generate nAtoms (\i -> i)) atoms
-  in  -- Header line with number of atoms and comment
-      ( (T.pack $ show nAtoms ++ "  " ++ (mol ^. molecule_Label))
-        `T.append`
-         nL
-      )
-      `T.append`
-      -- Body with one atom per line
-      ( vUnlines . VB.map (\(i, a) ->
-          (T.pack . printf "%-6d  " $ i + 1)
-          `T.append`
-          a2txyz a
-          `T.append`
-          m2txyz mol i
-        ) $ atomsIndexed
-      )
-  where
-    -- Write element, XYZ coordinates and force field type of an atom.
-    a2txyz :: Atom -> Text
-    a2txyz a =
-      (T.pack . printf "%-4s" . show $ a ^. atom_Element)
-      `T.append`
-      (vConcat . VB.map (T.pack . printf "    %12.8F") . VS.convert $ a ^. atom_Coordinates)
-      `T.append`
-      "      "
-      `T.append`
-      ( if a ^. atom_FFType == ""
-          then T.pack . printf "%10s     " $ ("0" :: String)
-          else T.pack . printf "%10s     " $ a ^. atom_FFType
-      )
-    -- Write connectivity of an atom (specified by its index). If no bonding informations can be
-    -- found, do not write them.
-    m2txyz :: Molecule -> Int -> Text
-    m2txyz m i =
-      let iBonds = i `IM.lookup` (m ^. molecule_Bonds)
-      in  case iBonds of
-            Just b  ->
-              IS.foldl' (\acc x -> acc `T.append` (T.pack $ printf "%6d  " x)) "" (IS.map (+1) b)
-            Nothing -> ""
--}
 
 {-|
 Write a simplified .mol2 file (Tripos SYBYL) from a 'Molecule', containing the atoms, connectivities
-(single bonds only) and partial charges. The writer is not fool proof and will happily accept any
-'_atom_FFType' that is supplied, even if it is not a TRIPOS SYBYL atom type. This can lead to mol2
-files that have correct topology and geometry, but visualisation programs wont be able to assign
-correct elements.
+(single bonds only) and partial charges. This format writes atoms and bonds __only__ from the the
+first sublayer of the 'Molecule', which includes the fragment definitions.
 -}
-writeMOL2 :: Molecule -> Text
-writeMOL2 mol = T.decodeUtf8 . encodePretty $ mol
-{-
-  let atoms  = mol ^. molecule_Atoms
-      nAtoms = VB.length atoms
-      bonds  = mol ^. molecule_Bonds
-      nBonds = IM.size bonds
-  in  -- Header of the MOL2.
-      T.unlines
-        [ "@<TRIPOS>MOLECULE"
-        , T.pack $ mol ^. molecule_Label
-        , T.pack $ show nAtoms ++ " " ++ show nBonds ++ " 0 0 0"
-        , "SMALL"
-        , "GASTEIGER"
-        , ""
-        ]
-      `T.append`
-      -- Atoms section containing indices, chemical element, XYZ coordinates, force field type
-      "@<TRIPOS>ATOM"
-      `T.append`
+writeMOL2 :: Molecule -> Either String Text
+writeMOL2 mol
+  | ffTypeCheck = toMOL2 <$> (checkMolecule =<< reIndex2BaseMolecule mol)
+  | otherwise   = Left "writeMOL2: Not all atoms have MOL2 style atom types."
   where
-    a2mol :: Atom -> Text
-    a2mol a
--}
+    ffTypeCheck = all (== Mol2 "") . IM.map (\a -> a ^. atom_FFType) $ mol ^. molecule_Atoms
+    toMOL2 :: Molecule -> Text
+    toMOL2 m =
+      let -- First sublayer of the molecule.
+          subMols = m ^. molecule_SubMol
+      in  undefined
+    toMOLECULE :: Seq Molecule -> Text
+    toMOLECULE sM =
+      let nAtoms = sum . fmap (\m -> IM.size $ m ^. molecule_Atoms) $ sM
+          --
+          bonds  = undefined -- fmap makeBondsUnidirectorial $
+      in undefined
 
 
 {-
