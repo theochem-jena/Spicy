@@ -215,11 +215,14 @@ writeMOL2 mol
           bonds     = makeBondsUnidirectorial $ m ^. molecule_Bonds
           -- Write a single line for each bond.
           bondLines =
-            snd
+              snd
+              -- Fold the keys (origins) in the IntMap to bond lines. Each origin key might give
+              -- multiple lines (one per target), and the targets are folded in an inner fold.
             $ IM.foldrWithKey' (\origin targets (nthBond, prevBLines) ->
-                let -- For each target, write a new line
-                    targetLines =
+                let targetLines =
                        snd
+                       -- For each target, write a new line. This is the inner loop, processing all
+                       -- targets for the current origin in the outer fold.
                      $ IS.foldr' (\target (nthTarget, prevTLines) ->
                          let targetLine =
                                T.pack $ printf "%6d %6d %6d %4s\n"
