@@ -179,17 +179,17 @@ writeMOL2 mol
     -- Write the @<TRIPOS>ATOM block.
     toATOM :: Molecule -> Seq Molecule -> Text
     toATOM m sM =
-      let annoFrags = IM.fromAscList . toList . S.zip (S.fromList [ 1 .. ]) $ sM
+      let annoFrags = IM.fromAscList . toList . S.zip (S.fromList [ 1 .. S.length sM ]) $ sM
           atomLines =
             IM.foldrWithKey' (\key atom acc ->
               let -- The index of the submol/fragment, in which the current atom can be found
-                  fragmentNum   = findAtomInSubMols key annoFrags :: Maybe Int
+                  fragmentNum   = findAtomInSubMols key annoFrags
                   fragment      = fragmentNum >>= (\fragKey -> IM.lookup fragKey annoFrags)
-                  fragmentLabel = _molecule_Label <$> fragment :: Maybe Text
+                  fragmentLabel = _molecule_Label <$> fragment
                   thisAtomLine  =
-                    T.stripEnd . T.pack $ printf "%7d %-6s %12.8F %12.8F %12.8F %4s %4d  %10s %8s\n"
+                    T.pack $ printf "%7d %-6s %12.8F %12.8F %12.8F %-8s %4d  %10s %8.4F\n"
                       (key + 1)                                           -- Index
-                      (show $ atom ^. atom_Label)               -- Atom label
+                      (T.unpack $ atom ^. atom_Label)                     -- Atom label
                       (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0) -- X
                       (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1) -- Y
                       (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2) -- Z
@@ -197,12 +197,12 @@ writeMOL2 mol
                           Mol2 t -> T.unpack t
                           _      -> show $ atom ^. atom_Element
                       )
-                      (fromMaybe 0 fragmentNum)
-                      (fromMaybe "UNL1" $ T.unpack <$> fragmentLabel)
-                      (( case atom ^. atom_PCharge of
-                          Nothing -> ""
-                          Just c  -> printf "%8.4F" c
-                      ) :: String)
+                      (fromMaybe 0 fragmentNum)                           -- Fragment number
+                      (fromMaybe "UNL1" $ T.unpack <$> fragmentLabel)     -- Fragment name
+                      (( case atom ^. atom_PCharge of                     -- Partial charge
+                          Nothing -> 0
+                          Just c  -> c
+                      ) :: Double)
               in  thisAtomLine `T.append` acc
             ) "" (m ^. molecule_Atoms)
       in  "@<TRIPOS>ATOM\n"
@@ -224,67 +224,14 @@ writeMOL2 mol
                          let targetLine =
                                T.pack $ printf "%6d %6d %6d %4s\n"
                                  (nthTarget + nthBond)
-                                 origin
-                                 target
-                         in  (nthTarget + 1, targetLine `T.append` prevTLines)
+                                 (origin + 1)
+                                 (target + 1)
+                                 ("1" :: String)
+                         in  (nthTarget + 1, prevTLines `T.append` targetLine)
                        ) (0, "") targets
-                in  (nthBond + IS.size targets, targetLines `T.append` prevBLines)
+                in  (nthBond + IS.size targets, prevBLines `T.append` targetLines)
               ) (1, "") bonds
-      in  "@<TRIPOS>BOND" `T.append` bondLines
-
-{-
-  "@<TRIPOS>MOLECULE" ++ "\n" ++
-  mol ^. molecule_Label ++ "\n" ++
-  show nAtoms ++ " " ++ show nBonds ++ " 0 0 0" ++ "\n" ++
-  "SMALL" ++ "\n" ++
-  "GASTEIGER" ++ "\n\n" ++
-
-  "@<TRIPOS>ATOM" ++ "\n" ++
-  concat
-    ( map (\(n, a) ->
-        printf "%6d    "        n ++
-        printf "%-4s    "       (show $ a ^. atom_Element) ++
-        (\(x, y, z) -> printf "%12.8F    %12.8F    %12.8F        " x y z)
-          (indexAtomCoordinates $ a ^. atom_Coordinates) ++
-        printf "%-8s    "
-          (if a ^. atom_FFType == ""
-             then show (a ^. atom_Element) ++
-                  "." ++
-                  show (length . I.toList $ a ^. atom_Connectivity)
-             else a ^. atom_FFType
-          ) ++
-        printf "%2d    " (1 :: Int) ++
-        printf "%4s    " "UNL1" ++
-        printf "%12.8F\n" (fromMaybe 0.0 $ a ^. atom_PCharge)
-      ) numberedAtoms
-    ) ++ "\n" ++
-    "@<TRIPOS>BOND" ++ "\n" ++
-    concat
-      ( map (\(n, (o, t)) -> printf "    %6d    " n ++
-                           printf "%6d    " o ++
-                           printf "%6d    " t ++
-                           printf "%6d\n" (1 :: Int)
-            ) numberedBonds
-      )
-  where
-    atoms = mol ^. molecule_Atoms
-    nAtoms = V.length atoms
-    numberedAtoms = V.generate nAtoms (\i -> (i, atoms V.! i))
-    bonds = map (I.toList . (^. atom_Connectivity)) $ V.toList atoms
-    pairBondsRedundant =
-      concat
-      [ map (\a -> (i + 1, a + 1)) (bonds !! i)
-      | i <- [ 0 .. length bonds - 1 ]
-      ]
-    pairBonds =
-      foldr (\a acc -> if swap a `elem` acc
-                       then delete a acc
-                       else acc
-            ) pairBondsRedundant pairBondsRedundant
-    nBonds = length pairBonds
-    bondIndexList = [ 1 .. nBonds]
-    numberedBonds = V.generate nBonds (\i -> (i, pairBonds !! i))
--}
+      in  "@<TRIPOS>BOND\n" `T.append` bondLines
 
 writePDB :: Molecule -> Text
 writePDB _mol = undefined
