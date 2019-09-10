@@ -169,7 +169,7 @@ reIndex2BaseMolecule mol =
         . (\old -> zip old [0 .. ])
         . IS.toList
         $ allAtomIndices
-  in reIndexMolecule repMap mol
+  in  reIndexMolecule repMap mol
 
 {-|
 Get the indices of all 'Atom's in a 'Molecule', including those of sublayers in '_molecule_SubMol'
@@ -205,7 +205,7 @@ reIndexMolecule repMap mol = do
     -- Else we need to reindex the deeper layers also.
     else do
       subMolsRI <- traverse (reIndexMolecule repMap) subMols
-      reIndexMolecule repMap $ molRI & molecule_SubMol .~ subMolsRI
+      return $ molRI & molecule_SubMol .~ subMolsRI
 
 {-|
 Reindex the '_molecule_Atoms' and '_molecule_Bonds' of a single layer of a molecule (ignoring
