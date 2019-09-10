@@ -47,22 +47,29 @@ import           Spicy.Types
 -}
 
 {-|
-Check if a single 'Molecule' layer has sane indices ('IM.Key') in the 'IntMap' for '_molecule_Atoms'
-and '_molecule_SubMol', meaning the bonds do not include 'Atom's, that do not exist. Then
-recursively check if the 'Atom's of deeper layers are proper subsets of the higher layer, both for
-'_molecule_Atoms' and '_molecule_Bonds'. Also checks if fragments of the same layer are disjoint.
-Returns the 'Molecule' without modifications if it is sane, a string with description of the found
-problem otherwise. This check is exhaustive and potentially expensive.
+Check sanity of 'Molecule', which means test the following criteria:
+
+  - The 'IM.Key's of the '_molecule_Atoms' 'IntMap' are a superset of all 'IM.Key's and 'IS.Key's
+    appearing in the 'IntMap' 'IntSet' of '_molecule_Bonds'
+  - The deeper layers in 'molecule_SubMol' are proper subsets of the higher layer regarding
+    non-pseudo 'Atom' indices
+  - Fragments of the same layer are completelty disjoint in their atom indices
+  - Bonds of a layer are bidirectorial
+  - The size of '_atom_Coordinates' is strictly 3 for all atoms of this layer
 -}
 checkMolecule :: Molecule -> Either String Molecule
 checkMolecule mol
-  | not layerIndCheck      =
+  | not layerIndCheck        =
       Left "checkMolecule: Bonds vs Atoms mismatch. Your bonds bind to non existing atoms."
-  | not fragAtomsDisjCheck =
+  | not fragAtomsDisjCheck   =
       Left "checkMolecule: The atoms of deeper layers are not disjoint but shared by fragments."
-  | not subsetCheckAtoms   =
+  | not subsetCheckAtoms     =
       Left "checkMolecule: The atoms of deeper layers are not a subset of this layer."
-  | otherwise              =
+  | not bondBidectorialCheck =
+      Left "checkMolecule: The bonds are not bidirectorially defined."
+  | not atomCoordCheck       =
+      Left "checkMolecule: Not all atoms have exactly 3 coordinates."
+  | otherwise                =
       if S.null (mol ^. molecule_SubMol)
         then Right mol
         else do
@@ -99,6 +106,11 @@ checkMolecule mol
     nLPseudoAtomsInds    = IM.keysSet. IM.filter (^. atom_IsPseudo) $ nLAtoms
     -- Test if the next deeper layer is a proper subset of the current layer.
     subsetCheckAtoms     = IS.null $ (nLAtomsInds \\ nLPseudoAtomsInds) \\ atomInds
+    -- Check if the bonds are bidirectorial
+    bondBidectorialCheck = imisBidirectorial $ mol ^. molecule_Bonds
+    -- Check if all atoms have exactly 3 coodinates.
+    atomCoordCheck       =
+      all (\aC -> S.length aC == 3) $ mol ^.. molecule_Atoms . each . atom_Coordinates
     {-
     -- This check doesn't need to be true, as pseudobonds can break the subset property.
     -- All Bonds of the next layer joinded
@@ -109,6 +121,28 @@ checkMolecule mol
     subsetCheckBonds     =
       (nLBondsOrigin `IS.union` nLBondsTarget) \\ (bondsTarget `IS.union` bondsOrig)
     -}
+
+{-|
+Check wether an 'IntMap' 'IntSet' structure is bidirectorial.
+-}
+imisBidirectorial :: IntMap IntSet -> Bool
+imisBidirectorial imis =
+  IM.foldrWithKey' (\key valIS bool ->
+    let -- Look for the IntSet, that can be found when looking up all values from an IntSet of Keys.
+        targetIS :: Seq IntSet
+        targetIS =
+          IS.foldr' (\k acc ->
+            case imis IM.!? k of
+              Nothing  -> acc :|> IS.empty
+              Just tIS -> acc :|> tIS
+          ) S.empty valIS
+        -- Check for all in the Seq of found IntSet, if the current key is also a member.
+        keyInTargets :: Seq Bool
+        keyInTargets = fmap (key `IS.member`) targetIS
+    in  -- If the current key is a member of all target IntSet, we are fine. If not, we have a
+        -- problem.
+        all (== True) keyInTargets && bool
+  ) True imis
 
 {-|
 Check if 2 'IntMap' are disjoint in their 'IM.Key's.
@@ -330,9 +364,9 @@ groupAnnoAtomsAsSubMols annoAtoms =
   $ annoAtoms
 
 {-|
-Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete 'Molecule'.
-Then form a proper submolecule. This function relies on the group of being a proper submolecule and
-will hapilly accept groups that are not.
+Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete
+'Molecule'. Then form a proper submolecule. This function relies on the group of being a proper
+submolecule and will hapilly accept groups that are not.
 -}
 makeSubMolFromGroup ::
      Seq (Int, (Int, TL.Text), Atom) -- ^ A group of annotated atoms in the style of:
