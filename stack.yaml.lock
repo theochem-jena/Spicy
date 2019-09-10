@@ -5,67 +5,67 @@
 
 packages:
 - completed:
-    size: 441067
-    url: https://github.com/tmcdonell/accelerate/archive/1010d97f8cc8cbecff28200cf6e176455769c644.tar.gz
+    size: 442405
+    url: https://github.com/tmcdonell/accelerate/archive/156b5ce9232f3d9bbb94f3054daf51e23454fb0b.tar.gz
     cabal-file:
-      size: 20000
-      sha256: f7c3770f2069a2e498b1f02fb221f3b127940cc9053825c82c986da200fcec10
+      size: 20056
+      sha256: 57f195885291744b66f19f3dde927adaf268f320f0f65a3d60bd9ed76844cca2
     name: accelerate
     version: 1.3.0.0
-    sha256: b62ea5fa4b5eada466f2333d8eacda359bfe331dc2a836ceeb24f3a9aca2d987
+    sha256: c05241d045f34e2ac6fb4010e290fa6289546ba06e2893d845542bd1d063de39
     pantry-tree:
-      size: 13309
-      sha256: 0f68dac4329f4a7612deabd5c607dd852573cec7177d45f27718991b345d30de
+      size: 13402
+      sha256: 9ed5a747f6697befd498617ecc0ceaa439241f36a8bec23bc1c8584f1ef10b8c
   original:
-    url: https://github.com/tmcdonell/accelerate/archive/1010d97f8cc8cbecff28200cf6e176455769c644.tar.gz
+    url: https://github.com/tmcdonell/accelerate/archive/156b5ce9232f3d9bbb94f3054daf51e23454fb0b.tar.gz
 - completed:
-    size: 263139
+    size: 263451
     subdir: accelerate-llvm
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9.tar.gz
     cabal-file:
       size: 5983
       sha256: 37156026a7faa14865e5b20798e1966b587ea47208dc9d7e3ee4cb695ad7e844
     name: accelerate-llvm
     version: 1.3.0.0
-    sha256: 9d641763cd2049f449ef711920783d2dc5865ffbcef177008500f8e160b4a09f
+    sha256: 3acdff10b66b68ed3bd1a36ebc22be65868af1f30068cd0be7bb12114e33f13a
     pantry-tree:
       size: 5454
-      sha256: a6b0d5aea254254aebaaa7229898c46faf99b9495aa0d47336c99e1e708dbc99
+      sha256: 3df66be1cae191ede3d41b6a845dc6da26579f171afa9b6d1d00306a72a80574
   original:
     subdir: accelerate-llvm
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9.tar.gz
 - completed:
-    size: 263139
+    size: 263451
     subdir: accelerate-llvm-native
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9.tar.gz
     cabal-file:
       size: 6317
       sha256: 9d6ec705a29a568d7c74855bfcd3a83bf7a1fb3d7a37e875ed88d0d91ce48b4a
     name: accelerate-llvm-native
     version: 1.3.0.0
-    sha256: 9d641763cd2049f449ef711920783d2dc5865ffbcef177008500f8e160b4a09f
+    sha256: 3acdff10b66b68ed3bd1a36ebc22be65868af1f30068cd0be7bb12114e33f13a
     pantry-tree:
       size: 4693
       sha256: 85f9e2a615f857b188fbc07bf10083ff47d51c757147a24f50293f7a172b9bf8
   original:
     subdir: accelerate-llvm-native
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9.tar.gz
 - completed:
-    size: 263139
+    size: 263451
     subdir: accelerate-llvm-ptx
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9.tar.gz
     cabal-file:
       size: 6641
       sha256: c3da24f7a3dc2cadd48b6a1e8b70689e63fd1ce05bf0a4caca5c22e27fff7bea
     name: accelerate-llvm-ptx
     version: 1.3.0.0
-    sha256: 9d641763cd2049f449ef711920783d2dc5865ffbcef177008500f8e160b4a09f
+    sha256: 3acdff10b66b68ed3bd1a36ebc22be65868af1f30068cd0be7bb12114e33f13a
     pantry-tree:
       size: 4775
-      sha256: f262e3da46e51eb2e439f2fdf830e656981c6e5c5269b7593966f6cd1dd4d7a0
+      sha256: 01fac9a08a474d37ec59a94c131f0dfaa07e932a46b5f5301d95b72c6884cc64
   original:
     subdir: accelerate-llvm-ptx
-    url: https://github.com/tmcdonell/accelerate-llvm/archive/60b0ebc38549e887159e0bec7493fad2231a2550.tar.gz
+    url: https://github.com/tmcdonell/accelerate-llvm/archive/ae3e6383aedeefb5a2bd58f6a315f8e2fefbf2a9.tar.gz
 - completed:
     cabal-file:
       size: 1422
@@ -81,20 +81,6 @@ packages:
     git: https://github.com/tmcdonell/lens-accelerate.git
     commit: b74eb8098735b1ad6cff3c5655af03d3f29b9f8e
 - completed:
-    cabal-file:
-      size: 6952
-      sha256: 54bd2b7c0ff2ec3a5fb186bf413000af54c32d16e878de140026d31675cca753
-    name: accelerate-blas
-    version: 0.3.0.0
-    git: https://github.com/tmcdonell/accelerate-blas.git
-    pantry-tree:
-      size: 4502
-      sha256: 272afaa9df20ec63804b27226ab410fb2029ba5fac534dda3631db33fd80f155
-    commit: d6c6d0e0d3b882fcadc8e0565e5d6325c1b1c71c
-  original:
-    git: https://github.com/tmcdonell/accelerate-blas.git
-    commit: d6c6d0e0d3b882fcadc8e0565e5d6325c1b1c71c
-- completed:
     subdir: accelerate-io
     cabal-file:
       size: 1757
@@ -105,11 +91,11 @@ packages:
     pantry-tree:
       size: 432
       sha256: 4291e5d6beaaf3f7992a2842d39ccc8ad185d08e1fd64379bd5ba54fa491255a
-    commit: b909e3e225fff5f6eadeddc8668ef65677b19f9f
+    commit: e83461b194bb046a6f129a6be7f0e865653ed365
   original:
     subdir: accelerate-io
     git: https://github.com/AccelerateHS/accelerate-io
-    commit: b909e3e225fff5f6eadeddc8668ef65677b19f9f
+    commit: e83461b194bb046a6f129a6be7f0e865653ed365
 - completed:
     subdir: accelerate-io-vector
     cabal-file:
@@ -121,11 +107,11 @@ packages:
     pantry-tree:
       size: 1183
       sha256: 026c68b0b92f38960ec415a31eaa884516dd159186b39efb5573cdbfb329579f
-    commit: b909e3e225fff5f6eadeddc8668ef65677b19f9f
+    commit: e83461b194bb046a6f129a6be7f0e865653ed365
   original:
     subdir: accelerate-io-vector
     git: https://github.com/AccelerateHS/accelerate-io
-    commit: b909e3e225fff5f6eadeddc8668ef65677b19f9f
+    commit: e83461b194bb046a6f129a6be7f0e865653ed365
 - completed:
     hackage: hedgehog-1.0@sha256:440dafedac48a34eac3871f8622b215462cfc0708536cb0458b7a8cf38247c69,4463
     pantry-tree:
@@ -156,7 +142,7 @@ packages:
     hackage: tasty-hedgehog-1.0.0.1
 snapshots:
 - completed:
-    size: 523878
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/3.yaml
-    sha256: 470c46c27746a48c7c50f829efc0cf00112787a7804ee4ac7a27754658f6d92c
-  original: lts-14.3
+    size: 524104
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/5.yaml
+    sha256: 3c146eebc1b383211ea49d5422fb3d63d699da12307b4bc989107300eb579d60
+  original: lts-14.5

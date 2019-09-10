@@ -28,6 +28,7 @@ import           Data.IntMap               (IntMap)
 import qualified Data.IntMap               as IM
 import           Data.IntSet               (IntSet)
 import qualified Data.IntSet               as IS
+import qualified Data.List                 as L
 import           Data.Maybe
 import           Data.Sequence             (Seq (..))
 import qualified Data.Sequence             as S
@@ -310,17 +311,28 @@ directly coming after the failed one.
 parsePDB :: Parser Molecule
 parsePDB = do
   -- Parse the COMPND field as a label. Only the first line of COMPND will be used.
-  label        <- maybeOption $ do
+  label         <- maybeOption $ do
     _             <- manyTill anyChar (string "COMPND")
     compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
     return $ TL.pack compoundLabel
   -- Parse atoms only and ignore other fiels
-  atomsLabeled <- S.fromList <$> many1 atomParser
-  bonds        <- IM.fromList <$> many' connectParser
+  atomsLabeled  <- S.fromList <$> many1 atomParser
+  -- Parse the bonds to the tuple structure. Need to be joinded to get more than 4 bonds for strange
+  -- cases, before constructing the IMIS.
+  bondRedundant <- many' connectParser
   -- links <- undefined --many' linkParser
   let -- Transform the informations from the parsers.
       atomsIM = IM.fromList . toList .  fmap (\(ind, _, atom) -> (ind, atom)) $ atomsLabeled
       subMols = makeSubMolsFromAnnoAtoms atomsLabeled bonds
+      -- Join bond tuples with same origin and then build the IntMap IntSet structure from it. This
+      -- avoids losing different targets, for origins, that are multiply defined, as PDB allows
+      -- maximum 4 bond targets per line.
+      bonds =
+          IM.fromList
+        . map (foldr' (\(o, t) (_, tA) -> (o, t <> tA)) (0, IS.empty) )
+        . L.groupBy (\a b -> fst a == fst b)
+        . L.sortOn fst
+        $ bondRedundant
   return Molecule
     { _molecule_Label    = fromMaybe "" label
     , _molecule_Atoms    = atomsIM
