@@ -291,10 +291,11 @@ parseMOL2 = do
         _type  <- skipSpace' *> takeWhile (not . isSpace) <* skipSpace
         return (origin, target)
       let -- Make the bonds bidirectorial
-          bondTupleSeq = S.fromList uniBonds
-          bondsForth   = groupTupleSeq bondTupleSeq
-          bondsBack    = groupTupleSeq $ swap <$> bondTupleSeq
-          bonds        = bondsForth <> bondsBack
+          bondTupleSeq    = S.fromList uniBonds
+          bondTuplesForth = bondTupleSeq
+          bondTuplesBack  = swap <$> bondTuplesForth
+          bondTuplesBoth  = bondTuplesForth <> bondTuplesBack
+          bonds           = groupTupleSeq bondTuplesBoth
       return bonds
 
 {-|
