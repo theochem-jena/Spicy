@@ -16,6 +16,7 @@ module Spicy.Molecule.Util
 , groupTupleSeq
 , groupBy
 , makeSubMolsFromAnnoAtoms
+, makeBondsUnidirectorial
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap)
@@ -402,3 +403,53 @@ makeSubMolsFromAnnoAtoms ::
 makeSubMolsFromAnnoAtoms annoAtoms bonds =
   let subMolAtomGroups = groupAnnoAtomsAsSubMols annoAtoms
   in  fmap (\g -> makeSubMolFromGroup g bonds) subMolAtomGroups
+
+{-|
+The bond structure, which is defined bidirectorially can be reduced to be defined unidirectorial,
+albeit not uniquely.
+-}
+makeBondsUnidirectorial :: IntMap IntSet -> IntMap IntSet
+makeBondsUnidirectorial imis =
+    removeEmptyIMIS
+  . snd
+  $ IM.foldrWithKey' (\key is (accKeysDone, accIMISUpdated) ->
+      let -- Keys that were removed once, should not be removed again. Therefore collect them.
+          keysDone      = (key `IS.insert` accKeysDone)
+          -- Remove protected, already processed keys from the keys to remove
+          keysToRem     = is \\ keysDone
+          -- Current iteration of cleaning the IMIS
+          iterImisClean = removeInverseFromIMIS accIMISUpdated (key, keysToRem)
+      in  (keysDone, iterImisClean)
+    ) (IS.empty, imis) imis
+
+{-|
+This function takes and 'IntMap' 'IntSet' structure and a single update tuple. All values from the
+'IntSet' will be looked up in the 'IntMap' as 'IM.Key', and the 'IM.Key' from the tuple will be
+removed from the so obtained pairs.
+
+Example:
+@removeInverseFromIMIS map (5, IS.fromList [1,2,3])@ would remove the value 5 from the 'IntMap'
+entries ('IntSet's) with the 'IM.Key's 1, 2 and 3.
+-}
+-- "val2Rem" = value to remove
+removeInverseFromIMIS ::
+     IntMap IntSet    -- ^ Original structure.
+  -> (IM.Key, IntSet) -- ^ The update tuple. 'IM.Key' is the value to be removed from the 'IntSet's,
+                      --   that are found, when looking up all values from the 'IntSet' in the
+                      --   'IntMap'.
+  -> IntMap IntSet    -- ^ Updated structure.
+removeInverseFromIMIS imis (val2Rem, keys) =
+  IM.foldrWithKey' (\key _ acc ->
+    if key `IS.member` keys
+      then IM.update (Just <$> IS.delete val2Rem) key acc
+      else acc
+  ) imis imis
+
+{-|
+Remove 'IM.Key' value pairs from the 'IntMap', where the 'IntSet' is empty.
+-}
+removeEmptyIMIS :: IntMap IntSet -> IntMap IntSet
+removeEmptyIMIS imis =
+  IM.foldrWithKey' (\key is acc ->
+    IM.update (\_ -> if IS.null is then Nothing else Just is) key acc
+  ) imis imis
