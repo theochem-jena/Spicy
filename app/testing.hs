@@ -208,7 +208,7 @@ testParserPDB2 =
 
 testParserPDB3 :: TestTree
 testParserPDB3 =
-  let testName      = "PDB 4NDG Aprataxin (pentavalent vanadium) (3)"
+  let testName      = "PDB 4NDG Aprataxin (3)"
       goldenFile    = "goldentests/goldenfiles/4ndg__testParserPDB3.json.golden"
       inputFile     = "goldentests/input/4ndg.pdb"
       outputFile    = "goldentests/output/4ndg__testParserPDB3.json"
