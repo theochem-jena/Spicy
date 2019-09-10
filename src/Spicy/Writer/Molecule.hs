@@ -156,6 +156,8 @@ writeMOL2 mol
       in  (toMOLECULE m)
            `T.append`
            (toATOM m subMols)
+           `T.append`
+           (toBOND m)
     -- Write the "@<TRIPOS>MOLECULE" block.
     toMOLECULE :: Molecule -> Text
     toMOLECULE m =
@@ -206,7 +208,29 @@ writeMOL2 mol
       in  "@<TRIPOS>ATOM\n"
           `T.append`
           atomLines
-
+    -- Write the "@<TRIPOS>BOND" block. All bonds are defined as single bonds for convenience.
+    toBOND :: Molecule -> Text
+    toBOND m =
+      let -- Make the bonds unidirectorial first.
+          bonds     = makeBondsUnidirectorial $ m ^. molecule_Bonds
+          -- Write a single line for each bond.
+          bondLines =
+            snd
+            $ IM.foldrWithKey' (\origin targets (nthBond, prevBLines) ->
+                let -- For each target, write a new line
+                    targetLines =
+                       snd
+                     $ IS.foldr' (\target (nthTarget, prevTLines) ->
+                         let targetLine =
+                               T.pack $ printf "%6d %6d %6d %4s\n"
+                                 (nthTarget + nthBond)
+                                 origin
+                                 target
+                         in  (nthTarget + 1, targetLine `T.append` prevTLines)
+                       ) (0, "") targets
+                in  (nthBond + IS.size targets, targetLines `T.append` prevBLines)
+              ) (1, "") bonds
+      in  "@<TRIPOS>BOND" `T.append` bondLines
 
 {-
   "@<TRIPOS>MOLECULE" ++ "\n" ++
