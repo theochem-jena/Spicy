@@ -17,6 +17,7 @@ module Spicy.Molecule.Util
 , groupBy
 , makeSubMolsFromAnnoAtoms
 , makeBondsUnidirectorial
+, findAtomInSubMols
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap)
@@ -481,3 +482,19 @@ removeEmptyIMIS imis =
   IM.foldrWithKey' (\key is acc ->
     IM.update (\_ -> if IS.null is then Nothing else Just is) key acc
   ) imis imis
+
+{-|
+Given a 'IM.Key' (representing an 'Atom'), determine in which fragment ('_molecule_SubMol') the
+'Atom' is.
+-}
+findAtomInSubMols ::
+     Int             -- ^ 'Atom' to find in the fragments.
+  -> IntMap Molecule -- ^ Annotated fragments in an 'IntMap'
+  -> Maybe Int       -- ^ The 'IM.Key' aka fragment number in which the atom has been found.
+findAtomInSubMols atomKey annoFrags =
+    fst <$>
+  ( IM.lookupMin
+  . IM.filter (== True)
+  . IM.map (\mol -> atomKey `IM.member` (mol ^. molecule_Atoms))
+  $ annoFrags
+  )
