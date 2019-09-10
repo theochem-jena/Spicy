@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 078673ab1b6affe8bb655855b5070b943cfc322de37508eada0a13db93e0d6fb
+-- hash: 9caaf21b42a9e7b52d3fb58f99ff7898867188722cc74adadbf3defc624d915b
 
 name:           spicy
 version:        0.0.0.1
