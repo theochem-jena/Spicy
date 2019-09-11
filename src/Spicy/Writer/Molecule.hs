@@ -236,8 +236,56 @@ writeMOL2 mol
               ) (1, "") bonds
       in  "@<TRIPOS>BOND\n" `T.append` bondLines
 
-writePDB :: Molecule -> Text
-writePDB _mol = undefined
+writePDB :: Molecule -> Either String Text
+writePDB mol
+  | ffTypeCheck = toPDB <$> (checkMolecule =<< reIndex2BaseMolecule mol)
+  | otherwise   = Left "writeMOL2: Not all atoms have PDB style atom types"
+  where
+    ffTypeCheck = all (== PDB "") . IM.map (\a -> a ^. atom_FFType) $ mol ^. molecule_Atoms
+    toPDB :: Molecule -> Text
+    toPDB m =
+      let label  = T.filter (not . isEndOfLine) $ m ^. molecule_Label
+          header = T.pack $ printf "%-6s    %-70s\n" ("HEADER" :: Text) label
+      in  header
+          `T.append`
+          (toHETATM m)
+    toHETATM :: Molecule -> Text
+    toHETATM m =
+      let subMols = m ^. molecule_SubMol
+          annoFrags =
+              IM.fromAscList
+            . toList
+            . S.zip (S.fromList [ 1 .. S.length subMols ])
+            $ subMols
+          atomLines =
+            IM.foldrWithKey' (\key atom acc ->
+              let fragmentNum   = findAtomInSubMols key annoFrags
+                  fragment      = fragmentNum >>= (\fragKey -> IM.lookup fragKey annoFrags)
+                  fragmentLabel = _molecule_Label <$> fragment
+                  thisAtomLine =
+                    T.concat . map T.pack $
+                      [ printf "%-6s"            ("HETATM" :: Text)                                         -- 1-6: Record type
+                      , printf "%5d "            (key + 1)                                                  -- 7-11: Atom serial number
+                      , printf "%-4s "
+                          ( if T.length (atom ^. atom_Label) <= 3
+                              then " " ++ (T.unpack $ atom ^. atom_Label)
+                              else T.unpack $ atom ^. atom_Label
+                          )
+                      , printf "%3s "            (fromMaybe "UNL" $ T.unpack . T.take 3 <$> fragmentLabel)  -- 18-20: Residue name
+                      , printf "%1s"             ("A"  :: Text)                                             -- 22: Chain identifier
+                      , printf "%4d    "         (fromMaybe 0 fragmentNum)                                  -- 23-26: Residue sequence number
+                      , printf "%8.3F"           (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)        -- 31-38: X
+                      , printf "%8.3F"           (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)        -- 39-46: Y
+                      , printf "%8.3F"           (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)        -- 47-54: Z
+                      , printf "%6.2F"           (1.0 :: Double)                                            -- 55-60: Occupancy
+                      , printf "%6.2F          " (0.0 :: Double)                                            -- 61-66: Temperature factor
+                      , printf "%2s"             (T.toUpper . T.pack . show $ atom ^. atom_Element)         -- 77-78: Element symbol
+                      , printf "%2s\n"           ("" :: Text)                                               -- 79-80: Charge of the atom.
+                      ]
+              in  thisAtomLine `T.append` acc
+            ) "" $ m ^. molecule_Atoms
+      in atomLines
+
 
 {-|
 Write Spicy format, which is an AESON generated JSON document, directly representing the data type
