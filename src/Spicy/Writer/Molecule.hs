@@ -24,7 +24,9 @@ import           Data.Attoparsec.Text.Lazy (isEndOfLine)
 import           Data.Either
 import           Data.Foldable
 import qualified Data.IntMap.Lazy          as IM
+import           Data.IntSet               (IntSet)
 import qualified Data.IntSet               as IS
+import           Data.List.Split           (chunksOf)
 import           Data.Maybe
 import           Data.Sequence             (Seq)
 import qualified Data.Sequence             as S
@@ -236,6 +238,11 @@ writeMOL2 mol
               ) (1, "") bonds
       in  "@<TRIPOS>BOND\n" `T.append` bondLines
 
+{-|
+Writes a 'Molecule' to a PDB file. The PDB format is simplified and recounts atom, discards
+different chains, sets dummy values for the temperature and occupation factors and cannot write
+charges (as PDB) expects integers.
+-}
 writePDB :: Molecule -> Either String Text
 writePDB mol
   | ffTypeCheck = toPDB <$> (checkMolecule =<< reIndex2BaseMolecule mol)
@@ -249,6 +256,8 @@ writePDB mol
       in  header
           `T.append`
           (toHETATM m)
+          `T.append`
+          (toCONECT m)
     toHETATM :: Molecule -> Text
     toHETATM m =
       let subMols = m ^. molecule_SubMol
@@ -285,7 +294,26 @@ writePDB mol
               in  thisAtomLine `T.append` acc
             ) "" $ m ^. molecule_Atoms
       in atomLines
-
+    toCONECT :: Molecule -> Text
+    toCONECT m =
+      IM.foldrWithKey' (\o ts acc ->
+       let originGroupLines = writeOriginLines o ts
+       in  originGroupLines `T.append` acc
+      ) "" $ m ^. molecule_Bonds
+      where
+        writeOriginLines :: Int -> IntSet -> Text
+        writeOriginLines origin targets =
+          let targetGroups = chunksOf 4 . IS.toList $ targets
+              conectGroups = zip (repeat origin) targetGroups
+          in  T.concat . map (\(o, ts) ->
+                "CONECT"
+                `T.append`
+                T.pack (printf "%5d" (o + 1))
+                `T.append`
+                (T.concat . map (T.pack . (printf "%5d") . (+ 1)) $ ts)
+                `T.append`
+                "\n"
+              ) $ conectGroups
 
 {-|
 Write Spicy format, which is an AESON generated JSON document, directly representing the data type
