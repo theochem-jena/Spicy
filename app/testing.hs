@@ -11,12 +11,14 @@ import           Data.Sequence             (Seq)
 import qualified Data.Sequence             as S
 import qualified Data.Text.Lazy            as T
 import qualified Data.Text.Lazy.IO         as T
+import           Data.Either
 import           Spicy.Math
 import           Spicy.Parser
 import           Spicy.Writer.Molecule
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
+--import System.FilePath
 
 
 -- instance Show Molecule where
@@ -29,7 +31,7 @@ tests :: TestTree
 tests = testGroup "All tests"
   [ testParser
   , testMath
-  -- , testMolecularSystem
+  , testWriter
   ]
 
 ----------------------------------------------------------------------------------------------------
@@ -241,7 +243,7 @@ testParserMOL21 =
         parseAndWrite
 
 testParserSpicy1 :: TestTree
-testParserSpicy1=
+testParserSpicy1 =
   let testName      = "Spicy JSON Parser (1)"
       goldenFile    = "goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden"
       inputFile     = "goldentests/input/6cvr.json"
@@ -256,6 +258,67 @@ testParserSpicy1=
         goldenFile
         outputFile
         parseAndWrite
+
+
+----------------------------------------------------------------------------------------------------
+-- Test cases for the Writers
+
+testWriter :: TestTree
+testWriter = testGroup "Writer"
+  [ testWriterMolecule
+  ]
+
+{-|
+These tests are meant to check if the writers produce parsable formats. Parsing an "original" file
+(from Babel, PDB, ...), writing it again and parsing the written result, should produce the same
+'Molecule's.
+
+The test scheme works as follows:
+
+  - Read and parse an "original" file.
+  - Write the so obtained representation to the Spicy JSON format (golden file).
+  - Write the corresponding representation of the original file with the writer to test.
+  - Read and parse the Spicy-written representation.
+  - Write the result of the Spicy parsed-Spicy written orientation to the Spicy JSON format and
+-}
+testWriterMolecule :: TestTree
+testWriterMolecule = testGroup "Molecule Formats"
+  [ testWriterXYZ1
+  ]
+
+testWriterXYZ1 :: TestTree
+testWriterXYZ1 =
+  let testName             = "Molden XYZ (1)"
+      origInputFile        = "goldentests/input/FePorphyrine.xyz"
+      goldenFile           = "goldentests/goldenfiles/FePorphyrine__testWriterXYZ1.json.golden"
+      writerOutputFile     = "goldentests/output/FePorphyrine__testWriterXYZ1.xyz"
+      spicyInputFile       = writerOutputFile
+      spicyOutputFile      = "goldentests/output/FePorphyrine__testWriterXYZ1.json"
+      parseWriteParseWrite = do
+        -- Read the original (XYZ) file.
+        origRaw <- T.readFile origInputFile
+        case parse parseXYZ origRaw of
+          Done _ origMol -> do
+            -- Write the so obtained internal representation to JSON as golden file (reference)-
+            T.writeFile goldenFile . writeSpicy $ origMol
+            -- Use the writer to write the internal representation to the same format as the input
+            -- file.
+            T.writeFile writerOutputFile . fromRight "" . writeXYZ $ origMol
+            -- Read and parse the format written by Spicy.
+            spicyRaw <- T.readFile spicyInputFile
+            case parse parseXYZ spicyRaw of
+              Done _ spicyMol -> T.writeFile spicyOutputFile . writeSpicy $ spicyMol
+              Fail _ _ e      -> T.writeFile spicyOutputFile . T.pack $ e
+          Fail _ _ e     -> T.writeFile spicyOutputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        spicyOutputFile
+        parseWriteParseWrite
+
+
+
+
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem
