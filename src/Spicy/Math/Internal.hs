@@ -18,16 +18,22 @@ module Spicy.Math.Internal
 , covRMat
 , boolBondMatrix
 , getCovalentRadii
+, findBondPairs
+, getElementIdxs
+, bondPairsToSeq
 ) where
 import            Control.Parallel.Strategies
 import            Data.Array.Accelerate                         as A
 import            Data.Array.Accelerate.Control.Lens
 import            Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
+import            Data.Array.Accelerate.IO.Data.Vector.Unboxed  as AVU
 import qualified  Data.Foldable                                 as F
 import qualified  Data.IntMap                                   as IM
 import qualified  Data.IntSet                                   as IS
+import            Data.Sequence                                 (Seq)
 import qualified  Data.Sequence                                 as S
 import qualified  Data.Vector.Storable                          as VS
+import qualified  Data.Vector.Unboxed                           as VB
 import            Prelude                                       hiding ((/=))
 import            Spicy.Types
 import qualified  Spicy.Data                                    as D
@@ -55,7 +61,7 @@ getCoordinates strat mol =
       plainCoords = IM.foldl' (S.><) S.empty atomCoords
       plainVec    = VS.fromList . F.toList $ plainCoords
       vecLength   = VS.length plainVec
-  in  AVS.fromVectors (A.Z A.:. vecLength) plainVec
+  in  AVS.fromVectors (Z :. vecLength) plainVec
 
 {-|
 Calculate the distance matrix from the plain cartesian coordinate vector in \(R^(3 N)\) with \(N\)
@@ -70,13 +76,13 @@ distMat v =
       dim       = 3 :: Exp Int
       -- Reshape the 3N cartesion input vector to a 3xN matrix with the number of atoms N on
       -- x-axis and (x_n, y_n, z_n) on the y-axis.
-      n3Vec     = reshape (lift $ A.Z :. n :. dim) $ v
+      n3Vec     = reshape (lift $ Z :. n :. dim) v
       -- The x-Axis is now a repetition of the atoms on the y-Axis (which were previously
       -- the x-axis) and z now stores the 3 compotents of the coordinates.
       xVec      = A.replicate (lift $ Z :. n :. All :. All) n3Vec
       -- Transpose the 3D array to swap x- and y-axis and also have the numbersbuildExamples of the atoms on x
       -- again. Strangely the lenses start counting in reverse index order.
-      yVec      = transposeOn _2 _3 xVec
+      yVec      = transposeOn _2 _3 xVec--
   in  -- Overlay the two 3D arrays. The x-y-plane is a table correlating all atom indices with
       -- each other. The z-axis stores the 3 components of the cartesian coordiantes.
       -- Now the 3D arrays will elementwise be subtracted from each other, all results squared,
@@ -93,7 +99,7 @@ getCovalentRadii mol = covRadii
   where
     -- Get the element numbers in the given molecule
     elementNums = IM.map (fromEnum . _atom_Element) (mol ^. molecule_Atoms )
-    -- Get the number of elements in the IntMap
+    -- Get the number of elemenfBPts in the IntMap
     nrOfAtoms   = IM.size elementNums
     -- Lookup the respective covalent radii from the Spicy.Data.covalentRadiiIM (IntMap)
     -- and assign them to the correspondingbuildExamples atom index
@@ -130,25 +136,18 @@ covRMat rFactor covRadii =
 Build the boolean bond matrix from the cov
 -}
 boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matrix Bool)
-boolBondMatrix covRMatrix distMatrix = A.zipWith (A.<=) distMatrix covRMatrix
+boolBondMatrix distMatrix covRMatrix= A.zipWith (A.<=) distMatrix covRMatrix
 
 
 {-|
 Map the boolean bond matrix to an IntMap to get the connectivity and find fragments in the later
 run.
 -}
-findBondPairs :: Molecule -> Acc (A.Matrix Bool) -> Acc (A.Vector (Int, Int))
-findBondPairs molA bbMatrix =
-    -- Get the ordered element indices in the given molecule
-    let atoms       = molA ^. molecule_Atoms
-        -- Get the indices from the IntMap of atoms --> [Int]
-        idxList     = VS.fromList (IM.keys atoms :: [Int])
-        -- Convert to an Acc Vector --> Acc (A.Vector Int)
-        elementIdxs = AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
-
-        -- Build the index matrix in x-direction
+findBondPairs :: Acc (A.Vector Int) -> Acc (A.Matrix Bool) -> Acc (A.Vector (Int, Int))
+findBondPairs elemIdxs bbMatrix =
+    let -- Build the index matrix in x-direction
         xMat :: Acc (A.Matrix Int)
-        xMat        = A.replicate (lift $ Z :. IM.size atoms :. All) $ A.use elementIdxs
+        xMat        = A.replicate (lift $ Z :. A.size elemIdxs :. All) elemIdxs
 
         -- Replicate to get the y-direction
         yMat :: Acc (A.Matrix Int)
@@ -159,8 +158,17 @@ findBondPairs molA bbMatrix =
 
     in  A.zip o t
 
--- processBondPairs :: Acc (A.Vector (Int, Int)) -> IM.IntMap IS.IntSet
--- processBondPairs otVector = 
---   let (origin, target)  = A.unzip otVector
 
---   in  
+getElementIdxs :: Molecule -> A.Vector (Int)
+getElementIdxs molA =
+  let atoms       = molA ^. molecule_Atoms
+      -- Get the indices from the IntMap of atoms --> [Int]
+      idxList     = VS.fromList (IM.keys atoms :: [Int])
+      -- Convert to an Acc Vector --> Acc (A.Vector Int)
+  in  AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
+
+
+bondPairsToSeq ::  A.Array DIM1 (Int, Int) -> Seq (Int, Int)
+bondPairsToSeq otVector = otSeq
+  where
+    otSeq = S.fromList . VB.toList $ AVU.toUnboxed otVector
