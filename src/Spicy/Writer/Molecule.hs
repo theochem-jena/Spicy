@@ -11,7 +11,6 @@ A module which converts the internal Molecule representation to a string, which 
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
-{-# LANGUAGE ScopedTypeVariables #-}
 module Spicy.Writer.Molecule
 ( writeXYZ
 , writeTXYZ
