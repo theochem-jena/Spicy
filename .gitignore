@@ -3,4 +3,4 @@ Temp
 Test.hs
 *.so
 *.so.*
-goldentests/output/*.json
+goldentests/output/*.*
