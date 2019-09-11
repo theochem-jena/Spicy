@@ -312,7 +312,7 @@ parsePDB :: Parser Molecule
 parsePDB = do
   -- Parse the COMPND field as a label. Only the first line of COMPND will be used.
   label         <- maybeOption $ do
-    _             <- manyTill anyChar (string "COMPND")
+    _             <- manyTill anyChar (string "HEADER")
     compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
     return $ TL.pack compoundLabel
   -- Parse atoms only and ignore other fiels
