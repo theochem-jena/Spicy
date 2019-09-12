@@ -76,7 +76,7 @@ vDistance a b = vLength $ S.zipWith (-) a b
 Angle in radian between 2 'Seq's.
 -}
 vAngle :: (Floating a) => Seq a -> Seq a -> a
-vAngle a b = acos $ (a <.> b) / ((vLength a) * (vLength b))
+vAngle a b = acos $ (a <.> b) / (vLength a * vLength b)
 
 {-|
 3D cross product of 2 'Seq's.
@@ -107,34 +107,23 @@ distMat' mol =
     dM = $(runQ MI.distMat)
 
 {-|
-Build a boolean bond matrix from a Molecule.
+Accelerate fueled bond finding wrapper function. Gives an IntMap of IntSets with
+IntMap indices as bond origins and the IntSet as bond targets for each molecule
 -}
-{-
-findBondPairs' :: Molecule -> IntMap IntSet
-findBondPairs' mol =
-  let covMat    = cM $ prepareCovalentRadii mol
-      coordVec  = MI.getCoordinates Serial mol
-      dMat      = dM coordVec
-      elemIdxs  = MI.getElementIdxs mol
-  in MU.groupTupleSeq $ MI.bondPairsToSeq $ fBP elemIdxs $ bbM dMat covMat
-  where cM  = $(runQ $ MI.covRMat 1.3)
-        dM  = $(runQ MI.distMat)
-        bbM = $(runQ MI.boolBondMatrix)
-        fBP = $(runQ MI.findBondPairs)
--}
-
 findBonds :: Maybe Double -> Molecule -> IntMap IntSet
 findBonds covRScaling mol =
+  -- Cartesian coordinate vector (size of 3N) of the molecule
   let coordVec :: A.Vector Double
       coordVec = MI.getCoordinates Serial mol
+      -- Vector of the covalent radii of the
       covRadVec :: A.Vector Double
       covRadVec = MI.prepareCovalentRadii mol
       indices :: A.Vector Int
       indices = MI.getElementIdxs mol
-      scalFac = A.fromList (A.Z) [(fromMaybe 1.3 covRScaling)]
+      scalFac = A.fromList A.Z [fromMaybe 1.3 covRScaling]
   in  MU.groupTupleSeq . MI.bondPairsToSeq $ bondPairs scalFac indices coordVec covRadVec
   where
-    bondPairs = $(runQ MI.accelerateFunChain)
+    bondPairs = $(runQ MI.accFindBondsChain)
 
 
 

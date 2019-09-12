@@ -1,5 +1,5 @@
 {-|
-Module      : Spicy.Math.Helper
+Module      : Spicy.Math.Internal
 Description : Basic mathematical operations, auxiliary functions for runQ
 Copyright   : Phillip Seeber, 2019
 License     : GPL-3
@@ -22,7 +22,8 @@ module Spicy.Math.Internal
 , getElementIdxs
 , bondPairsToSeq
 , prepareCovalentRadii
-, accelerateFunChain
+, accFindBondsChain
+, bondPairsToGraph
 ) where
 import           Control.Parallel.Strategies
 import           Data.Array.Accelerate                         as A
@@ -35,7 +36,10 @@ import           Data.Sequence                                 (Seq)
 import qualified Data.Sequence                                 as S
 import qualified Data.Vector.Storable                          as VS
 import qualified Data.Vector.Unboxed                           as VB
-import           Prelude                                       hiding ((/=))
+import           Prelude
+import           Data.Graph.Types
+import qualified Data.Graph.UGraph                             as UG
+
 import qualified Spicy.Data                                    as D
 import           Spicy.Types
 
@@ -160,7 +164,7 @@ findBondPairs elemIdxs bbMatrix =
     in  A.zip o t
 
 
-getElementIdxs :: Molecule -> A.Vector (Int)
+getElementIdxs :: Molecule -> A.Vector Int
 getElementIdxs molA =
   let atoms       = molA ^. molecule_Atoms
       -- Get the indices from the IntMap of atoms --> [Int]
@@ -168,11 +172,28 @@ getElementIdxs molA =
       -- Convert to an Acc Vector --> Acc (A.Vector Int)
   in  AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
 
-
+{-|
+Map an Accelerate array to a Sequence of tuples of atom indices
+-}
 bondPairsToSeq ::  A.Array DIM1 (Int, Int) -> Seq (Int, Int)
 bondPairsToSeq otVector = otSeq
   where
     otSeq = S.fromList . VB.toList $ AVU.toUnboxed otVector
+
+
+{-|
+Map an Accelerate array to a graphite Graph // EXPERIMENTAL
+-}
+bondPairsToGraph  :: A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
+bondPairsToGraph otVector =
+  UG.fromEdgesList $ Prelude.map (Prelude.uncurry (<->))
+                   $ VB.toList
+                   $ VB.uniq
+                   $ VB.filter (\(a,b) -> a Prelude./= b)
+                   $ VB.map (\(a, b) -> if a Prelude.>= b then (a,b) else (b,a))
+                   $ AVU.toUnboxed otVector
+
+
 
 prepareCovalentRadii :: Molecule -> A.Vector Double
 prepareCovalentRadii mol = covRadVec
@@ -183,14 +204,22 @@ prepareCovalentRadii mol = covRadVec
                     Left  _ -> error msg
                     Right c -> c
 
-accelerateFunChain ::
-     A.Acc (A.Scalar Double) -- ^ Scaling factor for the covalent radii sums.
-  -> A.Acc (A.Vector Int) -- ^ Vector of the element indices
-  -> A.Acc (A.Vector Double) -- ^ Coordinate vector
-  -> A.Acc (A.Vector Double) -- ^ Covalent radii vector
-  -> A.Acc (A.Vector (Int, Int)) -- ^ Vector of bond pairs
-accelerateFunChain radScal idx cV rV =
+{-|
+Compiler-friendly Accelerate function chain to calculate
+the bond pairs from molecule-intrinsic properties. Used in Spicy.Math with $(LLVM.runQ)
+-}
+accFindBondsChain ::
+     A.Acc (A.Scalar Double)      -- ^ Scaling factor for the covalent radii sums.
+  -> A.Acc (A.Vector Int)         -- ^ Vector of the element indices
+  -> A.Acc (A.Vector Double)      -- ^ Coordinate vector
+  -> A.Acc (A.Vector Double)      -- ^ Covalent radii vector
+  -> A.Acc (A.Vector (Int, Int))  -- ^ Vector of bond pairs
+accFindBondsChain radScal idx cV rV =
+  -- Covalent radii matrix in the Acc context
   let accCovMat = covRMat radScal rV :: A.Acc (A.Matrix Double)
+      -- Distance matrix in the Acc context
       accDistMat = distMat cV :: A.Acc (A.Matrix Double)
+      -- Boolean bond matrix defined in the Acc context
       accBoolBondMat = boolBondMatrix accDistMat accCovMat :: A.Acc (A.Matrix Bool)
+      -- Complete Acc function chain
   in  findBondPairs idx accBoolBondMat

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 83d6d198fad2c8021c41aacb7f12e8dd93b5668740568afabebbb011574d9220
+-- hash: 0c6d82e07a70ca6874dfaa15397f7db54bff7cc31d1c30dfaf35dc39123bf906
 
 name:           spicy
 version:        0.0.0.1
@@ -95,6 +95,8 @@ library
     , containers >=0.6.0.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
+    , graphite >=0.10.0.1
+    , hashable >=1.2.7.0
     , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
@@ -142,6 +144,8 @@ executable benchmarks-exe
     , criterion >=1.4.1.0
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
+    , graphite >=0.10.0.1
+    , hashable >=1.2.7.0
     , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
@@ -189,6 +193,8 @@ executable spicy
     , containers >=0.6.0.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
+    , graphite >=0.10.0.1
+    , hashable >=1.2.7.0
     , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
@@ -236,6 +242,8 @@ executable unittests-exe
     , containers >=0.6.0.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
+    , graphite >=0.10.0.1
+    , hashable >=1.2.7.0
     , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
@@ -287,6 +295,8 @@ test-suite unittests
     , containers >=0.6.0.1
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
+    , graphite >=0.10.0.1
+    , hashable >=1.2.7.0
     , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
@@ -339,6 +349,8 @@ benchmark benchmarks
     , criterion >=1.4.1.0
     , deepseq >=1.4.2.0
     , filepath >=1.4.2
+    , graphite >=0.10.0.1
+    , hashable >=1.2.7.0
     , lens-accelerate >=0.3.0.0 && <=0.4.0.0
     , microlens-platform >=0.3.9.0
     , parallel >=3.2.1.0
