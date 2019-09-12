@@ -99,7 +99,7 @@ parseXYZ = do
         { _atom_Element     = fromMaybe H . readMaybe $ cElement
         , _atom_Label       = ""
         , _atom_IsPseudo    = False
-        , _atom_FFType      = ""
+        , _atom_FFType      = XYZ
         , _atom_PCharge     = Nothing
         , _atom_Coordinates = S.fromList [x, y, z]
         }
@@ -132,7 +132,7 @@ parseTXYZ = do
       x               <- skipSpace' *> double
       y               <- skipSpace' *> double
       z               <- skipSpace' *> double
-      mFFType         <- skipSpace' *> maybeOption decimal
+      mFFType         <- skipSpace' *> maybeOption (decimal :: Parser Int)
       connectivityRaw <- skipSpace' *> many' columnDecimal
       endOfLine
       return
@@ -143,8 +143,8 @@ parseTXYZ = do
             , _atom_IsPseudo     = False
             , _atom_FFType       =
                 case mFFType of
-                  Nothing -> ""
-                  Just a  -> TL.pack . show $ (a :: Int)
+                  Nothing -> TXYZ 0
+                  Just a  -> TXYZ a
             , _atom_PCharge      = Nothing
             , _atom_Coordinates  = S.fromList [x, y, z]
             }
@@ -255,7 +255,7 @@ parseMOL2 = do
               { _atom_Element     = fromMaybe H . readMaybe $ cElem
               , _atom_Label       = textS2L label
               , _atom_IsPseudo    = False
-              , _atom_FFType      =
+              , _atom_FFType      = Mol2 $
                   (TL.pack cElem)
                   `TL.append`
                   ( TL.pack . (\c -> case c of
@@ -292,10 +292,11 @@ parseMOL2 = do
         _type  <- skipSpace' *> takeWhile (not . isSpace) <* skipSpace
         return (origin, target)
       let -- Make the bonds bidirectorial
-          bondTupleSeq = S.fromList uniBonds
-          bondsForth   = groupTupleSeq bondTupleSeq
-          bondsBack    = groupTupleSeq $ swap <$> bondTupleSeq
-          bonds        = bondsForth <> bondsBack
+          bondTupleSeq    = S.fromList uniBonds
+          bondTuplesForth = bondTupleSeq
+          bondTuplesBack  = swap <$> bondTuplesForth
+          bondTuplesBoth  = bondTuplesForth <> bondTuplesBack
+          bonds           = groupTupleSeq bondTuplesBoth
       return bonds
 
 {-|
@@ -311,7 +312,7 @@ parsePDB :: Parser Molecule
 parsePDB = do
   -- Parse the COMPND field as a label. Only the first line of COMPND will be used.
   label         <- maybeOption $ do
-    _             <- manyTill anyChar (string "COMPND")
+    _             <- manyTill anyChar (string "HEADER")
     compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
     return $ TL.pack compoundLabel
   -- Parse atoms only and ignore other fiels
@@ -411,7 +412,7 @@ parsePDB = do
                   Nothing -> Left "parsePDB: Could not read the element symbol."
                   Just e  -> Right e
           aLabel       = TL.strip cName
-          aFFType      = ""
+          aFFType      = PDB aLabel
           aPCharge     =
             let pChargeMaybe = fst <$> (TL.double . TL.strip $ cCharge)
             in  case pChargeMaybe of

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 078673ab1b6affe8bb655855b5070b943cfc322de37508eada0a13db93e0d6fb
+-- hash: b47ded3974b52b313c565ff40e2faaf44491a4505959b37a813509e15639ef3e
 
 name:           spicy
 version:        0.0.0.1
@@ -43,6 +43,7 @@ extra-source-files:
     goldentests/goldenfiles/6cvr__testParserPDB2.json.golden
     goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden
     goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden
+    goldentests/goldenfiles/FePorphyrine__testWriterXYZ1.json.golden
     goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden
     goldentests/goldenfiles/Peptid__testParserMOL21.json.golden
     goldentests/goldenfiles/RuKomplex__testParserTXYZ1.json.golden
@@ -68,11 +69,11 @@ library
       Spicy.Math.Internal
       Spicy.Molecule
       Spicy.Molecule.Util
-      Spicy.MolWriter
       Spicy.Parser
       Spicy.Types
       Spicy.Wrapper.ORCA
       Spicy.Wrapper.ORCA.Methods
+      Spicy.Writer.Molecule
   other-modules:
       Paths_spicy
   hs-source-dirs:

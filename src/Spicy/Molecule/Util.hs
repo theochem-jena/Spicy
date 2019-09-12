@@ -12,9 +12,12 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
 ( checkMolecule
 , reIndexMolecule
+, reIndex2BaseMolecule
 , groupTupleSeq
 , groupBy
 , makeSubMolsFromAnnoAtoms
+, makeBondsUnidirectorial
+, findAtomInSubMols
 ) where
 import           Data.Foldable
 import           Data.IntMap.Lazy    (IntMap)
@@ -154,6 +157,36 @@ iMdisjoint ::
 iMdisjoint a b = IM.null $ a `IM.intersection` b
 
 {-|
+This reindexes all structures in a 'Molecule' with predefined counting scheme. This means counting
+of 'Atom's will start at 0 and be consecutive. This also influences bonds in '_molecule_Bonds' and
+layers in '_molecule_SubMol'. Pseudoatoms will be taken care of.
+-}
+reIndex2BaseMolecule :: Molecule -> Either String Molecule
+reIndex2BaseMolecule mol =
+  let allAtomIndices = getAtomIndices mol
+      repMap         =
+          IM.fromAscList
+        . (\old -> zip old [0 .. ])
+        . IS.toList
+        $ allAtomIndices
+  in  reIndexMolecule repMap mol
+
+{-|
+Get the indices of all 'Atom's in a 'Molecule', including those of sublayers in '_molecule_SubMol'
+and pseudoatoms therein. This assumes a sane 'Molecule' according to 'checkMolecule'.
+-}
+getAtomIndices :: Molecule -> IntSet
+getAtomIndices mol =
+  let -- The indices of all atoms of the current layer
+      thisLayerIndices = IM.keysSet $ mol ^. molecule_Atoms
+      -- The indices of all sublayers + this layer.
+      allIndices =
+          foldr' (<>) thisLayerIndices
+        . fmap (getAtomIndices)
+        $ mol ^. molecule_SubMol
+  in allIndices
+
+{-|
 Reindex a complete 'Molecule', including all its deeper layers in '_molecule_SubMol') by mappings
 from a global replacement Map, mapping old to new indices. This function assumes, that your molecule
 is sane in the overall assumptions of this program. This means that the lower layers obey the
@@ -172,7 +205,7 @@ reIndexMolecule repMap mol = do
     -- Else we need to reindex the deeper layers also.
     else do
       subMolsRI <- traverse (reIndexMolecule repMap) subMols
-      reIndexMolecule repMap $ molRI & molecule_SubMol .~ subMolsRI
+      return $ molRI & molecule_SubMol .~ subMolsRI
 
 {-|
 Reindex the '_molecule_Atoms' and '_molecule_Bonds' of a single layer of a molecule (ignoring
@@ -405,3 +438,63 @@ makeSubMolsFromAnnoAtoms ::
 makeSubMolsFromAnnoAtoms annoAtoms bonds =
   let subMolAtomGroups = groupAnnoAtomsAsSubMols annoAtoms
   in  fmap (\g -> makeSubMolFromGroup g bonds) subMolAtomGroups
+
+{-|
+The bond structure, which is defined bidirectorially can be reduced to be defined unidirectorial. If
+you imagine this structure as the bond matrix, this is the same as taking just the upper right
+triangular matrix without the main diagonal.
+-}
+makeBondsUnidirectorial :: IntMap IntSet -> IntMap IntSet
+makeBondsUnidirectorial imis =
+     removeEmptyIMIS
+  $ IM.foldrWithKey (\key valIS acc ->
+      IM.update (\_ -> Just $ IS.filter (> key) valIS) key acc
+    ) imis imis
+
+{-|
+This function takes and 'IntMap' 'IntSet' structure and a single update tuple. All values from the
+'IntSet' will be looked up in the 'IntMap' as 'IM.Key', and the 'IM.Key' from the tuple will be
+removed from the so obtained pairs.
+
+Example:
+@removeInverseFromIMIS map (5, IS.fromList [1,2,3])@ would remove the value 5 from the 'IntMap'
+entries ('IntSet's) with the 'IM.Key's 1, 2 and 3.
+-}
+-- "val2Rem" = value to remove
+removeInverseFromIMIS ::
+     IntMap IntSet    -- ^ Original structure.
+  -> (IM.Key, IntSet) -- ^ The update tuple. 'IM.Key' is the value to be removed from the 'IntSet's,
+                      --   that are found, when looking up all values from the 'IntSet' in the
+                      --   'IntMap'.
+  -> IntMap IntSet    -- ^ Updated structure.
+removeInverseFromIMIS imis (val2Rem, keys) =
+  IM.foldrWithKey' (\key _ acc ->
+    if key `IS.member` keys
+      then IM.update (Just <$> IS.delete val2Rem) key acc
+      else acc
+  ) imis imis
+
+{-|
+Remove 'IM.Key' value pairs from the 'IntMap', where the 'IntSet' is empty.
+-}
+removeEmptyIMIS :: IntMap IntSet -> IntMap IntSet
+removeEmptyIMIS imis =
+  IM.foldrWithKey' (\key is acc ->
+    IM.update (\_ -> if IS.null is then Nothing else Just is) key acc
+  ) imis imis
+
+{-|
+Given a 'IM.Key' (representing an 'Atom'), determine in which fragment ('_molecule_SubMol') the
+'Atom' is.
+-}
+findAtomInSubMols ::
+     Int             -- ^ 'Atom' to find in the fragments.
+  -> IntMap Molecule -- ^ Annotated fragments in an 'IntMap'
+  -> Maybe Int       -- ^ The 'IM.Key' aka fragment number in which the atom has been found.
+findAtomInSubMols atomKey annoFrags =
+    fst <$>
+  ( IM.lookupMin
+  . IM.filter (== True)
+  . IM.map (\mol -> atomKey `IM.member` (mol ^. molecule_Atoms))
+  $ annoFrags
+  )

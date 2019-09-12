@@ -7,13 +7,15 @@ All tests are required to pass. There is no gray zone!!
 import           Data.Aeson
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.ByteString.Lazy      as B
+import           Data.Either
 import           Data.Sequence             (Seq)
 import qualified Data.Sequence             as S
 import qualified Data.Text.Lazy            as T
 import qualified Data.Text.Lazy.IO         as T
 import           Spicy.Math
-import           Spicy.MolWriter
 import           Spicy.Parser
+import           Spicy.Writer.Molecule
+import           System.FilePath           ((</>))
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
@@ -29,7 +31,7 @@ tests :: TestTree
 tests = testGroup "All tests"
   [ testParser
   , testMath
-  -- , testMolecularSystem
+  , testWriter
   ]
 
 ----------------------------------------------------------------------------------------------------
@@ -124,9 +126,9 @@ testParser = testGroup "Parser"
 testParserTXYZ1 :: TestTree
 testParserTXYZ1 =
   let testName      = "Tinker TXYZ (1)"
-      goldenFile    = "goldentests/goldenfiles/RuKomplex__testParserTXYZ1.json.golden"
-      inputFile     = "goldentests/input/RuKomplex.txyz"
-      outputFile    = "goldentests/output/RuKomplex__testParserTXYZ1.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "RuKomplex__testParserTXYZ1.json.golden"
+      inputFile     = "goldentests" </> "input" </> "RuKomplex.txyz"
+      outputFile    = "goldentests" </> "output" </> "RuKomplex__testParserTXYZ1.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parseTXYZ raw of
@@ -141,9 +143,9 @@ testParserTXYZ1 =
 testParserXYZ1 :: TestTree
 testParserXYZ1 =
   let testName      = "Molden XYZ (1)"
-      goldenFile    = "goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden"
-      inputFile     = "goldentests/input/FePorphyrine.xyz"
-      outputFile    = "goldentests/output/FePorphyrine__testParserXYZ1.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "FePorphyrine__testParserXYZ1.json.golden"
+      inputFile     = "goldentests" </> "input" </> "FePorphyrine.xyz"
+      outputFile    = "goldentests" </> "output" </> "FePorphyrine__testParserXYZ1.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parseXYZ raw of
@@ -158,9 +160,9 @@ testParserXYZ1 =
 testParserXYZ2 :: TestTree
 testParserXYZ2 =
   let testName      = "Molden XYZ Trajectory (1)"
-      goldenFile    = "goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden"
-      inputFile     = "goldentests/input/HeteroTraj.xyz"
-      outputFile    = "goldentests/output/HeteroTraj__testParserXYZ2.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "HeteroTraj__testParserXYZ2.json.golden"
+      inputFile     = "goldentests" </> "input" </> "HeteroTraj.xyz"
+      outputFile    = "goldentests" </> "output" </> "HeteroTraj__testParserXYZ2.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse (many1 parseXYZ) raw of
@@ -175,9 +177,9 @@ testParserXYZ2 =
 testParserPDB1 :: TestTree
 testParserPDB1 =
   let testName      = "PDB 1HFE Hydrogenase (1)"
-      goldenFile    = "goldentests/goldenfiles/1hfe__testParserPDB1.json.golden"
-      inputFile     = "goldentests/input/1hfe.pdb"
-      outputFile    = "goldentests/output/1hfe__testParserPDB1.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "1hfe__testParserPDB1.json.golden"
+      inputFile     = "goldentests" </> "input" </> "1hfe.pdb"
+      outputFile    = "goldentests" </> "output" </> "1hfe__testParserPDB1.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parsePDB raw of
@@ -192,9 +194,9 @@ testParserPDB1 =
 testParserPDB2 :: TestTree
 testParserPDB2 =
   let testName      = "PDB 6CVR Aprataxin (2)"
-      goldenFile    = "goldentests/goldenfiles/6cvr__testParserPDB2.json.golden"
-      inputFile     = "goldentests/input/6cvr.pdb"
-      outputFile    = "goldentests/output/6cvr__testParserPDB2.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "6cvr__testParserPDB2.json.golden"
+      inputFile     = "goldentests" </> "input" </> "6cvr.pdb"
+      outputFile    = "goldentests" </> "output" </> "6cvr__testParserPDB2.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parsePDB raw of
@@ -209,9 +211,9 @@ testParserPDB2 =
 testParserPDB3 :: TestTree
 testParserPDB3 =
   let testName      = "PDB 4NDG Aprataxin (3)"
-      goldenFile    = "goldentests/goldenfiles/4ndg__testParserPDB3.json.golden"
-      inputFile     = "goldentests/input/4ndg.pdb"
-      outputFile    = "goldentests/output/4ndg__testParserPDB3.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "4ndg__testParserPDB3.json.golden"
+      inputFile     = "goldentests" </> "input" </> "4ndg.pdb"
+      outputFile    = "goldentests" </> "output" </> "4ndg__testParserPDB3.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parsePDB raw of
@@ -226,9 +228,9 @@ testParserPDB3 =
 testParserMOL21 :: TestTree
 testParserMOL21 =
   let testName      = "SyByl MOL2 (1)"
-      goldenFile    = "goldentests/goldenfiles/Peptid__testParserMOL21.json.golden"
-      inputFile     = "goldentests/input/Peptid.mol2"
-      outputFile    = "goldentests/output/Peptid__testParserMOL21.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "Peptid__testParserMOL21.json.golden"
+      inputFile     = "goldentests" </> "input" </> "Peptid.mol2"
+      outputFile    = "goldentests" </> "output" </> "Peptid__testParserMOL21.json"
       parseAndWrite = do
         raw <- T.readFile inputFile
         case parse parseMOL2 raw of
@@ -241,11 +243,11 @@ testParserMOL21 =
         parseAndWrite
 
 testParserSpicy1 :: TestTree
-testParserSpicy1=
+testParserSpicy1 =
   let testName      = "Spicy JSON Parser (1)"
-      goldenFile    = "goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden"
-      inputFile     = "goldentests/input/6cvr.json"
-      outputFile    = "goldentests/output/6cvr__testParserSpicy1.json"
+      goldenFile    = "goldentests" </> "goldenfiles" </> "6cvr__testParserSpicy1.json.golden"
+      inputFile     = "goldentests" </> "input" </> "6cvr.json"
+      outputFile    = "goldentests" </> "output" </> "6cvr__testParserSpicy1.json"
       parseAndWrite = do
         raw <- B.readFile inputFile
         case eitherDecode raw of
@@ -256,6 +258,67 @@ testParserSpicy1=
         goldenFile
         outputFile
         parseAndWrite
+
+
+----------------------------------------------------------------------------------------------------
+-- Test cases for the Writers
+
+testWriter :: TestTree
+testWriter = testGroup "Writer"
+  [ testWriterMolecule
+  ]
+
+{-|
+These tests are meant to check if the writers produce parsable formats. Parsing an "original" file
+(from Babel, PDB, ...), writing it again and parsing the written result, should produce the same
+'Molecule's.
+
+The test scheme works as follows:
+
+  - Read and parse an "original" file.
+  - Write the so obtained representation to the Spicy JSON format (golden file).
+  - Write the corresponding representation of the original file with the writer to test.
+  - Read and parse the Spicy-written representation.
+  - Write the result of the Spicy parsed-Spicy written orientation to the Spicy JSON format and
+-}
+testWriterMolecule :: TestTree
+testWriterMolecule = testGroup "Molecule Formats"
+  [ testWriterXYZ1
+  ]
+
+testWriterXYZ1 :: TestTree
+testWriterXYZ1 =
+  let testName             = "Molden XYZ (1)"
+      origInputFile        = "goldentests" </> "input" </> "FePorphyrine.xyz"
+      goldenFile           = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1.json.golden"
+      writerOutputFile     = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.xyz"
+      spicyInputFile       = writerOutputFile
+      spicyOutputFile      = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.json"
+      parseWriteParseWrite = do
+        -- Read the original (XYZ) file.
+        origRaw <- T.readFile origInputFile
+        case parse parseXYZ origRaw of
+          Done _ origMol -> do
+            -- Write the so obtained internal representation to JSON as golden file (reference)-
+            T.writeFile goldenFile . writeSpicy $ origMol
+            -- Use the writer to write the internal representation to the same format as the input
+            -- file.
+            T.writeFile writerOutputFile . fromRight "" . writeXYZ $ origMol
+            -- Read and parse the format written by Spicy.
+            spicyRaw <- T.readFile spicyInputFile
+            case parse parseXYZ spicyRaw of
+              Done _ spicyMol -> T.writeFile spicyOutputFile . writeSpicy $ spicyMol
+              Fail _ _ e      -> T.writeFile spicyOutputFile . T.pack $ e
+          Fail _ _ e     -> T.writeFile spicyOutputFile . T.pack $ e
+  in  goldenVsFile
+        testName
+        goldenFile
+        spicyOutputFile
+        parseWriteParseWrite
+
+
+
+
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for MolecularSystem
