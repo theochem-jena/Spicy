@@ -20,7 +20,7 @@ module Spicy.Types
 , AccMatrix(..)
 , Element(..)
 , AtomLabel
-, FFType
+, FFType(..)
 , Atom(..)
 , atom_Element
 , atom_Label
@@ -146,7 +146,25 @@ type AtomLabel = Text
 These are labels for molecular mechanics software. The strings are basically arbitrary and depending
 on the MM software used.
 -}
-type FFType = Text
+data FFType =
+    Mol2 Text
+  | TXYZ Int
+  | PDB Text
+  | XYZ
+  deriving (Generic)
+makeLenses ''FFType
+instance Eq FFType where
+  Mol2 _ == Mol2 _ = True
+  Mol2 _ == _      = False
+  TXYZ _ == TXYZ _ = True
+  TXYZ _ == _      = False
+  PDB _  == PDB _  = True
+  PDB _  == _      = False
+  XYZ    == XYZ    = True
+  XYZ    == _      = False
+instance ToJSON FFType where
+  toEncoding = genericToEncoding defaultOptions
+instance FromJSON FFType
 
 {-|
 An Atom in a 'Molecule'. Atoms are compared by their indices only and they must therefore be unique.
