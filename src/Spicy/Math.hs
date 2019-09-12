@@ -23,23 +23,21 @@ module Spicy.Math
 , vAngle
 , vCross
 , distMat'
-, findBondPairs'
+, findBonds
 ) where
-import           Data.Array.Accelerate              (Matrix, Vector)
-import qualified Data.Array.Accelerate              as A
-import qualified Data.Foldable                      as F
-import           Data.Sequence                      (Seq)
-import qualified Data.Sequence                      as S
-import           Prelude                            hiding (cycle, foldl1,
-                                                      foldr1, head, init, last,
-                                                      maximum, minimum, tail,
-                                                      take, takeWhile, (!!))
-import qualified Spicy.Math.Internal                as MI
-import qualified Spicy.Molecule.Util                as MU
-import qualified Data.IntMap                        as IM
-import           Data.IntMap                        (IntMap)
-import qualified Data.IntSet                        as IS
-import           Data.IntSet                        (IntSet)
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Foldable                     as F
+import           Data.IntMap                       (IntMap)
+import           Data.IntSet                       (IntSet)
+import           Data.Maybe
+import           Data.Sequence                     (Seq)
+import qualified Data.Sequence                     as S
+import           Prelude                           hiding (cycle, foldl1,
+                                                    foldr1, head, init, last,
+                                                    maximum, minimum, tail,
+                                                    take, takeWhile, (!!))
+import qualified Spicy.Math.Internal               as MI
+import qualified Spicy.Molecule.Util               as MU
 import           Spicy.Types
 #ifdef CUDA
 import           Data.Array.Accelerate.LLVM.PTX
@@ -101,7 +99,7 @@ vCross a b = do
 {-|
 __PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
 -}
-distMat' :: Molecule -> Matrix Double
+distMat' :: Molecule -> A.Matrix Double
 distMat' mol =
   let coordVec = MI.getCoordinates Serial mol
   in  dM coordVec
@@ -111,6 +109,7 @@ distMat' mol =
 {-|
 Build a boolean bond matrix from a Molecule.
 -}
+{-
 findBondPairs' :: Molecule -> IntMap IntSet
 findBondPairs' mol =
   let covMat    = cM $ prepareCovalentRadii mol
@@ -122,17 +121,23 @@ findBondPairs' mol =
         dM  = $(runQ MI.distMat)
         bbM = $(runQ MI.boolBondMatrix)
         fBP = $(runQ MI.findBondPairs)
+-}
 
-
-
-prepareCovalentRadii :: Molecule -> A.Vector Double
-prepareCovalentRadii mol = covRadVec
+findBonds :: Maybe Double -> Molecule -> IntMap IntSet
+findBonds covRScaling mol =
+  let coordVec :: A.Vector Double
+      coordVec = MI.getCoordinates Serial mol
+      covRadVec :: A.Vector Double
+      covRadVec = MI.prepareCovalentRadii mol
+      indices :: A.Vector Int
+      indices = MI.getElementIdxs mol
+      scalFac = A.fromList (A.Z) [(fromMaybe 1.3 covRScaling)]
+  in  MU.groupTupleSeq . MI.bondPairsToSeq $ bondPairs scalFac indices coordVec covRadVec
   where
-    msg       = "boolBondMatrix': Something went wrong in looking up covalent radii"
-    covRad    = MI.getCovalentRadii mol :: Either String (Vector Double)
-    covRadVec = case covRad of
-                    Left  _ -> error msg
-                    Right c -> c
+    bondPairs = $(runQ MI.accelerateFunChain)
+
+
+
 
 {-|
 

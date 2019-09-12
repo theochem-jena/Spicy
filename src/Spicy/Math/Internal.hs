@@ -21,22 +21,23 @@ module Spicy.Math.Internal
 , findBondPairs
 , getElementIdxs
 , bondPairsToSeq
+, prepareCovalentRadii
+, accelerateFunChain
 ) where
-import            Control.Parallel.Strategies
-import            Data.Array.Accelerate                         as A
-import            Data.Array.Accelerate.Control.Lens
-import            Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
-import            Data.Array.Accelerate.IO.Data.Vector.Unboxed  as AVU
-import qualified  Data.Foldable                                 as F
-import qualified  Data.IntMap                                   as IM
-import qualified  Data.IntSet                                   as IS
-import            Data.Sequence                                 (Seq)
-import qualified  Data.Sequence                                 as S
-import qualified  Data.Vector.Storable                          as VS
-import qualified  Data.Vector.Unboxed                           as VB
-import            Prelude                                       hiding ((/=))
-import            Spicy.Types
-import qualified  Spicy.Data                                    as D
+import           Control.Parallel.Strategies
+import           Data.Array.Accelerate                         as A
+import           Data.Array.Accelerate.Control.Lens
+import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
+import           Data.Array.Accelerate.IO.Data.Vector.Unboxed  as AVU
+import qualified Data.Foldable                                 as F
+import qualified Data.IntMap                                   as IM
+import           Data.Sequence                                 (Seq)
+import qualified Data.Sequence                                 as S
+import qualified Data.Vector.Storable                          as VS
+import qualified Data.Vector.Unboxed                           as VB
+import           Prelude                                       hiding ((/=))
+import qualified Spicy.Data                                    as D
+import           Spicy.Types
 
 
 {-|
@@ -118,7 +119,7 @@ getCovalentRadii mol = covRadii
 Calculate the matrix of the sum of the covalent radii for the detection of bonds
 --> N x N matrix, symmetric
 -}
-covRMat :: Exp Double -> Acc (A.Vector Double) -> Acc (A.Matrix Double)
+covRMat :: A.Acc (A.Scalar Double) -> Acc (A.Vector Double) -> Acc (A.Matrix Double)
 covRMat rFactor covRadii =
   -- Get the number of atoms from the dimension of the cR vector
   let (Z :. nrOfAtoms)    = unlift . shape $ covRadii    :: Z :. Exp Int
@@ -129,7 +130,7 @@ covRMat rFactor covRadii =
   -- Get the result by zipping the "3D stack of 2D matrices" using the summation operator
   -- and multiplication by 1.3 (see Literature for the factor)
   -- https://doi.org/10.1063/1.1515483
-  in  A.map (* rFactor) $ A.zipWith (+) xCovMat yCovMat
+  in  A.map (* (A.the rFactor)) $ A.zipWith (+) xCovMat yCovMat
 
 
 {-|
@@ -172,3 +173,24 @@ bondPairsToSeq ::  A.Array DIM1 (Int, Int) -> Seq (Int, Int)
 bondPairsToSeq otVector = otSeq
   where
     otSeq = S.fromList . VB.toList $ AVU.toUnboxed otVector
+
+prepareCovalentRadii :: Molecule -> A.Vector Double
+prepareCovalentRadii mol = covRadVec
+  where
+    msg       = "boolBondMatrix': Something went wrong in looking up covalent radii"
+    covRad    = getCovalentRadii mol :: Either String (A.Vector Double)
+    covRadVec = case covRad of
+                    Left  _ -> error msg
+                    Right c -> c
+
+accelerateFunChain ::
+     A.Acc (A.Scalar Double) -- ^ Scaling factor for the covalent radii sums.
+  -> A.Acc (A.Vector Int) -- ^ Vector of the element indices
+  -> A.Acc (A.Vector Double) -- ^ Coordinate vector
+  -> A.Acc (A.Vector Double) -- ^ Covalent radii vector
+  -> A.Acc (A.Vector (Int, Int)) -- ^ Vector of bond pairs
+accelerateFunChain radScal idx cV rV =
+  let accCovMat = covRMat radScal rV :: A.Acc (A.Matrix Double)
+      accDistMat = distMat cV :: A.Acc (A.Matrix Double)
+      accBoolBondMat = boolBondMatrix accDistMat accCovMat :: A.Acc (A.Matrix Bool)
+  in  findBondPairs idx accBoolBondMat
