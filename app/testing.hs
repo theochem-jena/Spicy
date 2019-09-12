@@ -393,6 +393,9 @@ mweGoldenVsFile env =
 testWriterMolecule :: TestTree
 testWriterMolecule = testGroup "Molecule Formats"
   [ testWriterXYZ1
+  , testWriterTXYZ1
+  , testWriterMOL21
+  , testWriterPDB1
   ]
 
 testWriterXYZ1 :: TestTree
@@ -400,11 +403,54 @@ testWriterXYZ1 =
   let testEnv = MolWriterEnv
         { mweTestName   = "Molden XYZ (1)"
         , mweOrigFile   = "goldentests" </> "input" </> "FePorphyrine.xyz"
-        , mweGoldenJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Orig.json"
+        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1_Orig.json.golden"
         , mweWriterFile = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.xyz"
         , mweWriterJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.json"
         , mweParser     = parseXYZ
         , mweWriter     = writeXYZ
+        }
+  in mweGoldenVsFile testEnv
+
+testWriterTXYZ1 :: TestTree
+testWriterTXYZ1 =
+  let testEnv = MolWriterEnv
+        { mweTestName   = "Tinker TXYZ (1)"
+        , mweOrigFile   = "goldentests" </> "input" </> "SulfateInSolution.txyz"
+        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "SulfateInSolution__testWriterTXYZ1_Orig.json.golden"
+        , mweWriterFile = "goldentests" </> "output" </> "SulfateInSolution__testWriterTXYZ1_Writer.txyz"
+        , mweWriterJSON = "goldentests" </> "output" </> "SulfateInSolution__testWriterTXYZ1_Writer.json"
+        , mweParser     = parseTXYZ
+        , mweWriter     = writeTXYZ
+        }
+  in mweGoldenVsFile testEnv
+
+testWriterMOL21 :: TestTree
+testWriterMOL21 =
+  let testEnv = MolWriterEnv
+        { mweTestName   = "SyByl MOL2 (1)"
+        , mweOrigFile   = "goldentests" </> "input" </> "FePorphyrine.mol2"
+        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterMOL21_Orig.json.golden"
+        , mweWriterFile = "goldentests" </> "output" </> "FePorphyrine__testWriterMOL21_Writer.mol2"
+        , mweWriterJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterMOL21_Writer.json"
+        , mweParser     = parseMOL2
+        , mweWriter     = writeMOL2
+        }
+  in mweGoldenVsFile testEnv
+
+{-|
+Not that changed atom indices can occur in strange PDBs. This is normal and this is wanted. This
+test case therefore uses a "correctly" counting PDB.
+-}
+testWriterPDB1 :: TestTree
+testWriterPDB1 =
+  let testEnv = MolWriterEnv
+        { mweTestName   = "PDB 4NDG Aprataxin (1)"
+        , mweOrigFile   = "goldentests" </> "input" </> "Peptid.pdb"
+        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "Peptid__testWriterPDB1_Orig.json.golden"
+        , mweWriterFile = "goldentests" </> "output" </> "Peptid__testWriterPDB1_Writer.pdb"
+        , mweWriterJSON = "goldentests" </> "output" </> "Peptid__testWriterPDB1_Writer.json"
+        , mweParser     = parsePDB
+        , mweWriter     = writePDB
         }
   in mweGoldenVsFile testEnv
 

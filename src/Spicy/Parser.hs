@@ -313,8 +313,8 @@ parsePDB = do
   -- Parse the COMPND field as a label. Only the first line of COMPND will be used.
   label         <- maybeOption $ do
     _             <- manyTill anyChar (string "HEADER")
-    compoundLabel <- skipSpace' *> manyTill anyChar endOfLine
-    return $ TL.pack compoundLabel
+    compoundLabel <- skipSpace' *> takeWhile (not . isEndOfLine)
+    return $ textS2L compoundLabel
   -- Parse atoms only and ignore other fiels
   atomsLabeled  <- S.fromList <$> many1 atomParser
   -- Parse the bonds to the tuple structure. Need to be joinded to get more than 4 bonds for strange

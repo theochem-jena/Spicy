@@ -251,7 +251,12 @@ writePDB mol
     toPDB :: Molecule -> Text
     toPDB m =
       let label  = T.filter (not . isEndOfLine) $ m ^. molecule_Label
-          header = T.pack $ printf "%-6s    %-70s\n" ("HEADER" :: Text) label
+          -- Strange construct to avoid conflict with the parser with trailing white space in the
+          -- "HEADER" records.
+          header =
+            (T.stripEnd . T.pack $ printf "%-6s    %-70s" ("HEADER" :: Text) label)
+            `T.append`
+            "\n"
       in  header
           `T.append`
           (toHETATM m)
