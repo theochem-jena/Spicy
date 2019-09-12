@@ -5,29 +5,25 @@ All tests are required to pass. There is no gray zone!!
 -}
 {-# LANGUAGE OverloadedStrings #-}
 import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Except
-import           Control.Monad.Trans.Maybe
 import           Control.Monad.Trans.Reader
-import Control.Monad.Trans.Class
 import           Data.Aeson
 import           Data.Attoparsec.Text.Lazy
 import qualified Data.ByteString.Lazy       as B
 import           Data.Sequence              (Seq)
 import qualified Data.Sequence              as S
+import           Data.Text.Lazy             (Text)
 import qualified Data.Text.Lazy             as T
-import Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.IO          as T
-import           Data.Either
 import           Spicy.Math
 import           Spicy.Parser
 import           Spicy.Types
 import           Spicy.Writer.Molecule
-import           System.FilePath hiding ((<.>))
+import           System.FilePath            hiding ((<.>))
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
-import System.Directory
-import Control.Monad.Trans.State.Lazy
 
 
 main :: IO ()
@@ -112,11 +108,11 @@ testVCross =
 
 
 ----------------------------------------------------------------------------------------------------
--- Test cases for Parser
-{-|
+{- *parserTests
 These tests are golden tests within the Tasty framework. If one of these tests fail, you are in
 trouble, as all the others will rely on working parsers and are golden tests, too.
 -}
+
 testParser :: TestTree
 testParser = testGroup "Parser"
   [ testParserTXYZ1
@@ -267,17 +263,29 @@ testParserSpicy1 =
 
 
 ----------------------------------------------------------------------------------------------------
--- Test cases for the Writers
+{- $writerTests
+These tests are meant to check if the writers produce parsable formats. Parsing an "original" file
+(from Babel, PDB, ...), writing it again and parsing the written result, should produce the same
+'Molecule's.
+
+The test scheme works as follows:
+
+  - Read and parse an "original" file.
+  - Write the so obtained representation to the Spicy JSON format (golden file).
+  - Write the corresponding representation of the original file with the writer to test.
+  - Read and parse the Spicy-written representation.
+  - Write the result of the Spicy parsed-Spicy written orientation to the Spicy JSON format and
+-}
 
 {-|
 Data type to define common parameters for processing the test cases.
 -}
 data MolWriterEnv = MolWriterEnv
   { testName   :: String                         -- ^ Name of the test case.
-  , origFile  :: FilePath                        -- ^ Original input file of the current format,
+  , origFile   :: FilePath                       -- ^ Original input file of the current format,
                                                  --   created by an external program, such as Babel.
-  , origJSON   :: FilePath                       -- ^ The file storing the internal representation
-                                                 --   of the 'origInput' after parsing with
+  , goldenJSON :: FilePath                       -- ^ The file storing the internal representation
+                                                 --   of the original input file after parsing with
                                                  --   'parser'.
   , writerFile :: FilePath                       -- ^ The file with the representation, suitable for
                                                  --   external programs and the writer
@@ -299,33 +307,66 @@ Process input files of the test type (XYZ, TXYZ, MOL2, PDB, ...) and parse them 
 'String' 'Molecule'. If the
 -}
 processFile :: MolWriterStep -> ExceptT String (ReaderT MolWriterEnv IO) Molecule
-processFile step = ExceptT $ ReaderT $ do
-  env <- lift ask
-  let inputToRead = case step of
-        OrigFile   -> origFile env
-        WriterFile -> writerFile env
+processFile step = ExceptT $ do
+  env <- ask
+  let inputToRead =
+        case step of
+          OrigFile   -> origFile env
+          WriterFile -> writerFile env
   raw <- liftIO $ T.readFile inputToRead
   return $ eitherResult . parse (parser env) $ raw
-  return result
+
+{-|
+Process a given 'Molecule' with a monad transformer to a 'Either' 'String' 'Text', where 'Text' is
+representing the molecule in the file format representation to be tested.
+-}
+writeFileFormat :: Molecule -> ExceptT String (ReaderT MolWriterEnv IO) Text
+writeFileFormat mol = ExceptT $ do
+  env <- ask
+  let molFormatText = (writer env) $ mol
+  return molFormatText
+
+{-|
+Provides the IO action for 'goldenVsFile', writing the original representation in JSON and the writer
+format, and the writer representation as
+-}
+parseWriteParseWrite :: MolWriterEnv -> IO ()
+parseWriteParseWrite molWriterEnv = do
+  _ <- flip runReaderT molWriterEnv . runExceptT $ do
+    -- Get the environment.
+    env               <- lift ask
+    -- Read and parse the original (external) file
+    origMol           <- processFile OrigFile
+    -- Get the writer representation of the original molecule.
+    origMolFormatText <- writeFileFormat origMol
+    -- Write internal representation and writer representation of the original molecule.
+    liftIO . T.writeFile (goldenJSON env) . writeSpicy $ origMol
+    liftIO . T.writeFile (writerFile env) $ origMolFormatText
+    -- Parse the writer representation again.
+    writerMol         <- processFile WriterFile
+    -- Write the internal representation of the parsed writer representation.
+    liftIO $ T.writeFile (writerJSON env) . writeSpicy $ writerMol
+    return writerMol
+  return ()
+
+{-|
+This function provides a wrapper around 'goldenVsFile', tuned for the writer tests.
+-}
+writerGoldenVsFile :: MolWriterEnv -> TestTree
+writerGoldenVsFile env =
+  goldenVsFile
+    (testName env)
+    (goldenJSON env)
+    (writerJSON env)
+    (parseWriteParseWrite env)
+
 
 testWriter :: TestTree
 testWriter = testGroup "Writer"
   [ testWriterMolecule
   ]
 
-{-|
-These tests are meant to check if the writers produce parsable formats. Parsing an "original" file
-(from Babel, PDB, ...), writing it again and parsing the written result, should produce the same
-'Molecule's.
 
-The test scheme works as follows:
-
-  - Read and parse an "original" file.
-  - Write the so obtained representation to the Spicy JSON format (golden file).
-  - Write the corresponding representation of the original file with the writer to test.
-  - Read and parse the Spicy-written representation.
-  - Write the result of the Spicy parsed-Spicy written orientation to the Spicy JSON format and
--}
 testWriterMolecule :: TestTree
 testWriterMolecule = testGroup "Molecule Formats"
   [ testWriterXYZ1
@@ -336,32 +377,13 @@ testWriterXYZ1 =
   let testEnv = MolWriterEnv
         { testName   = "Molden XYZ (1)"
         , origFile   = "goldentests" </> "input" </> "FePorphyrine.xyz"
-        , origJSON   = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1.json.golden"
-        , writerFile = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.xyz"
-        , writerJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.json"
+        , goldenJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Orig.json"
+        , writerFile = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.xyz"
+        , writerJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.json"
         , parser     = parseXYZ
         , writer     = writeXYZ
         }
-      testName             = "Molden XYZ (1)"
-      origInputFile        = "goldentests" </> "input" </> "FePorphyrine.xyz"
-      goldenFile           = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1.json.golden"
-      writerOutputFile     = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.xyz"
-      spicyInputFile       = writerOutputFile
-      spicyOutputFile      = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.json"
-      parseWriteParseWrite = do
-        finalResult <- runMaybeT $ do
-            return undefined
-        case finalResult of
-          Nothing  -> T.writeFile (writerJSON testEnv) . T.pack $ ""
-          Just r -> T.writeFile (writerJSON testEnv) . writeSpicy $ r
-  in  goldenVsFile
-        testName
-        goldenFile
-        spicyOutputFile
-        parseWriteParseWrite
-
-
-
+  in writerGoldenVsFile testEnv
 
 
 ----------------------------------------------------------------------------------------------------
