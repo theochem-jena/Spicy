@@ -4,25 +4,31 @@ parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
 {-# LANGUAGE OverloadedStrings #-}
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Except
+import           Control.Monad.Trans.Maybe
+import           Control.Monad.Trans.Reader
+import Control.Monad.Trans.Class
 import           Data.Aeson
 import           Data.Attoparsec.Text.Lazy
-import qualified Data.ByteString.Lazy      as B
+import qualified Data.ByteString.Lazy       as B
+import           Data.Sequence              (Seq)
+import qualified Data.Sequence              as S
+import qualified Data.Text.Lazy             as T
+import Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy.IO          as T
 import           Data.Either
-import           Data.Sequence             (Seq)
-import qualified Data.Sequence             as S
-import qualified Data.Text.Lazy            as T
-import qualified Data.Text.Lazy.IO         as T
 import           Spicy.Math
 import           Spicy.Parser
+import           Spicy.Types
 import           Spicy.Writer.Molecule
-import           System.FilePath           ((</>))
+import           System.FilePath hiding ((<.>))
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
+import System.Directory
+import Control.Monad.Trans.State.Lazy
 
-
--- instance Show Molecule where
---   show = writeSpicy
 
 main :: IO ()
 main = defaultMain tests
@@ -263,6 +269,45 @@ testParserSpicy1 =
 ----------------------------------------------------------------------------------------------------
 -- Test cases for the Writers
 
+{-|
+Data type to define common parameters for processing the test cases.
+-}
+data MolWriterEnv = MolWriterEnv
+  { testName   :: String                         -- ^ Name of the test case.
+  , origFile  :: FilePath                        -- ^ Original input file of the current format,
+                                                 --   created by an external program, such as Babel.
+  , origJSON   :: FilePath                       -- ^ The file storing the internal representation
+                                                 --   of the 'origInput' after parsing with
+                                                 --   'parser'.
+  , writerFile :: FilePath                       -- ^ The file with the representation, suitable for
+                                                 --   external programs and the writer
+                                                 --   representation of 'origInput' after parsing.
+  , writerJSON :: FilePath                       -- ^ The internal representation of the 'Molecule'
+                                                 --    after parsing 'writerFile' again.
+  , parser     :: Parser Molecule                -- ^ A 'Parser' for the 'Molecule'.
+  , writer     :: Molecule -> Either String Text -- ^ A writer for 'Molecule'
+  }
+
+{-|
+Defines a job step for the test case. Either process the original input file (step 1), or the
+spicy-written file.
+-}
+data MolWriterStep = OrigFile | WriterFile deriving Eq
+
+{-|
+Process input files of the test type (XYZ, TXYZ, MOL2, PDB, ...) and parse them to an 'Either'
+'String' 'Molecule'. If the
+-}
+processFile :: MolWriterStep -> ExceptT String (ReaderT MolWriterEnv IO) Molecule
+processFile step = ExceptT $ ReaderT $ do
+  env <- lift ask
+  let inputToRead = case step of
+        OrigFile   -> origFile env
+        WriterFile -> writerFile env
+  raw <- liftIO $ T.readFile inputToRead
+  return $ eitherResult . parse (parser env) $ raw
+  return result
+
 testWriter :: TestTree
 testWriter = testGroup "Writer"
   [ testWriterMolecule
@@ -288,28 +333,27 @@ testWriterMolecule = testGroup "Molecule Formats"
 
 testWriterXYZ1 :: TestTree
 testWriterXYZ1 =
-  let testName             = "Molden XYZ (1)"
+  let testEnv = MolWriterEnv
+        { testName   = "Molden XYZ (1)"
+        , origFile   = "goldentests" </> "input" </> "FePorphyrine.xyz"
+        , origJSON   = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1.json.golden"
+        , writerFile = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.xyz"
+        , writerJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.json"
+        , parser     = parseXYZ
+        , writer     = writeXYZ
+        }
+      testName             = "Molden XYZ (1)"
       origInputFile        = "goldentests" </> "input" </> "FePorphyrine.xyz"
       goldenFile           = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1.json.golden"
       writerOutputFile     = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.xyz"
       spicyInputFile       = writerOutputFile
       spicyOutputFile      = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1.json"
       parseWriteParseWrite = do
-        -- Read the original (XYZ) file.
-        origRaw <- T.readFile origInputFile
-        case parse parseXYZ origRaw of
-          Done _ origMol -> do
-            -- Write the so obtained internal representation to JSON as golden file (reference)-
-            T.writeFile goldenFile . writeSpicy $ origMol
-            -- Use the writer to write the internal representation to the same format as the input
-            -- file.
-            T.writeFile writerOutputFile . fromRight "" . writeXYZ $ origMol
-            -- Read and parse the format written by Spicy.
-            spicyRaw <- T.readFile spicyInputFile
-            case parse parseXYZ spicyRaw of
-              Done _ spicyMol -> T.writeFile spicyOutputFile . writeSpicy $ spicyMol
-              Fail _ _ e      -> T.writeFile spicyOutputFile . T.pack $ e
-          Fail _ _ e     -> T.writeFile spicyOutputFile . T.pack $ e
+        finalResult <- runMaybeT $ do
+            return undefined
+        case finalResult of
+          Nothing  -> T.writeFile (writerJSON testEnv) . T.pack $ ""
+          Just r -> T.writeFile (writerJSON testEnv) . writeSpicy $ r
   in  goldenVsFile
         testName
         goldenFile
