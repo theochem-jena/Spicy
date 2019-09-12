@@ -22,9 +22,14 @@ module Spicy.Math
 , vDistance
 , vAngle
 , vCross
+, distMat'
+, findBonds
 ) where
-import           Data.Array.Accelerate             (Matrix)
+import qualified Data.Array.Accelerate             as A
 import qualified Data.Foldable                     as F
+import           Data.IntMap                       (IntMap)
+import           Data.IntSet                       (IntSet)
+import           Data.Maybe
 import           Data.Sequence                     (Seq)
 import qualified Data.Sequence                     as S
 import           Prelude                           hiding (cycle, foldl1,
@@ -32,6 +37,7 @@ import           Prelude                           hiding (cycle, foldl1,
                                                     maximum, minimum, tail,
                                                     take, takeWhile, (!!))
 import qualified Spicy.Math.Internal               as MI
+import qualified Spicy.Molecule.Util               as MU
 import           Spicy.Types
 #ifdef CUDA
 import           Data.Array.Accelerate.LLVM.PTX
@@ -93,12 +99,55 @@ vCross a b = do
 {-|
 __PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
 -}
-distMat' :: Molecule -> Matrix Double
+distMat' :: Molecule -> A.Matrix Double
 distMat' mol =
   let coordVec = MI.getCoordinates Serial mol
   in  dM coordVec
   where
     dM = $(runQ MI.distMat)
+
+{-|
+Build a boolean bond matrix from a Molecule.
+-}
+{-
+findBondPairs' :: Molecule -> IntMap IntSet
+findBondPairs' mol =
+  let covMat    = cM $ prepareCovalentRadii mol
+      coordVec  = MI.getCoordinates Serial mol
+      dMat      = dM coordVec
+      elemIdxs  = MI.getElementIdxs mol
+  in MU.groupTupleSeq $ MI.bondPairsToSeq $ fBP elemIdxs $ bbM dMat covMat
+  where cM  = $(runQ $ MI.covRMat 1.3)
+        dM  = $(runQ MI.distMat)
+        bbM = $(runQ MI.boolBondMatrix)
+        fBP = $(runQ MI.findBondPairs)
+-}
+
+findBonds :: Maybe Double -> Molecule -> IntMap IntSet
+findBonds covRScaling mol =
+  let coordVec :: A.Vector Double
+      coordVec = MI.getCoordinates Serial mol
+      covRadVec :: A.Vector Double
+      covRadVec = MI.prepareCovalentRadii mol
+      indices :: A.Vector Int
+      indices = MI.getElementIdxs mol
+      scalFac = A.fromList (A.Z) [(fromMaybe 1.3 covRScaling)]
+  in  MU.groupTupleSeq . MI.bondPairsToSeq $ bondPairs scalFac indices coordVec covRadVec
+  where
+    bondPairs = $(runQ MI.accelerateFunChain)
+
+
+
+
+{-|
+
+-}
+-- getBondsIMIS' :: Molecule -> IntMap IntSet
+-- getBondsIMIS' mol =
+--   let covR = prepareCovalentRadii mol
+--       covMat =
+--   where
+
 {-
 -- | Defines the normal vector of a plane, defined by 3 points
 r3VecNormalVecOfPlane3Points :: (Vector R, Vector R, Vector R) -> Vector R
