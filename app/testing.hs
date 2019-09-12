@@ -3,7 +3,6 @@ Unit testing and golden testing (unit testing based on files) for Spicy. Test al
 parts of Spicy. This is especially Spicy.MolecularSystem and Spicy.Parser.
 All tests are required to pass. There is no gray zone!!
 -}
-{-# LANGUAGE OverloadedStrings #-}
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Except
