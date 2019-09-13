@@ -404,4 +404,4 @@ makeSubMolsFromAnnoAtoms ::
   -> Seq Molecule                    -- ^ The submolecules.
 makeSubMolsFromAnnoAtoms annoAtoms bonds =
   let subMolAtomGroups = groupAnnoAtomsAsSubMols annoAtoms
-  in  fmap (\g -> makeSubMolFromGroup g bonds) subMolAtomGroups
+  in  fmap (`makeSubMolFromGroup` bonds) subMolAtomGroups

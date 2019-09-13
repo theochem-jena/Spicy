@@ -24,6 +24,7 @@ module Spicy.Math
 , vCross
 , distMat'
 , findBonds
+, findBondsToGraph
 ) where
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Foldable                     as F
@@ -32,6 +33,7 @@ import           Data.IntSet                       (IntSet)
 import           Data.Maybe
 import           Data.Sequence                     (Seq)
 import qualified Data.Sequence                     as S
+import           Data.Graph.UGraph                 as UG
 import           Prelude                           hiding (cycle, foldl1,
                                                     foldr1, head, init, last,
                                                     maximum, minimum, tail,
@@ -113,29 +115,37 @@ IntMap indices as bond origins and the IntSet as bond targets for each molecule
 findBonds :: Maybe Double -> Molecule -> IntMap IntSet
 findBonds covRScaling mol =
   -- Cartesian coordinate vector (size of 3N) of the molecule
-  let coordVec :: A.Vector Double
+  let
+      coordVec :: A.Vector Double
       coordVec = MI.getCoordinates Serial mol
-      -- Vector of the covalent radii of the
+      -- Vector of the covalent radii of the atoms in order of the atom indices
       covRadVec :: A.Vector Double
       covRadVec = MI.prepareCovalentRadii mol
+      -- Vector of the atom indices
       indices :: A.Vector Int
       indices = MI.getElementIdxs mol
+      -- Scalar scaling factor for bond detection using the boolean bond matrix
+      scalFac :: A.Scalar Double
       scalFac = A.fromList A.Z [fromMaybe 1.3 covRScaling]
+
   in  MU.groupTupleSeq . MI.bondPairsToSeq $ bondPairs scalFac indices coordVec covRadVec
+
   where
+    -- Accelerate function chain from the Internal module
     bondPairs = $(runQ MI.accFindBondsChain)
 
 
-
-
-{-|
-
--}
--- getBondsIMIS' :: Molecule -> IntMap IntSet
--- getBondsIMIS' mol =
---   let covR = prepareCovalentRadii mol
---       covMat =
---   where
+findBondsToGraph :: Maybe Double -> Molecule -> UGraph Int ()
+findBondsToGraph covRScaling mol =
+  -- Cartesian coordinate vector (size of 3N) of the molecule
+  let coordVec = MI.getCoordinates Serial mol
+      -- Vector of the covalent radii of the
+      covRadVec = MI.prepareCovalentRadii mol
+      indices = MI.getElementIdxs mol
+      scalFac = A.fromList A.Z [fromMaybe 1.3 covRScaling]
+  in  MI.bondPairsToGraph mol $ bondPairs scalFac indices coordVec covRadVec
+  where
+    bondPairs = $(runQ MI.accFindBondsChain)
 
 {-
 -- | Defines the normal vector of a plane, defined by 3 points

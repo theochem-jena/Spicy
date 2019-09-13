@@ -37,12 +37,13 @@ import qualified Data.Sequence                                 as S
 import qualified Data.Vector.Storable                          as VS
 import qualified Data.Vector.Unboxed                           as VB
 import           Prelude
-import           Data.Graph.Types
+import           Data.Graph.Types                              as GT
 import qualified Data.Graph.UGraph                             as UG
-
+-- import           Data.Graph.Connectivity                       as GC
+import qualified Lens.Micro.Platform                           as L
 import qualified Spicy.Data                                    as D
 import           Spicy.Types
-
+import           Data.List (group)
 
 {-|
 Helper function to get the first element of a triple. Taken from utility-ht == 0.0.14:
@@ -134,14 +135,15 @@ covRMat rFactor covRadii =
   -- Get the result by zipping the "3D stack of 2D matrices" using the summation operator
   -- and multiplication by 1.3 (see Literature for the factor)
   -- https://doi.org/10.1063/1.1515483
-  in  A.map (* (A.the rFactor)) $ A.zipWith (+) xCovMat yCovMat
+  in  A.map (* A.the rFactor) $ A.zipWith (+) xCovMat yCovMat
 
 
 {-|
 Build the boolean bond matrix from the cov
 -}
 boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matrix Bool)
-boolBondMatrix distMatrix covRMatrix= A.zipWith (A.<=) distMatrix covRMatrix
+boolBondMatrix -- distanceMatrix covalentRadiiMatrix
+  = A.zipWith (\a b -> a A.<= b A.&& a A./= 0.0)
 
 
 {-|
@@ -183,15 +185,21 @@ bondPairsToSeq otVector = otSeq
 
 {-|
 Map an Accelerate array to a graphite Graph // EXPERIMENTAL
+!! TODO !!
 -}
-bondPairsToGraph  :: A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
-bondPairsToGraph otVector =
-  UG.fromEdgesList $ Prelude.map (Prelude.uncurry (<->))
-                   $ VB.toList
-                   $ VB.uniq
-                   $ VB.filter (\(a,b) -> a Prelude./= b)
-                   $ VB.map (\(a, b) -> if a Prelude.>= b then (a,b) else (b,a))
-                   $ AVU.toUnboxed otVector
+bondPairsToGraph  :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
+bondPairsToGraph mol otVector =
+  let rawVUnBoxed =  VB.uniq
+                    $ VB.map (\(a, b) -> if a Prelude.>= b then (a,b) else (b,a))
+                    $ AVU.toUnboxed otVector
+  in UG.fromEdgesList $ Prelude.map (Prelude.uncurry (<->)) $ VB.toList rawVUnBoxed
+  where
+    checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector (Int, Int)
+    checkRawUnBoxVec mol rawUnBVec =
+      let atomIdxs    = AVU.toUnboxed $ getElementIdxs mol
+          bondIdxList = Prelude.map Prelude.head $ group $ rawUnBVec L.^.. L.each . L.each
+
+      in undefined
 
 
 
