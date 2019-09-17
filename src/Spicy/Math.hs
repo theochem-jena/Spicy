@@ -98,6 +98,7 @@ vCross a b = do
   where
     err = "vCross: Could not get an element from input sequence"
 
+    
 {-|
 __PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
 -}

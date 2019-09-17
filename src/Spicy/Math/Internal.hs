@@ -185,22 +185,23 @@ bondPairsToSeq otVector = otSeq
 
 {-|
 Map an Accelerate array to a graphite Graph // EXPERIMENTAL
-!! TODO !!
+-- ! TODO 
 -}
 bondPairsToGraph  :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
 bondPairsToGraph mol otVector =
   let rawVUnBoxed =  VB.uniq
                     $ VB.map (\(a, b) -> if a Prelude.>= b then (a,b) else (b,a))
                     $ AVU.toUnboxed otVector
-  in UG.fromEdgesList $ Prelude.map (Prelude.uncurry (<->)) $ VB.toList rawVUnBoxed
+      missingIdxs = checkRawUnBoxVec mol rawVUnBoxed
+
+  in GT.insertVertices (VB.toList missingIdxs) $ UG.fromEdgesList $ Prelude.map (Prelude.uncurry (<->)) $ VB.toList rawVUnBoxed
   where
-    checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector (Int, Int)
-    checkRawUnBoxVec mol rawUnBVec =
-      let atomIdxs    = AVU.toUnboxed $ getElementIdxs mol
+    checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector Int
+    checkRawUnBoxVec molA rawUnBVec =
+      let atomIdxs    = AVU.toUnboxed $ getElementIdxs molA
           bondIdxList = Prelude.map Prelude.head $ group $ rawUnBVec L.^.. L.each . L.each
-
-      in undefined
-
+      in VB.filter (`Prelude.notElem` bondIdxList) atomIdxs
+    
 
 
 prepareCovalentRadii :: Molecule -> A.Vector Double
