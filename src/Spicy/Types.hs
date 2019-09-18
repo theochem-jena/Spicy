@@ -36,6 +36,7 @@ module Spicy.Types
 , molecule_Energy
 , molecule_Gradient
 , molecule_Hessian
+, dummyMolecule
 , Trajectory
 ) where
 import           Control.DeepSeq
@@ -44,8 +45,10 @@ import           Data.Aeson.Encode.Pretty
 import qualified Data.Array.Accelerate     as A
 import qualified Data.ByteString.Lazy.UTF8 as BL
 import           Data.IntMap.Lazy          (IntMap)
+import           Data.IntMap.Lazy          as IM
 import           Data.IntSet               (IntSet)
 import           Data.Sequence             (Seq)
+import           Data.Sequence             as S
 import           Data.Text.Lazy            (Text)
 import           GHC.Generics              (Generic)
 import           Lens.Micro.Platform       hiding ((.=))
@@ -209,6 +212,12 @@ Trajectories are simply 'Seq'uences of 'Molecule's.
 -}
 type Trajectory = Seq Molecule
 
+
+{-| 
+Dummy molecule for testing purposes
+-}
+dummyMolecule :: Molecule
+dummyMolecule = Molecule "" IM.empty IM.empty S.empty Nothing Nothing Nothing
 
 ----------------------------------------------------------------------------------------------------
 {- $compChemTypes

@@ -9,16 +9,17 @@ import Spicy.Parser
 import Debug.Trace
 import Data.Graph.Visualize as GV
 import Data.Text.Lazy.IO as TIO
-import Data.Attoparsec.Text.Lazy (parse, Result(Fail, Done))
+import Data.Attoparsec.Text.Lazy (parse, Result(Fail,Done))
 
 main :: IO ()
 main = do
-  fileContent <- TIO.readFile "goldentests/input/mDCB+.xyz"
+  fileContent <- TIO.readFile "goldentests/input/SulfateInSolution.xyz"
   info        <- case parse parseXYZ fileContent of
-    Fail _ _ e  -> error e
-    Done _ mol  -> do
-      let graph = SM.findBondsToGraph Nothing mol
-      _ <- GV.plotUGraphPng graph "test"
+    Fail _ _ e    -> error e
+    Done _ mol    -> do
+      let graph = SM.findBondsToGraph (Just 1.3) mol
       traceShowM graph
+
+      GV.plotUGraphEdged graph -- ("test" :: FilePath)
 
   print info

@@ -25,10 +25,12 @@ module Spicy.Math
 , distMat'
 , findBonds
 , findBondsToGraph
+, getBondLength
 ) where
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Foldable                     as F
 import           Data.IntMap                       (IntMap)
+import qualified Data.IntMap                       as IM
 import           Data.IntSet                       (IntSet)
 import           Data.Maybe
 import           Data.Sequence                     (Seq)
@@ -41,6 +43,7 @@ import           Prelude                           hiding (cycle, foldl1,
 import qualified Spicy.Math.Internal               as MI
 import qualified Spicy.Molecule.Util               as MU
 import           Spicy.Types
+import           Lens.Micro.Platform               as L
 #ifdef CUDA
 import           Data.Array.Accelerate.LLVM.PTX
 #else
@@ -98,7 +101,19 @@ vCross a b = do
   where
     err = "vCross: Could not get an element from input sequence"
 
-    
+
+getBondLength :: Molecule -> Int -> Int -> Maybe Double
+getBondLength mol idx1 idx2 = 
+  do
+    let atomIM = _molecule_Atoms mol                            :: IntMap Atom
+    atom1   <- (^. atom_Coordinates) <$> IM.lookup idx1 atomIM  :: Maybe (Seq Double)
+    atom2   <- (^. atom_Coordinates) <$> IM.lookup idx2 atomIM  :: Maybe (Seq Double)
+
+    let bondLength = vDistance atom1 atom2
+
+    return bondLength
+
+
 {-|
 __PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
 -}

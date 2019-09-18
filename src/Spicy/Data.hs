@@ -40,4 +40,4 @@ covalentRadii = Map.fromList
 covalentRadiiIM :: IM.IntMap Double
 covalentRadiiIM = IM.fromList listOfPairs
     where
-      listOfPairs = Map.toList $ Map.mapKeys fromEnum covalentRadii
+      listOfPairs = Map.toList $ Map.mapKeys ((+1) . fromEnum) covalentRadii

@@ -104,7 +104,7 @@ getCovalentRadii ::  Molecule -> Either String (A.Vector Double)
 getCovalentRadii mol = covRadii
   where
     -- Get the element numbers in the given molecule
-    elementNums = IM.map (fromEnum . _atom_Element) (mol ^. molecule_Atoms )
+    elementNums = IM.map ( ( + 1) . fromEnum . _atom_Element) (mol ^. molecule_Atoms )
     -- Get the number of elemenfBPts in the IntMap
     nrOfAtoms   = IM.size elementNums
     -- Lookup the respective covalent radii from the Spicy.Data.covalentRadiiIM (IntMap)
@@ -143,7 +143,7 @@ Build the boolean bond matrix from the cov
 -}
 boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matrix Bool)
 boolBondMatrix -- distanceMatrix covalentRadiiMatrix
-  = A.zipWith (\a b -> a A.<= b A.&& a A./= 0.0)
+  = A.zipWith (\a b -> (a A.<= b) A.&& (a A./= 0.0))
 
 
 {-|
@@ -189,8 +189,8 @@ Map an Accelerate array to a graphite Graph // EXPERIMENTAL
 -}
 bondPairsToGraph  :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
 bondPairsToGraph mol otVector =
-  let rawVUnBoxed =  VB.uniq
-                    $ VB.map (\(a, b) -> if a Prelude.>= b then (a,b) else (b,a))
+  let rawVUnBoxed = VB.uniq
+                    $ VB.map (\(a, b) -> if a Prelude.<= b then (a,b) else (b,a))
                     $ AVU.toUnboxed otVector
       missingIdxs = checkRawUnBoxVec mol rawVUnBoxed
 
