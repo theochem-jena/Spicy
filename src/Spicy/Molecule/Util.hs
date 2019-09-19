@@ -14,6 +14,10 @@ module Spicy.Molecule.Util
 , reIndexMolecule
 , groupTupleSeq
 , groupBy
+, nubBy
+, fst3
+, snd3
+, lst3
 , makeSubMolsFromAnnoAtoms
 ) where
 import           Data.Foldable
@@ -347,6 +351,39 @@ groupBy _ S.Empty    = S.empty
 groupBy f (x :<| xs) = (x :<| ys) :<| groupBy f zs
   where
     (ys, zs) = S.spanl (f x) xs
+
+{-|
+This function provides the 
+[nubBy](https://hackage.haskell.org/package/base-4.12.0.0/docs/Data-List.html#v:nubBy) 
+function for Sequences. This is a fork of the original list 
+[code](https://hackage.haskell.org/package/base-4.12.0.0/docs/src/Data.OldList.html#nubBy)
+-}
+nubBy :: (a -> a -> Bool) -> Seq a -> Seq a
+nubBy _  S.Empty    = S.Empty 
+nubBy eq (x :<| xs) = x :<| nubBy eq (S.filter (\ y -> not (eq x y)) xs)
+
+
+{-|
+Give the first of a triple (3-Tuple). For eventual convenience use
+-}
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
+
+
+{-|
+Give the second of a triple (3-Tuple). For eventual convenience use
+-}
+snd3 :: (a, b, c) -> b
+snd3 (_, x, _) = x
+
+
+{-|
+Give the last of a triple (3-Tuple). For eventual convenience use
+-}
+lst3 :: (a, b, c) -> c
+lst3 (_, _, x) = x
+
+
 
 {-|
 Group a common parser structure based on a submolecule identifier.

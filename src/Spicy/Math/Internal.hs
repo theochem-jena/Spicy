@@ -189,19 +189,27 @@ Map an Accelerate array to a graphite Graph // EXPERIMENTAL
 -}
 bondPairsToGraph  :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
 bondPairsToGraph mol otVector =
-  let rawVUnBoxed = VB.uniq
+  -- Find missing indices (single-atom fragments)
+  let missingIdxs = checkRawUnBoxVec mol rawVUnboxed 
+      -- build the unboxed vector used to convert to a graph (+ some cleanup)
+      rawVUnboxed = VB.uniq
                     $ VB.map (\(a, b) -> if a Prelude.<= b then (a,b) else (b,a))
                     $ AVU.toUnboxed otVector
-      missingIdxs = checkRawUnBoxVec mol rawVUnBoxed
 
-  in GT.insertVertices (VB.toList missingIdxs) $ UG.fromEdgesList $ Prelude.map (Prelude.uncurry (<->)) $ VB.toList rawVUnBoxed
+  -- Convert the unboxed vector to an undirected graph
+  in GT.insertVertices (VB.toList missingIdxs) 
+      $ UG.fromEdgesList 
+      $ Prelude.map (Prelude.uncurry (<->)) 
+      $ VB.toList rawVUnboxed
   where
+    -- check the raw unboxed vector for missing atoms. 
+    -- Nobody will be left behind!
+    -- Returns an unboxed vector of "lonely" vertices
     checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector Int
-    checkRawUnBoxVec molA rawUnBVec =
+    checkRawUnBoxVec molA rawVB =
       let atomIdxs    = AVU.toUnboxed $ getElementIdxs molA
-          bondIdxList = Prelude.map Prelude.head $ group $ rawUnBVec L.^.. L.each . L.each
+          bondIdxList = Prelude.map Prelude.head $ group $ rawVB L.^.. L.each . L.each
       in VB.filter (`Prelude.notElem` bondIdxList) atomIdxs
-    
 
 
 prepareCovalentRadii :: Molecule -> A.Vector Double

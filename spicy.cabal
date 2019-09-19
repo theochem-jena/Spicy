@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0c6d82e07a70ca6874dfaa15397f7db54bff7cc31d1c30dfaf35dc39123bf906
+-- hash: 809d7c1816de8a02c5e6de7fb4d55416e37e1c25b2aa744e6f7477b68f3f4624
 
 name:           spicy
 version:        0.0.0.1
@@ -27,6 +27,7 @@ extra-source-files:
     goldentests/input/FePorphyrine.mol2
     goldentests/input/FePorphyrine.txyz
     goldentests/input/FePorphyrine.xyz
+    goldentests/input/H2O.xyz
     goldentests/input/HeteroTraj.xyz
     goldentests/input/mDCB+.xyz
     goldentests/input/N2_bonded.xyz
@@ -44,6 +45,7 @@ extra-source-files:
     goldentests/goldenfiles/6cvr__testParserPDB2.json.golden
     goldentests/goldenfiles/6cvr__testParserSpicy1.json.golden
     goldentests/goldenfiles/FePorphyrine__testParserXYZ1.json.golden
+    goldentests/goldenfiles/H2O__testParserXYZ3.json.golden
     goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden
     goldentests/goldenfiles/Peptid__testParserMOL21.json.golden
     goldentests/goldenfiles/RuKomplex__testParserTXYZ1.json.golden
@@ -110,6 +112,7 @@ library
     , vector >=0.12.0.0
   if flag(dev)
     ghc-options: -O0
+    cpp-options: -DDEV
   else
     ghc-options: -Werror -fllvm -O2
   if flag(cuda)
@@ -160,6 +163,7 @@ executable benchmarks-exe
     , vector >=0.12.0.0
   if flag(dev)
     ghc-options: -O0
+    cpp-options: -DDEV
   else
     ghc-options: -Werror -fllvm -O2
   if flag(cuda)
@@ -209,6 +213,7 @@ executable spicy
     , vector >=0.12.0.0
   if flag(dev)
     ghc-options: -O0
+    cpp-options: -DDEV
   else
     ghc-options: -Werror -fllvm -O2
   if flag(cuda)
@@ -261,6 +266,7 @@ executable unittests-exe
     , vector >=0.12.0.0
   if flag(dev)
     ghc-options: -O0
+    cpp-options: -DDEV
   else
     ghc-options: -Werror -fllvm -O2
   if flag(cuda)
@@ -314,6 +320,7 @@ test-suite unittests
     , vector >=0.12.0.0
   if flag(dev)
     ghc-options: -O0
+    cpp-options: -DDEV
   else
     ghc-options: -Werror -fllvm -O2
   if flag(cuda)
@@ -365,6 +372,7 @@ benchmark benchmarks
     , vector >=0.12.0.0
   if flag(dev)
     ghc-options: -O0
+    cpp-options: -DDEV
   else
     ghc-options: -Werror -fllvm -O2
   if flag(cuda)

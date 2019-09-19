@@ -1,0 +1,55 @@
+{
+    "_molecule_Label": "",
+    "_molecule_Atoms": [
+        [
+            1,
+            {
+                "_atom_PCharge": null,
+                "_atom_Coordinates": [
+                    0.84924,
+                    -3.69371,
+                    -8.342e-2
+                ],
+                "_atom_FFType": "",
+                "_atom_IsPseudo": false,
+                "_atom_Element": "O",
+                "_atom_Label": ""
+            }
+        ],
+        [
+            2,
+            {
+                "_atom_PCharge": null,
+                "_atom_Coordinates": [
+                    1.80517,
+                    -3.89171,
+                    8.114e-2
+                ],
+                "_atom_FFType": "",
+                "_atom_IsPseudo": false,
+                "_atom_Element": "H",
+                "_atom_Label": ""
+            }
+        ],
+        [
+            3,
+            {
+                "_atom_PCharge": null,
+                "_atom_Coordinates": [
+                    0.36916,
+                    -4.18789,
+                    0.62754
+                ],
+                "_atom_FFType": "",
+                "_atom_IsPseudo": false,
+                "_atom_Element": "H",
+                "_atom_Label": ""
+            }
+        ]
+    ],
+    "_molecule_Bonds": [],
+    "_molecule_Hessian": null,
+    "_molecule_Gradient": null,
+    "_molecule_Energy": null,
+    "_molecule_SubMol": []
+}
