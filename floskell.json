@@ -126,11 +126,6 @@
                 "spaces": "after",
                 "linebreaks": "before"
             },
-            "--": {
-                "force-linebreak": false,
-                "spaces": "after",
-                "linebreaks": "none"
-            },
             "[t|": {
                 "force-linebreak": false,
                 "spaces": "none",
