@@ -15,7 +15,10 @@ takes care of the description of molecules (structure, topology, potential energ
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Spicy.Types
-( Strat(..)
+( MolLogicException(..)
+, DataStructureException(..)
+, ParserException(..)
+, Strat(..)
 , AccVector(..)
 , AccMatrix(..)
 , Element(..)
@@ -62,6 +65,41 @@ class NiceShow a where
   niceShow    :: a -> String -- ^ Printing the isolated object
   niceComplex :: a -> String -- ^ Printing the object in the complex form, where everything is meant
                              --   to be printed at once as overview
+
+{-|
+Exception type for operations on 'Molecule's, which lead to a logical error. This can be caused
+because some Spicy assumptions are not met for example.
+-}
+data MolLogicException = MolLogicException
+  { mlExcFunctionName :: String
+  , mlExcDescription  :: String
+  } deriving Typeable
+instance Show MolLogicException where
+  show (MolLogicException f e) = "MoleculeLogicException in function \"" ++ f ++ "\":" ++ e
+instance Exception MolLogicException
+
+{-|
+Exception type for operations on data structures, which are not meeting necessary criteria for the
+operation to perform.
+-}
+data DataStructureException = DataStructureException
+  { dsExcFunctionName :: String
+  , dsExcDescription  :: String
+  } deriving Typeable
+instance Show DataStructureException where
+  show (DataStructureException f e) = "DataStructureException in function \"" ++ f ++ "\":" ++ e
+instance Exception DataStructureException
+
+{-|
+Exception type for textual or binary data, that could not be parsed.
+-}
+data ParserException = ParserException
+  { pExcParser      :: String
+  , pExcType        :: String
+  } deriving Typeable
+instance Show ParserException where
+  show (ParserException p e) = "DataStructureException in parser \"" ++ f ++ "\":" ++ e
+instance Exception ParserException
 
 {-|
 Use serial or parallel processing for large data structures. This helps deciding on a per use base,
