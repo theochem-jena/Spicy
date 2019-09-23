@@ -16,57 +16,70 @@ takes care of the description of molecules (structure, topology, potential energ
 {-# LANGUAGE TemplateHaskell #-}
 
 module Spicy.Types
-( -- * Exceptions
+  (
+  -- * Exceptions
   -- $exceptionTypes
-  MolLogicException(..)
-, DataStructureException(..)
-, ParserException(..)
+    MolLogicException(..)
+  , DataStructureException(..)
+  , ParserException(..)
   -- * Performance- and Execution-related Types
   -- $performanceTypes
-, Strat(..)
-, AccVector(..)
-, AccMatrix(..)
+  , Strat(..)
+  , AccVector(..)
+  , AccMatrix(..)
   -- * Molecules and Atoms
   -- $moleculeTypes
-, Element(..)
-, AtomLabel
-, FFType(..)
-, Atom(..)
-, atom_Element
-, atom_Label
-, atom_IsPseudo
-, atom_FFType
-, atom_PCharge
-, atom_Coordinates
-, Molecule(..)
-, molecule_Label
-, molecule_Atoms
-, molecule_Bonds
-, molecule_SubMol
-, molecule_Energy
-, molecule_Gradient
-, molecule_Hessian
-, Trajectory
-) where
+  , Element(..)
+  , AtomLabel
+  , FFType(..)
+  , Atom(..)
+  , atom_Element
+  , atom_Label
+  , atom_IsPseudo
+  , atom_FFType
+  , atom_PCharge
+  , atom_Coordinates
+  , Molecule(..)
+  , molecule_Label
+  , molecule_Atoms
+  , molecule_Bonds
+  , molecule_SubMol
+  , molecule_Energy
+  , molecule_Gradient
+  , molecule_Hessian
+  , Trajectory
+  )
+where
 
 import           Control.DeepSeq
 import           Control.Exception.Safe
 
 import           Data.Aeson
 import           Data.Aeson.Encode.Pretty
-import qualified Data.Array.Accelerate     as A
-import qualified Data.ByteString.Lazy.UTF8 as BL
-import           Data.IntMap.Lazy          ( IntMap )
-import           Data.IntSet               ( IntSet )
-import           Data.Sequence             ( Seq )
-import           Data.Text.Lazy            ( Text )
+import qualified Data.Array.Accelerate         as A
+import qualified Data.ByteString.Lazy.UTF8     as BL
+import           Data.IntMap.Lazy                         ( IntMap )
+import           Data.IntSet                              ( IntSet )
+import           Data.Sequence                            ( Seq )
+import           Data.Text.Lazy                           ( Text )
 
-import           GHC.Generics              ( Generic )
+import           GHC.Generics                             ( Generic )
 
-import           Lens.Micro.Platform       hiding ( (.=) )
+import           Lens.Micro.Platform               hiding ( (.=) )
 
-import           Prelude                   hiding ( (!!), cycle, foldl1, foldr1, head, init, last
-                                                  , maximum, minimum, tail, take, takeWhile )
+import           Prelude                           hiding ( (!!)
+                                                          , cycle
+                                                          , foldl1
+                                                          , foldr1
+                                                          , head
+                                                          , init
+                                                          , last
+                                                          , maximum
+                                                          , minimum
+                                                          , tail
+                                                          , take
+                                                          , takeWhile
+                                                          )
 
 {-
 ====================================================================================================
@@ -139,14 +152,15 @@ newtype AccVector a = AccVector { getAccVector :: A.Vector a
   deriving ( Generic, Show, Eq )
 
 instance ( ToJSON a, A.Elt a ) => ToJSON (AccVector a) where
-  toJSON vec = let plainVec        = getAccVector vec
-                   (A.Z A.:. xDim) = A.arrayShape plainVec
-                   elements        = A.toList plainVec
-               in object [ "shape" .= xDim, "elements" .= elements ]
+  toJSON vec =
+    let plainVec        = getAccVector vec
+        (A.Z A.:. xDim) = A.arrayShape plainVec
+        elements        = A.toList plainVec
+    in  object ["shape" .= xDim, "elements" .= elements]
 
 instance ( FromJSON a, A.Elt a ) => FromJSON (AccVector a) where
   parseJSON = withObject "AccVector" $ \vec -> do
-    xDim <- vec .: "shape"
+    xDim     <- vec .: "shape"
     elements <- vec .: "elements"
     return . AccVector $ A.fromList (A.Z A.:. xDim) elements
 
@@ -159,15 +173,16 @@ newtype AccMatrix a = AccMatrix { getAccMatrix :: A.Matrix a
   deriving ( Generic, Show, Eq )
 
 instance ( ToJSON a, A.Elt a ) => ToJSON (AccMatrix a) where
-  toJSON mat = let plainMat                  = getAccMatrix mat
-                   (A.Z A.:. xDim A.:. yDim) = A.arrayShape plainMat
-                   elements                  = A.toList plainMat
-               in object [ "shape" .= ( xDim, yDim ), "elements" .= elements ]
+  toJSON mat =
+    let plainMat                  = getAccMatrix mat
+        (A.Z A.:. xDim A.:. yDim) = A.arrayShape plainMat
+        elements                  = A.toList plainMat
+    in  object ["shape" .= (xDim, yDim), "elements" .= elements]
 
 instance ( FromJSON a, A.Elt a ) => FromJSON (AccMatrix a) where
   parseJSON = withObject "AccVector" $ \mat -> do
-    ( xDim, yDim ) <- mat .: "shape"
-    elements <- mat .: "elements"
+    (xDim, yDim) <- mat .: "shape"
+    elements     <- mat .: "elements"
     return . AccMatrix $ A.fromList (A.Z A.:. xDim A.:. yDim) elements
 
 {-
@@ -333,10 +348,10 @@ instance Eq FFType where
   Mol2 _ == _      = False
   TXYZ _ == TXYZ _ = True
   TXYZ _ == _      = False
-  PDB _ == PDB _   = True
-  PDB _ == _       = False
-  XYZ == XYZ       = True
-  XYZ == _         = False
+  PDB  _ == PDB _  = True
+  PDB  _ == _      = False
+  XYZ    == XYZ    = True
+  XYZ    == _      = False
 
 instance ToJSON FFType where
   toEncoding = genericToEncoding defaultOptions
