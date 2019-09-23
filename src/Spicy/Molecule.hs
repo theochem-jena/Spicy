@@ -16,6 +16,8 @@ substructeres to layers and creation of ghost atoms. Following conventions shall
 -}
 module Spicy.Molecule
 (
+
 ) where
-import           Prelude hiding (cycle, foldl1, foldr1, head, init, last,
-                          maximum, minimum, tail, take, takeWhile, (!!))
+
+import           Prelude hiding ( (!!), cycle, foldl1, foldr1, head, init, last, maximum, minimum
+                                , tail, take, takeWhile )
