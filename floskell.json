@@ -53,6 +53,11 @@
                 "force-linebreak": false,
                 "spaces": "after",
                 "linebreaks": "none"
+            },
+            "let": {
+                "force-linebreak": true,
+                "spaces": "after",
+                "linebreaks": "before"
             }
         },
         "group": {
