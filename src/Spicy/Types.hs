@@ -73,7 +73,7 @@ because some Spicy assumptions are not met for example.
 data MolLogicException = MolLogicException
   { mlExcFunctionName :: String
   , mlExcDescription  :: String
-  } deriving Typeable
+  }
 instance Show MolLogicException where
   show (MolLogicException f e) = "MoleculeLogicException in function \"" ++ f ++ "\":" ++ e
 instance Exception MolLogicException
@@ -85,7 +85,7 @@ operation to perform.
 data DataStructureException = DataStructureException
   { dsExcFunctionName :: String
   , dsExcDescription  :: String
-  } deriving Typeable
+  }
 instance Show DataStructureException where
   show (DataStructureException f e) = "DataStructureException in function \"" ++ f ++ "\":" ++ e
 instance Exception DataStructureException
