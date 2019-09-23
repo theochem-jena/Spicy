@@ -105,14 +105,3 @@ distMat' mol = let coordVec = MI.getCoordinates Serial mol
                in dM coordVec
   where
     dM = $( runQ MI.distMat )
-
--- | Dihedral angle between 4 atoms
-r3VecDihedral :: (Vector R, Vector R, Vector R, Vector R) -> R
-r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
-  where
-    p1Normal = r3VecNormalVecOfPlane3Points (a, b, c)
-    p2Normal = r3VecNormalVecOfPlane3Points (b, c, d)
-
--- vectorProduct :: Seq Double -> Seq Double -> VS.Scalar Double
--- vectorProduct = $( VS.runQ vectorProduct' )
--}
