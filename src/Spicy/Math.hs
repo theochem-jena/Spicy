@@ -14,42 +14,59 @@ other operations are implemented using Accelerate, to provide parallel operation
 The operations here accept some insecurities (like not checking if both vectors of a dot product
 have equal lenght) and trust the caller.
 -}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Spicy.Math
-( (<.>)
-, vLength
-, vDistance
-, vAngle
-, vCross
-) where
+  ( (<.>)
+  , vLength
+  , vDistance
+  , vAngle
+  , vCross
+  )
+where
 import           Control.Exception.Safe
-import           Data.Array.Accelerate             (Matrix)
-import qualified Data.Foldable                     as F
-import           Data.Sequence                     (Seq)
-import qualified Data.Sequence                     as S
-import           Prelude                           hiding (cycle, foldl1,
-                                                    foldr1, head, init, last,
-                                                    maximum, minimum, tail,
-                                                    take, takeWhile, (!!))
-import qualified Spicy.Math.Internal               as MI
+import           Data.Array.Accelerate                    ( Matrix )
+import qualified Data.Foldable                 as F
+import           Data.Sequence                            ( Seq )
+import qualified Data.Sequence                 as S
+import           Prelude                           hiding ( cycle
+                                                          , foldl1
+                                                          , foldr1
+                                                          , head
+                                                          , init
+                                                          , last
+                                                          , maximum
+                                                          , minimum
+                                                          , tail
+                                                          , take
+                                                          , takeWhile
+                                                          , (!!)
+                                                          )
+import qualified Spicy.Math.Internal           as MI
 import           Spicy.Types
-#ifdef CUDA
-import           Data.Array.Accelerate.LLVM.PTX
-#else
-import           Data.Array.Accelerate.LLVM.Native
-#endif
-import qualified Data.Foldable                     as F
-import           Data.Sequence                     ( Seq )
-import qualified Data.Sequence                     as S
+import qualified Data.Foldable                 as F
+import           Data.Sequence                            ( Seq )
+import qualified Data.Sequence                 as S
 
-import           Prelude
-                 hiding ( (!!), cycle, foldl1, foldr1, head, init, last, maximum, minimum, tail
-                        , take, takeWhile )
+import           Prelude                           hiding ( (!!)
+                                                          , cycle
+                                                          , foldl1
+                                                          , foldr1
+                                                          , head
+                                                          , init
+                                                          , last
+                                                          , maximum
+                                                          , minimum
+                                                          , tail
+                                                          , take
+                                                          , takeWhile
+                                                          )
 
-import qualified Spicy.Math.Internal               as MI
+import qualified Spicy.Math.Internal           as MI
 import           Spicy.Types
+import           Spicy.Internal.Accelerate                ( runQ
+                                                          , runN
+                                                          )
 
 {-|
 Dot product of two 'Seq's.
@@ -101,7 +118,5 @@ vCross a b =
 __PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
 -}
 distMat' :: Molecule -> Matrix Double
-distMat' mol = let coordVec = MI.getCoordinates Serial mol
-               in dM coordVec
-  where
-    dM = $( runQ MI.distMat )
+distMat' mol = let coordVec = MI.getCoordinates Serial mol in dM coordVec
+  where dM = $( runQ MI.distMat )
