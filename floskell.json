@@ -91,6 +91,11 @@
                 "spaces": "both",
                 "linebreaks": "after"
             },
+            "{": {
+                "force-linebreak": true,
+                "spaces": "both",
+                "linebreaks": "after"
+            },
             "(# in expression": {
                 "force-linebreak": false,
                 "spaces": "both",
@@ -130,6 +135,11 @@
                 "force-linebreak": false,
                 "spaces": "none",
                 "linebreaks": "none"
+            },
+            "let": {
+                "force-linebreak": true,
+                "spaces": "both",
+                "linebreaks": "before"
             }
         },
         "layout": {
