@@ -75,8 +75,8 @@ Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
 parseXYZ :: Parser Molecule
 parseXYZ = do
-  nAtoms <- skipSpace' *> decimal
-  label  <- skipSpace *> takeWhile (not . isEndOfLine) <* skipSpace
+  nAtoms <- skipSpace' *> decimal <* skipSpace' <* endOfLine
+  label  <- skipSpace' *> takeWhile (not . isEndOfLine) <* endOfLine
   atoms  <- count nAtoms xyzLineParser
   return Molecule
     { _molecule_Label    = textS2L label

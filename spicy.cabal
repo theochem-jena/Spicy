@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ce9efd07789c2822a02c3709f518367cc687758e201731eed397e487e2e3dd9c
+-- hash: cbb2c749ffb16bc5639921f12130f9e3c10f4b023b42ae1a93a370ffb37960c7
 
 name:           spicy
 version:        0.0.0.1
@@ -27,6 +27,7 @@ extra-source-files:
     goldentests/input/FePorphyrine.mol2
     goldentests/input/FePorphyrine.txyz
     goldentests/input/FePorphyrine.xyz
+    goldentests/input/Ferrocene.xyz
     goldentests/input/HeteroTraj.xyz
     goldentests/input/N2_bonded.xyz
     goldentests/input/N2_nonbonded.xyz
@@ -46,6 +47,7 @@ extra-source-files:
     goldentests/goldenfiles/FePorphyrine__testWriterMOL21_Orig.json.golden
     goldentests/goldenfiles/FePorphyrine__testWriterXYZ1.json.golden
     goldentests/goldenfiles/FePorphyrine__testWriterXYZ1_Orig.json.golden
+    goldentests/goldenfiles/Ferrocene__testParserXYZ3.json.golden
     goldentests/goldenfiles/HeteroTraj__testParserXYZ2.json.golden
     goldentests/goldenfiles/Peptid__testParserMOL21.json.golden
     goldentests/goldenfiles/Peptid__testWriterPDB1_Orig.json.golden

@@ -165,6 +165,7 @@ testParser = testGroup "Parser"
   [ testParserTXYZ1
   , testParserXYZ1
   , testParserXYZ2
+  , testParserXYZ3
   , testParserPDB1
   , testParserPDB2
   , testParserPDB3
@@ -210,6 +211,17 @@ testParserXYZ2 =
         goldenFile
         outputFile
         parseAndWrite
+
+testParserXYZ3 :: TestTree
+testParserXYZ3 =
+  let testEnv = ParserEnv
+        { peTestName   = "Molden XYZ (3)"
+        , peGoldenFile = "goldentests" </> "goldenfiles" </> "Ferrocene__testParserXYZ3.json.golden"
+        , peInputFile  = "goldentests" </> "input" </> "Ferrocene.xyz"
+        , peOutputFile = "goldentests" </> "output" </> "Ferrocene__testParserXYZ3.json"
+        , peParser     = parseXYZ
+        }
+  in  peGoldenVsFile testEnv
 
 testParserPDB1 :: TestTree
 testParserPDB1 =
