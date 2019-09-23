@@ -42,6 +42,7 @@ module Spicy.Types
 , Trajectory
 ) where
 import           Control.DeepSeq
+import           Control.Exception.Safe
 import           Data.Aeson
 import           Data.Aeson.Encode.Pretty
 import qualified Data.Array.Accelerate     as A
