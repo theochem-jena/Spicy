@@ -95,7 +95,7 @@ checkMolecule mol
       subMols <- traverse checkMolecule $ mol ^. molecule_SubMol
       return $ mol & molecule_SubMol .~ subMols
  where
-    -- Indices of the atoms
+  -- Indices of the atoms
   atomInds      = IM.keysSet $ mol ^. molecule_Atoms
   -- Indices of the bond origin atoms
   bondsOrig     = IM.keysSet $ mol ^. molecule_Bonds
@@ -158,7 +158,7 @@ imisBidirectorial imis = IM.foldrWithKey'
         -- Check for all in the Seq of found IntSet, if the current key is also a member.
         keyInTargets :: Seq Bool
         keyInTargets = fmap (key `IS.member`) targetIS
-    in    -- If the current key is a member of all target IntSet, we are fine. If not, we have a
+    in  -- If the current key is a member of all target IntSet, we are fine. If not, we have a
         -- problem.
         all (== True) keyInTargets && bool
   )
@@ -247,7 +247,7 @@ reIndexMoleculeLayer repMap mol
        -- Use the (%~) lens to update the atoms indices of a molecule with new indices.
     &  molecule_Atoms
     %~ replaceIMKeys repMap
-      -- Use the (%~) lens to update keys and values (IntSet) of the bond type data structure.
+       -- Use the (%~) lens to update keys and values (IntSet) of the bond type data structure.
     &  molecule_Bonds
     %~ replaceIMIS repMap
 
@@ -282,7 +282,6 @@ checkRepMapCompleteIM repMap im =
       -- Keys that cannot be replaced
       lostKeys = oldKeys \\ repKeys
   in  IS.null lostKeys
-
 
 {-|
 Check if 'IntMap' is complete to replace all values in an 'IntMap' 'IntSet' type construction
@@ -348,7 +347,7 @@ groupTupleSeq a =
       atomicIntMaps = traverse imisFromGroupedSequence keyValGroups
       -- Fold all atom IntMap in the sequence into one.
       completeMap   = foldl' (<>) IM.empty <$> atomicIntMaps
-  in    -- The only way this function can fail, is if keys would not properly be groupled. This cannot
+  in  -- The only way this function can fail, is if keys would not properly be groupled. This cannot
       -- happen if 'groupBy' is called correclty before 'imisFromGroupedSequence'. Therefore default
       -- to the empty IntMap if this case, that cannot happen, happens.
       case completeMap of
