@@ -61,12 +61,13 @@ import qualified Data.ByteString.Lazy.UTF8     as BL
 import           Data.IntMap.Lazy               ( IntMap )
 import           Data.IntSet                    ( IntSet )
 import           Data.Sequence                  ( Seq )
+import qualified Data.Sequence                 as S
 import           Data.Text.Lazy                 ( Text )
 
 import           GHC.Generics                   ( Generic )
 
+import qualified Data.IntMap.Lazy              as IM
 import           Lens.Micro.Platform     hiding ( (.=) )
-
 import           Prelude                 hiding ( cycle
                                                 , foldl1
                                                 , foldr1
