@@ -7,7 +7,7 @@ Maintainer  : phillip.seeber@uni-jena.de
 Stability   : experimental
 Portability : POSIX, Windows
 
-A module which converts the internal Molecule representation to a string, which is a common chemical
+A module which converts the internal Molecule representation to a text, which is a common chemical
 file format, that can be read by Avogadro, VMD, OpenBabel etc.. The writers are not fool proof with
 respect to force field types, which should always be remembered when usings its results.
 -}
@@ -57,28 +57,23 @@ Write a Molden XYZ file from a molecule. This format ignores all deep level laye
 writeXYZ :: MonadThrow m => Molecule -> m Text
 writeXYZ mol = toXYZ <$> checkMolecule mol
  where
-    -- Assemble a XYZ file from a molecule
+  -- Assemble a XYZ file from a molecule
   toXYZ :: Molecule -> Text
   toXYZ m =
     let -- Line 1 of the header contains the number of atoms
-        headerL1 = T.pack . show . IM.size $ m ^. molecule_Atoms
-        -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
-        headerL2 = T.filter (not . isEndOfLine) $ m ^. molecule_Label
-        atomLs =
-            IM.foldr'
-                (\atom acc ->
-                  (T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
-                                   (show $ atom ^. atom_Element)
-                                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
-                                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
-                                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
-                    )
-                    `T.append` acc
-                )
-                ""
-              $  m
-              ^. molecule_Atoms
-    in  T.unlines [headerL1, headerL2] `T.append` atomLs
+      headL1 = T.pack . show . IM.size $ m ^. molecule_Atoms
+      -- Line 2 of the header contains 1 line of comment. Remove all linebreaks by filtering.
+      headL2 = T.filter (not . isEndOfLine) $ m ^. molecule_Label
+      atomLs = IM.foldr' (\atom acc -> atomLineWriter atom `T.append` acc) "" $ m ^. molecule_Atoms
+    in
+      T.unlines [headL1, headL2] `T.append` atomLs
+   where
+    atomLineWriter :: Atom -> Text
+    atomLineWriter a = T.pack $ printf "%-4s    %12.8F    %12.8F    %12.8F\n"
+                                       (show $ a ^. atom_Element)
+                                       (fromMaybe 0.0 $ (a ^. atom_Coordinates) S.!? 0)
+                                       (fromMaybe 0.0 $ (a ^. atom_Coordinates) S.!? 1)
+                                       (fromMaybe 0.0 $ (a ^. atom_Coordinates) S.!? 2)
 
 {-|
 Write a Tinker XYZ from a 'Molecule'. The writer trusts the '_atom_FFType' to be
@@ -98,11 +93,12 @@ writeTXYZ mol
  where
     -- Check if all atoms have TXYZ atom types.
   ffTypeCheck = all (== TXYZ 0) . IM.map (\a -> a ^. atom_FFType) $ mol ^. molecule_Atoms
+  --
   -- Write the molecule as a TXYZ formatted file.
   toTXYZ :: Molecule -> Text
   toTXYZ m =
     let -- The header line contains the number of atoms and separated by a space a comment.
-        headerL1 =
+        headL1 =
             (T.pack . show . IM.size $ mol ^. molecule_Atoms)
               `T.append` "  "
               `T.append` (T.filter (not . isEndOfLine) $ mol ^. molecule_Label)
@@ -113,34 +109,37 @@ writeTXYZ mol
         --   - XYZ coordinates in angstrom
         --   - The integer number of the atom type
         --   - The indices of all atoms, where to bind to
-        atomLs = IM.foldrWithKey'
-          (\key atom acc ->
-            -- Print the serial element XYZ FFType
-            (T.pack $ printf
-                "%6d    %2s    %12.8F    %12.8F    %12.8F    %6d"
-                (key + 1)
-                (show $ atom ^. atom_Element)
-                (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)
-                (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)
-                (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)
-                (case atom ^. atom_FFType of
-                  TXYZ i -> i
-                  _      -> 0
-                )
-              )
-              -- Print the bond targets
-              `T.append`
-                         T.stripEnd
-                           ( IS.foldr' (\x xs -> (T.pack $ printf "    %6d" (x + 1)) `T.append` xs)
-                                       ""
-                           $ fromMaybe IS.empty ((m ^. molecule_Bonds) IM.!? key)
-                           )
-              `T.append` "\n"
-              `T.append` acc
-          )
-          ""
-          (m ^. molecule_Atoms)
-    in  headerL1 `T.append` atomLs
+        atomLs = IM.foldrWithKey' (\key atom acc -> (atomLineWriter key atom m) `T.append` acc)
+                                  ""
+                                  (m ^. molecule_Atoms)
+    in  headL1 `T.append` atomLs
+  --
+  -- Writes the first part of an atom line in a TXYZ file (without bonds).
+  atomFirstPart :: Int -> Atom -> Text
+  atomFirstPart k a =
+    let ffNum = case a ^. atom_FFType of
+          TXYZ i -> i
+          _      -> 0
+    in  T.pack $ printf "%6d    %2s    %12.8F    %12.8F    %12.8F    %6d"
+                        (k + 1)
+                        (show $ a ^. atom_Element)
+                        (fromMaybe 0.0 $ (a ^. atom_Coordinates) S.!? 0)
+                        (fromMaybe 0.0 $ (a ^. atom_Coordinates) S.!? 1)
+                        (fromMaybe 0.0 $ (a ^. atom_Coordinates) S.!? 2)
+                        ffNum
+  --
+  -- Writes the second part of an atom line in a TXYZ file (bond targets).
+  atomSecondPart :: Int -> Molecule -> Text
+  atomSecondPart k m =
+    let targets = fromMaybe IS.empty ((m ^. molecule_Bonds) IM.!? k)
+    in  T.stripEnd
+            (IS.foldr' (\x xs -> (T.pack $ printf "    %6d" (x + 1)) `T.append` xs) "" $ targets)
+          `T.append` "\n"
+  --
+  -- Writes an complete atom line.
+  atomLineWriter :: Int -> Atom -> Molecule -> Text
+  atomLineWriter k a m = (atomFirstPart k a) `T.append` (atomSecondPart k m)
+
 
 
 {-|
@@ -154,11 +153,14 @@ writeMOL2 mol
   | otherwise   = throwM $ MolLogicException "writeMOL2" "Not all atoms have MOL2 style atom types."
  where
   ffTypeCheck = all (== Mol2 "") . IM.map (\a -> a ^. atom_FFType) $ mol ^. molecule_Atoms
+  --
+  -- Write a MOL2 formatted text from the current molecule.
   toMOL2 :: Molecule -> Text
   toMOL2 m =
     let -- First sublayer of the molecule.
         subMols = m ^. molecule_SubMol
     in  (toMOLECULE m) `T.append` (toATOM m subMols) `T.append` (toBOND m)
+  --
   -- Write the "@<TRIPOS>MOLECULE" block.
   toMOLECULE :: Molecule -> Text
   toMOLECULE m =
@@ -178,6 +180,7 @@ writeMOL2 mol
           , "USER_CHARGES"
           , ""
           ]
+  --
   -- Write the @<TRIPOS>ATOM block.
   toATOM :: Molecule -> Seq Molecule -> Text
   toATOM m sM =
@@ -195,13 +198,13 @@ writeMOL2 mol
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0) -- X
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1) -- Y
                   (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2) -- Z
-                  (case atom ^. atom_FFType of                       -- Atom label
+                  (case atom ^. atom_FFType of                        -- Atom label
                     Mol2 t -> T.unpack t
                     _      -> show $ atom ^. atom_Element
                   )
                   (fromMaybe 0 fragmentNum)                           -- Fragment number
                   (fromMaybe "UNL1" $ T.unpack <$> fragmentLabel)     -- Fragment name
-                  ((case atom ^. atom_PCharge of                     -- Partial charge
+                  ((case atom ^. atom_PCharge of                      -- Partial charge
                      Nothing -> 0
                      Just c  -> c
                    ) :: Double
@@ -211,21 +214,21 @@ writeMOL2 mol
           ""
           (m ^. molecule_Atoms)
     in  "@<TRIPOS>ATOM\n" `T.append` atomLines
+  --
   -- Write the "@<TRIPOS>BOND" block. All bonds are defined as single bonds for convenience.
   toBOND :: Molecule -> Text
   toBOND m =
     let -- Make the bonds unidirectorial first.
         bonds     = makeBondsUnidirectorial $ m ^. molecule_Bonds
         -- Write a single line for each bond.
-        bondLines = snd
-            -- Fold the keys (origins) in the IntMap to bond lines. Each origin key might give
-            -- multiple lines (one per target), and the targets are folded in an inner fold.
-                        $ IM.foldrWithKey'
+        -- Fold the keys (origins) in the IntMap to bond lines. Each origin key might give
+        -- multiple lines (one per target), and the targets are folded in an inner fold.
+        bondLines = snd $ IM.foldrWithKey'
           (\origin targets (nthBond, prevBLines) ->
-            let targetLines = snd
-                   -- For each target, write a new line. This is the inner loop, processing all
-                   -- targets for the current origin in the outer fold.
-                                  $ IS.foldr'
+
+            let -- For each target, write a new line. This is the inner loop, processing all
+                -- targets for the current origin in the outer fold.
+                targetLines = snd $ IS.foldr'
                   (\target (nthTarget, prevTLines) ->
                     let targetLine = T.pack $ printf "%6d %6d %6d %4s\n"
                                                      (nthTarget + nthBond)
@@ -265,39 +268,37 @@ writePDB mol
   toHETATM m =
     let subMols   = m ^. molecule_SubMol
         annoFrags = IM.fromAscList . toList . S.zip (S.fromList [1 .. S.length subMols]) $ subMols
-        atomLines =
-            IM.foldrWithKey'
-                (\key atom acc ->
-                  let fragmentNum   = findAtomInSubMols key annoFrags
-                      fragment      = fragmentNum >>= (\fragKey -> IM.lookup fragKey annoFrags)
-                      fragmentLabel = _molecule_Label <$> fragment
-                      thisAtomLine =
-                          T.concat
-                            . map T.pack
-                            $ [ printf "%-6s" ("HETATM" :: Text)                                         -- 1-6: Record type
-                              , printf "%5d " (key + 1)                                                  -- 7-11: Atom serial number
-                              , printf
-                                "%-4s "
-                                (if T.length (atom ^. atom_Label) <= 3
-                                  then " " ++ (T.unpack $ atom ^. atom_Label)
-                                  else T.unpack $ atom ^. atom_Label
-                                )
-                              , printf "%3s " (fromMaybe "UNL" $ T.unpack . T.take 3 <$> fragmentLabel)  -- 18-20: Residue name
-                              , printf "%1s" ("A" :: Text)                                             -- 22: Chain identifier
-                              , printf "%4d    " (fromMaybe 0 fragmentNum)                                  -- 23-26: Residue sequence number
-                              , printf "%8.3F" (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)        -- 31-38: X
-                              , printf "%8.3F" (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)        -- 39-46: Y
-                              , printf "%8.3F" (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)        -- 47-54: Z
-                              , printf "%6.2F" (1.0 :: Double)                                            -- 55-60: Occupancy
-                              , printf "%6.2F          " (0.0 :: Double)                                            -- 61-66: Temperature factor
-                              , printf "%2s" (T.toUpper . T.pack . show $ atom ^. atom_Element)         -- 77-78: Element symbol
-                              , printf "%2s\n" ("" :: Text)                                               -- 79-80: Charge of the atom.
-                              ]
-                  in  thisAtomLine `T.append` acc
-                )
-                ""
-              $  m
-              ^. molecule_Atoms
+        atomLines = IM.foldrWithKey'
+          (\key atom acc ->
+            let fragmentNum   = findAtomInSubMols key annoFrags
+                fragment      = fragmentNum >>= (\fragKey -> IM.lookup fragKey annoFrags)
+                fragmentLabel = _molecule_Label <$> fragment
+                thisAtomLine =
+                    T.concat
+                      . map T.pack
+                      $ [ printf "%-6s" ("HETATM" :: Text)                                         -- 1-6: Record type
+                        , printf "%5d " (key + 1)                                                  -- 7-11: Atom serial number
+                        , printf
+                          "%-4s "
+                          (if T.length (atom ^. atom_Label) <= 3
+                            then " " ++ (T.unpack $ atom ^. atom_Label)
+                            else T.unpack $ atom ^. atom_Label
+                          )
+                        , printf "%3s " (fromMaybe "UNL" $ T.unpack . T.take 3 <$> fragmentLabel)  -- 18-20: Residue name
+                        , printf "%1s"             ("A" :: Text)                                             -- 22: Chain identifier
+                        , printf "%4d    "         (fromMaybe 0 fragmentNum)                                  -- 23-26: Residue sequence number
+                        , printf "%8.3F" (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 0)        -- 31-38: X
+                        , printf "%8.3F" (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 1)        -- 39-46: Y
+                        , printf "%8.3F" (fromMaybe 0.0 $ (atom ^. atom_Coordinates) S.!? 2)        -- 47-54: Z
+                        , printf "%6.2F"           (1.0 :: Double)                                            -- 55-60: Occupancy
+                        , printf "%6.2F          " (0.0 :: Double)                                            -- 61-66: Temperature factor
+                        , printf "%2s" (T.toUpper . T.pack . show $ atom ^. atom_Element)         -- 77-78: Element symbol
+                        , printf "%2s\n"           ("" :: Text)                                               -- 79-80: Charge of the atom.
+                        ]
+            in  thisAtomLine `T.append` acc
+          )
+          ""
+          (m ^. molecule_Atoms)
     in  atomLines
   toCONECT :: Molecule -> Text
   toCONECT m =
