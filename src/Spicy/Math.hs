@@ -25,48 +25,33 @@ module Spicy.Math
   )
 where
 import           Control.Exception.Safe
-import           Data.Array.Accelerate                    ( Matrix )
+import           Data.Array.Accelerate          ( Matrix )
 import qualified Data.Foldable                 as F
-import           Data.Sequence                            ( Seq )
+import qualified Data.Foldable                 as F
+import           Data.Sequence                  ( Seq )
+import           Data.Sequence                  ( Seq )
 import qualified Data.Sequence                 as S
-import           Prelude                           hiding ( cycle
-                                                          , foldl1
-                                                          , foldr1
-                                                          , head
-                                                          , init
-                                                          , last
-                                                          , maximum
-                                                          , minimum
-                                                          , tail
-                                                          , take
-                                                          , takeWhile
-                                                          , (!!)
-                                                          )
+import qualified Data.Sequence                 as S
+import           Prelude                 hiding ( cycle
+                                                , foldl1
+                                                , foldr1
+                                                , head
+                                                , init
+                                                , last
+                                                , maximum
+                                                , minimum
+                                                , tail
+                                                , take
+                                                , takeWhile
+                                                , (!!)
+                                                )
+import           Spicy.Internal.Accelerate      ( runN
+                                                , runQ
+                                                )
+import qualified Spicy.Math.Internal           as MI
 import qualified Spicy.Math.Internal           as MI
 import           Spicy.Types
-import qualified Data.Foldable                 as F
-import           Data.Sequence                            ( Seq )
-import qualified Data.Sequence                 as S
-
-import           Prelude                           hiding ( (!!)
-                                                          , cycle
-                                                          , foldl1
-                                                          , foldr1
-                                                          , head
-                                                          , init
-                                                          , last
-                                                          , maximum
-                                                          , minimum
-                                                          , tail
-                                                          , take
-                                                          , takeWhile
-                                                          )
-
-import qualified Spicy.Math.Internal           as MI
 import           Spicy.Types
-import           Spicy.Internal.Accelerate                ( runQ
-                                                          , runN
-                                                          )
 
 {-|
 Dot product of two 'Seq's.

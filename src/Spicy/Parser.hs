@@ -42,11 +42,8 @@ import qualified Data.Text                     as TS
 import qualified Data.Text.Lazy                as TL
 import qualified Data.Text.Lazy.Read           as TL
 import           Data.Tuple
-
 import           Lens.Micro.Platform
-
-import           Prelude                 hiding ( (!!)
-                                                , cycle
+import           Prelude                 hiding ( cycle
                                                 , foldl1
                                                 , foldr1
                                                 , head
@@ -57,12 +54,12 @@ import           Prelude                 hiding ( (!!)
                                                 , tail
                                                 , take
                                                 , takeWhile
+                                                , (!!)
                                                 )
+import           Text.Read
 
 import           Spicy.Molecule.Util
 import           Spicy.Types
-
-import           Text.Read
 
 -- import Data.Monoid
 -- import Data.Sequence (Seq)

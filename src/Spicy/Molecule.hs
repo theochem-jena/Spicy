@@ -18,8 +18,7 @@ module Spicy.Molecule
   ()
 where
 
-import           Prelude                 hiding ( (!!)
-                                                , cycle
+import           Prelude                 hiding ( cycle
                                                 , foldl1
                                                 , foldr1
                                                 , head
@@ -30,4 +29,5 @@ import           Prelude                 hiding ( (!!)
                                                 , tail
                                                 , take
                                                 , takeWhile
+                                                , (!!)
                                                 )

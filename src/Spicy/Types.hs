@@ -10,10 +10,10 @@ Portability : POSIX, Windows
 Spicy.Types contains the definition of all classes and data types, that are used in Spicy. Mainly it
 takes care of the description of molecules (structure, topology, potential energy surface, ...).
 -}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Spicy.Types
   (
@@ -67,8 +67,7 @@ import           GHC.Generics                   ( Generic )
 
 import           Lens.Micro.Platform     hiding ( (.=) )
 
-import           Prelude                 hiding ( (!!)
-                                                , cycle
+import           Prelude                 hiding ( cycle
                                                 , foldl1
                                                 , foldr1
                                                 , head
@@ -79,6 +78,7 @@ import           Prelude                 hiding ( (!!)
                                                 , tail
                                                 , take
                                                 , takeWhile
+                                                , (!!)
                                                 )
 
 {-

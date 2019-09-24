@@ -14,22 +14,22 @@ module Spicy.Data
   )
 where
 
-import           Data.Map                                 ( Map )
+import           Data.Map                       ( Map )
 import qualified Data.Map                      as Map
 
-import           Prelude                           hiding ( (!!)
-                                                          , cycle
-                                                          , foldl1
-                                                          , foldr1
-                                                          , head
-                                                          , init
-                                                          , last
-                                                          , maximum
-                                                          , minimum
-                                                          , tail
-                                                          , take
-                                                          , takeWhile
-                                                          )
+import           Prelude                 hiding ( cycle
+                                                , foldl1
+                                                , foldr1
+                                                , head
+                                                , init
+                                                , last
+                                                , maximum
+                                                , minimum
+                                                , tail
+                                                , take
+                                                , takeWhile
+                                                , (!!)
+                                                )
 
 import           Spicy.Types
 
