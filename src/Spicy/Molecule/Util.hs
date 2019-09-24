@@ -21,6 +21,7 @@ module Spicy.Molecule.Util
   , makeSubMolsFromAnnoAtoms
   )
 where
+import           Control.Exception.Safe
 import           Data.Foldable
 import           Data.IntMap.Lazy               ( IntMap )
 import qualified Data.IntMap.Lazy              as IM
