@@ -23,7 +23,6 @@ import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 
-
 main :: IO ()
 main = defaultMain tests
 
@@ -263,7 +262,6 @@ These tests are checking writers.
 testWriter :: TestTree
 testWriter = testGroup "Writer" [testWriterMolecule]
 
-
 ----------------------------------------------------------------------------------------------------
 {- $moleculeWriterTests
 These tests are meant to check if the writers produce parsable formats. Parsing an "original" file
@@ -399,8 +397,9 @@ testWriterMOL21 =
   in  mweGoldenVsFile testEnv
 
 {-|
-Not that changed atom indices can occur in strange PDBs. This is normal and this is wanted. This
-test case therefore uses a "correctly" counting PDB.
+Note, that changed atom indices can occur in strange PDBs. This is normal and this is wanted. This
+test case therefore uses a "correctly" counting PDB, as 'writePDB' will reindex. Therefore you will
+obtain an offset, if this PDB would not start counting from one continously.
 -}
 testWriterPDB1 :: TestTree
 testWriterPDB1 =

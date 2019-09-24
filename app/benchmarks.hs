@@ -14,7 +14,6 @@ import           Spicy.Parser
 import           Spicy.Types
 -}
 
-
 main :: IO ()
 main = return ()
 {-
