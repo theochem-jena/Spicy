@@ -30,13 +30,13 @@ import           Data.Attoparsec.Text.Lazy
 import           Data.Char
 import           Data.Either
 import           Data.Foldable
-import           Data.IntMap                              ( IntMap )
+import           Data.IntMap                    ( IntMap )
 import qualified Data.IntMap                   as IM
-import           Data.IntSet                              ( IntSet )
+import           Data.IntSet                    ( IntSet )
 import qualified Data.IntSet                   as IS
 import qualified Data.List                     as L
 import           Data.Maybe
-import           Data.Sequence                            ( Seq(..) )
+import           Data.Sequence                  ( Seq(..) )
 import qualified Data.Sequence                 as S
 import qualified Data.Text                     as TS
 import qualified Data.Text.Lazy                as TL
@@ -45,19 +45,19 @@ import           Data.Tuple
 
 import           Lens.Micro.Platform
 
-import           Prelude                           hiding ( (!!)
-                                                          , cycle
-                                                          , foldl1
-                                                          , foldr1
-                                                          , head
-                                                          , init
-                                                          , last
-                                                          , maximum
-                                                          , minimum
-                                                          , tail
-                                                          , take
-                                                          , takeWhile
-                                                          )
+import           Prelude                 hiding ( (!!)
+                                                , cycle
+                                                , foldl1
+                                                , foldr1
+                                                , head
+                                                , init
+                                                , last
+                                                , maximum
+                                                , minimum
+                                                , tail
+                                                , take
+                                                , takeWhile
+                                                )
 
 import           Spicy.Molecule.Util
 import           Spicy.Types
