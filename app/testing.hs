@@ -8,31 +8,26 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Reader
 import           Data.Aeson
 import           Data.Attoparsec.Text.Lazy
-import qualified Data.ByteString.Lazy       as B
-import           Data.Sequence              (Seq)
-import qualified Data.Sequence              as S
-import           Data.Text.Lazy             (Text)
-import qualified Data.Text.Lazy             as T
-import qualified Data.Text.Lazy.IO          as T
+import qualified Data.ByteString.Lazy          as B
+import           Data.Sequence                  ( Seq )
+import qualified Data.Sequence                 as S
+import           Data.Text.Lazy                 ( Text )
+import qualified Data.Text.Lazy                as T
+import qualified Data.Text.Lazy.IO             as T
 import           Spicy.Math
 import           Spicy.Parser
 import           Spicy.Types
 import           Spicy.Writer.Molecule
-import           System.FilePath            hiding ((<.>))
+import           System.FilePath         hiding ( (<.>) )
 import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
-
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "All tests"
-  [ testParser
-  , testMath
-  , testWriter
-  ]
+tests = testGroup "All tests" [testParser, testMath, testWriter]
 
 ----------------------------------------------------------------------------------------------------
 -- Test cases for math routines
@@ -42,24 +37,17 @@ calculations are embedded by TemplateHaskell as compiled LLVM code by means of '
 also as a test for a correct build, as the system is somewhat sensitive with all its dependencies.
 -}
 testMath :: TestTree
-testMath = testGroup "Math"
-  [ testDotProduct
-  , testVLength
-  , testVDistance
-  , testVAngle
-  , testVCross
-  ]
+testMath = testGroup "Math" [testDotProduct, testVLength, testVDistance, testVAngle, testVCross]
 
 {-|
 Dot product of 2 simple vectors.
 -}
 testDotProduct :: TestTree
 testDotProduct =
-  let vecA = S.fromList [1, 2 ,3]  :: Seq Double
-      vecB = S.fromList [-7, 8, 9] :: Seq Double
+  let vecA       = S.fromList [1, 2, 3] :: Seq Double
+      vecB       = S.fromList [-7, 8, 9] :: Seq Double
       dotProduct = 36
-  in  testCase "Vector Dot Product" $
-        vecA <.> vecB @?= dotProduct
+  in  testCase "Vector Dot Product" $ vecA <.> vecB @?= dotProduct
 
 {-|
 Length of a vector.
@@ -68,8 +56,7 @@ testVLength :: TestTree
 testVLength =
   let vecA = S.fromList [2, 4, 4] :: Seq Double
       len  = 6
-  in  testCase "Vector Length" $
-        vLength vecA @?= len
+  in  testCase "Vector Length" $ vLength vecA @?= len
 
 {-|
 Distance between 2 points.
@@ -77,10 +64,9 @@ Distance between 2 points.
 testVDistance :: TestTree
 testVDistance =
   let vecA = S.fromList [0, 0, 10] :: Seq Double
-      vecB = S.fromList [0, 0, 0]  :: Seq Double
+      vecB = S.fromList [0, 0, 0] :: Seq Double
       dist = 10
-  in  testCase "Vectors Distance" $
-        vDistance vecA vecB @?= dist
+  in  testCase "Vectors Distance" $ vDistance vecA vecB @?= dist
 
 {-|
 Anlge between two vectors.
@@ -90,19 +76,17 @@ testVAngle =
   let vecA  = S.fromList [0, 0, 1] :: Seq Double
       vecB  = S.fromList [0, 1, 0] :: Seq Double
       angle = 0.5 * pi
-  in  testCase "Vectors Angle" $
-        vAngle vecA vecB @?= angle
+  in  testCase "Vectors Angle" $ vAngle vecA vecB @?= angle
 
 {-|
 Cross product between two R3 vectors.
 -}
 testVCross :: TestTree
 testVCross =
-  let vecA = S.fromList [0, 0, 1]  :: Seq Double
-      vecB = S.fromList [0, 1, 0]  :: Seq Double
+  let vecA = S.fromList [0, 0, 1] :: Seq Double
+      vecB = S.fromList [0, 1, 0] :: Seq Double
       vecC = S.fromList [-1, 0, 0] :: Seq Double
-  in  testCase "Vectors Cross Product" $
-        (vCross vecA vecB :: Maybe (Seq Double)) @?= Just vecC
+  in  testCase "Vectors Cross Product" $ (vCross vecA vecB :: Maybe (Seq Double)) @?= Just vecC
 
 
 {-
@@ -142,15 +126,14 @@ peParseAndWrite = do
 Wrapper for 'goldenVsFile' for the 'Spicy.Parser' test cases.
 -}
 peGoldenVsFile :: ParserEnv -> TestTree
-peGoldenVsFile env =
-  goldenVsFile
-    (peTestName env)
-    (peGoldenFile env)
-    (peOutputFile env)
-    (runReaderT peParseAndWrite env)
+peGoldenVsFile env = goldenVsFile (peTestName env)
+                                  (peGoldenFile env)
+                                  (peOutputFile env)
+                                  (runReaderT peParseAndWrite env)
 
 testParser :: TestTree
-testParser = testGroup "Parser"
+testParser = testGroup
+  "Parser"
   [ testParserTXYZ1
   , testParserXYZ1
   , testParserXYZ2
@@ -166,7 +149,9 @@ testParserTXYZ1 :: TestTree
 testParserTXYZ1 =
   let testEnv = ParserEnv
         { peTestName   = "Tinker TXYZ (1)"
-        , peGoldenFile = "goldentests" </> "goldenfiles" </> "RuKomplex__testParserTXYZ1.json.golden"
+        , peGoldenFile = "goldentests"
+                         </> "goldenfiles"
+                         </> "RuKomplex__testParserTXYZ1.json.golden"
         , peInputFile  = "goldentests" </> "input" </> "RuKomplex.txyz"
         , peOutputFile = "goldentests" </> "output" </> "RuKomplex__testParserTXYZ1.json"
         , peParser     = parseTXYZ
@@ -177,7 +162,9 @@ testParserXYZ1 :: TestTree
 testParserXYZ1 =
   let testEnv = ParserEnv
         { peTestName   = "Molden XYZ (1)"
-        , peGoldenFile = "goldentests" </> "goldenfiles" </> "FePorphyrine__testParserXYZ1.json.golden"
+        , peGoldenFile = "goldentests"
+                         </> "goldenfiles"
+                         </> "FePorphyrine__testParserXYZ1.json.golden"
         , peInputFile  = "goldentests" </> "input" </> "FePorphyrine.xyz"
         , peOutputFile = "goldentests" </> "output" </> "FePorphyrine__testParserXYZ1.json"
         , peParser     = parseXYZ
@@ -195,11 +182,7 @@ testParserXYZ2 =
         case parse (many1 parseXYZ) raw of
           Done _ mol -> T.writeFile outputFile . T.concat . map writeSpicy $ mol
           Fail _ _ e -> T.writeFile outputFile . T.pack $ e
-  in  goldenVsFile
-        testName
-        goldenFile
-        outputFile
-        parseAndWrite
+  in  goldenVsFile testName goldenFile outputFile parseAndWrite
 
 testParserXYZ3 :: TestTree
 testParserXYZ3 =
@@ -265,13 +248,9 @@ testParserSpicy1 =
       parseAndWrite = do
         raw <- B.readFile inputFile
         case eitherDecode raw of
-          Left err    -> T.writeFile outputFile . T.pack $ err
+          Left  err   -> T.writeFile outputFile . T.pack $ err
           Right spicy -> T.writeFile outputFile . writeSpicy $ spicy
-  in  goldenVsFile
-        testName
-        goldenFile
-        outputFile
-        parseAndWrite
+  in  goldenVsFile testName goldenFile outputFile parseAndWrite
 
 
 {-
@@ -281,10 +260,7 @@ testParserSpicy1 =
 These tests are checking writers.
 -}
 testWriter :: TestTree
-testWriter = testGroup "Writer"
-  [ testWriterMolecule
-  ]
-
+testWriter = testGroup "Writer" [testWriterMolecule]
 
 ----------------------------------------------------------------------------------------------------
 {- $moleculeWriterTests
@@ -334,18 +310,18 @@ against the original JSON representation.
 mweParseWriteParseWrite :: ReaderT MolWriterEnv IO ()
 mweParseWriteParseWrite = do
   -- Get the environment.
-  env      <- ask
+  env     <- ask
   -- Read and parse the original (external) file
-  origRaw  <- liftIO $ T.readFile (mweOrigFile env)
+  origRaw <- liftIO $ T.readFile (mweOrigFile env)
   -- Parse the original file.
-  origMol  <- parse' (mweParser env) origRaw
+  origMol <- parse' (mweParser env) origRaw
   -- Get the text representation of the original file.
   let origText = (mweWriter env) origMol
   -- Write the Spicy JSON representation of the original molecule (Golden File) and the writer (to
   -- test) representation of the original molecule.
   liftIO . T.writeFile (mweGoldenJSON env) . writeSpicy $ origMol
   case origText of
-    Left e  -> liftIO . T.writeFile (mweWriterFile env) . T.pack . show $ e
+    Left  e -> liftIO . T.writeFile (mweWriterFile env) . T.pack . show $ e
     Right t -> liftIO . T.writeFile (mweWriterFile env) $ t
   -- Parse the writer result again with the supplied parser.
   writerRaw <- liftIO $ T.readFile (mweWriterFile env)
@@ -359,73 +335,83 @@ mweParseWriteParseWrite = do
 This function provides a wrapper around 'goldenVsFile', tuned for the writer tests.
 -}
 mweGoldenVsFile :: MolWriterEnv -> TestTree
-mweGoldenVsFile env =
-  goldenVsFile
-    (mweTestName env)
-    (mweGoldenJSON env)
-    (mweWriterJSON env)
-    (runReaderT mweParseWriteParseWrite env)
+mweGoldenVsFile env = goldenVsFile (mweTestName env)
+                                   (mweGoldenJSON env)
+                                   (mweWriterJSON env)
+                                   (runReaderT mweParseWriteParseWrite env)
 
 testWriterMolecule :: TestTree
-testWriterMolecule = testGroup "Molecule Formats"
-  [ testWriterXYZ1
-  , testWriterTXYZ1
-  , testWriterMOL21
-  , testWriterPDB1
-  ]
+testWriterMolecule =
+  testGroup "Molecule Formats" [testWriterXYZ1, testWriterTXYZ1, testWriterMOL21, testWriterPDB1]
 
 testWriterXYZ1 :: TestTree
 testWriterXYZ1 =
-  let testEnv = MolWriterEnv
-        { mweTestName   = "Molden XYZ (1)"
-        , mweOrigFile   = "goldentests" </> "input" </> "FePorphyrine.xyz"
-        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterXYZ1_Orig.json.golden"
-        , mweWriterFile = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.xyz"
-        , mweWriterJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.json"
-        , mweParser     = parseXYZ
-        , mweWriter     = writeXYZ
-        }
-  in mweGoldenVsFile testEnv
+  let
+    testEnv = MolWriterEnv
+      { mweTestName   = "Molden XYZ (1)"
+      , mweOrigFile   = "goldentests" </> "input" </> "FePorphyrine.xyz"
+      , mweGoldenJSON = "goldentests"
+                        </> "goldenfiles"
+                        </> "FePorphyrine__testWriterXYZ1_Orig.json.golden"
+      , mweWriterFile = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.xyz"
+      , mweWriterJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterXYZ1_Writer.json"
+      , mweParser     = parseXYZ
+      , mweWriter     = writeXYZ
+      }
+  in  mweGoldenVsFile testEnv
 
 testWriterTXYZ1 :: TestTree
 testWriterTXYZ1 =
-  let testEnv = MolWriterEnv
-        { mweTestName   = "Tinker TXYZ (1)"
-        , mweOrigFile   = "goldentests" </> "input" </> "SulfateInSolution.txyz"
-        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "SulfateInSolution__testWriterTXYZ1_Orig.json.golden"
-        , mweWriterFile = "goldentests" </> "output" </> "SulfateInSolution__testWriterTXYZ1_Writer.txyz"
-        , mweWriterJSON = "goldentests" </> "output" </> "SulfateInSolution__testWriterTXYZ1_Writer.json"
-        , mweParser     = parseTXYZ
-        , mweWriter     = writeTXYZ
-        }
-  in mweGoldenVsFile testEnv
+  let
+    testEnv = MolWriterEnv
+      { mweTestName   = "Tinker TXYZ (1)"
+      , mweOrigFile   = "goldentests" </> "input" </> "SulfateInSolution.txyz"
+      , mweGoldenJSON = "goldentests"
+                        </> "goldenfiles"
+                        </> "SulfateInSolution__testWriterTXYZ1_Orig.json.golden"
+      , mweWriterFile = "goldentests"
+                        </> "output"
+                        </> "SulfateInSolution__testWriterTXYZ1_Writer.txyz"
+      , mweWriterJSON = "goldentests"
+                        </> "output"
+                        </> "SulfateInSolution__testWriterTXYZ1_Writer.json"
+      , mweParser     = parseTXYZ
+      , mweWriter     = writeTXYZ
+      }
+  in  mweGoldenVsFile testEnv
 
 testWriterMOL21 :: TestTree
 testWriterMOL21 =
-  let testEnv = MolWriterEnv
-        { mweTestName   = "SyByl MOL2 (1)"
-        , mweOrigFile   = "goldentests" </> "input" </> "FePorphyrine.mol2"
-        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "FePorphyrine__testWriterMOL21_Orig.json.golden"
-        , mweWriterFile = "goldentests" </> "output" </> "FePorphyrine__testWriterMOL21_Writer.mol2"
-        , mweWriterJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterMOL21_Writer.json"
-        , mweParser     = parseMOL2
-        , mweWriter     = writeMOL2
-        }
-  in mweGoldenVsFile testEnv
+  let
+    testEnv = MolWriterEnv
+      { mweTestName   = "SyByl MOL2 (1)"
+      , mweOrigFile   = "goldentests" </> "input" </> "FePorphyrine.mol2"
+      , mweGoldenJSON = "goldentests"
+                        </> "goldenfiles"
+                        </> "FePorphyrine__testWriterMOL21_Orig.json.golden"
+      , mweWriterFile = "goldentests" </> "output" </> "FePorphyrine__testWriterMOL21_Writer.mol2"
+      , mweWriterJSON = "goldentests" </> "output" </> "FePorphyrine__testWriterMOL21_Writer.json"
+      , mweParser     = parseMOL2
+      , mweWriter     = writeMOL2
+      }
+  in  mweGoldenVsFile testEnv
 
 {-|
-Not that changed atom indices can occur in strange PDBs. This is normal and this is wanted. This
-test case therefore uses a "correctly" counting PDB.
+Note, that changed atom indices can occur in strange PDBs. This is normal and this is wanted. This
+test case therefore uses a "correctly" counting PDB, as 'writePDB' will reindex. Therefore you will
+obtain an offset, if this PDB would not start counting from one continously.
 -}
 testWriterPDB1 :: TestTree
 testWriterPDB1 =
   let testEnv = MolWriterEnv
         { mweTestName   = "PDB 4NDG Aprataxin (1)"
         , mweOrigFile   = "goldentests" </> "input" </> "Peptid.pdb"
-        , mweGoldenJSON = "goldentests" </> "goldenfiles" </> "Peptid__testWriterPDB1_Orig.json.golden"
+        , mweGoldenJSON = "goldentests"
+                          </> "goldenfiles"
+                          </> "Peptid__testWriterPDB1_Orig.json.golden"
         , mweWriterFile = "goldentests" </> "output" </> "Peptid__testWriterPDB1_Writer.pdb"
         , mweWriterJSON = "goldentests" </> "output" </> "Peptid__testWriterPDB1_Writer.json"
         , mweParser     = parsePDB
         , mweWriter     = writePDB
         }
-  in mweGoldenVsFile testEnv
+  in  mweGoldenVsFile testEnv
