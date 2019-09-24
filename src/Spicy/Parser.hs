@@ -14,8 +14,12 @@ provided, as this is a JSON structured file, which should be parsed by
 {-# LANGUAGE OverloadedStrings #-}
 
 module Spicy.Parser
-  ( parse'
+  (
+  -- * Generic Helpers
+  -- $
+    parse'
   -- * Chemical Data Formats
+  -- $chemicalFormats
   , parseXYZ
   , parseTXYZ
   , parseMOL2
@@ -61,10 +65,14 @@ import           Text.Read
 import           Spicy.Molecule.Util
 import           Spicy.Types
 
--- import Data.Monoid
--- import Data.Sequence (Seq)
--- import Debug.Trace
--- import Control.DeepSeq
+
+{-
+====================================================================================================
+-}
+{- $helperFunctions
+These are helper functions to abstract certain behaviours we need in Spicy.
+-}
+
 {-|
 Make a parser optional and wrap it in a 'Maybe'.
 -}
@@ -85,12 +93,24 @@ Convert strict text to lazy text.
 textS2L :: TS.Text -> TL.Text
 textS2L = TL.pack . TS.unpack
 
+{-|
+This is a wrapper around Attoparsec's 'parse' function. Contrary to 'parse', this function fails
+with  an composable error type in 'MonadThrow'.
+-}
 parse' :: MonadThrow m => Parser a -> TL.Text -> m a
 parse' p t = case parse p t of
   Done _ r   -> return r
   Fail _ _ e -> throwM $ ParserException e
 
-----------------------------------------------------------------------------------------------------
+{-
+====================================================================================================
+-}
+{- $chemicalFormats
+These are parsers for chemical data formats. Most of them are completetly fine with OpenBabel
+generated files but are nevertheless not fully standard compliant. The parsers for complex data
+formats, such as MOL2 or PDB are not parsing all informations these data formats provide but rather
+only the ones used by Spicy's internal representation.
+-}
 {-|
 Parse a .xyz file (has no connectivity, atom types or partioal charges).
 -}
@@ -123,6 +143,7 @@ parseXYZ = do
                 , _atom_Coordinates = S.fromList [x, y, z]
                 }
 
+----------------------------------------------------------------------------------------------------
 {-|
 Parse a Tinker XYZ formatted file. It has coordinates and might have connectivity and atom types.
 This format and therefore parser are not using any layers (recursions of 'Molecule').
@@ -171,6 +192,7 @@ parseTXYZ = do
   columnDecimal :: Parser Int
   columnDecimal = skipSpace' *> decimal <* skipSpace'
 
+----------------------------------------------------------------------------------------------------
 {-|
 Parse the "interesting" fields of a MOL2 file. This contains partial charges as well as
 connectivity. There is no special understanding for the atom types, that are available in MOL2
@@ -318,6 +340,7 @@ parseMOL2 = do
         bonds           = groupTupleSeq bondTuplesBoth
     return bonds
 
+----------------------------------------------------------------------------------------------------
 {-|
 Parse a PDB file as described in
 <ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf>. If parsing of a single ATOM
