@@ -27,10 +27,7 @@ where
 import           Control.Exception.Safe
 import           Data.Array.Accelerate          ( Matrix )
 import qualified Data.Foldable                 as F
-import qualified Data.Foldable                 as F
 import           Data.Sequence                  ( Seq )
-import           Data.Sequence                  ( Seq )
-import qualified Data.Sequence                 as S
 import qualified Data.Sequence                 as S
 import           Prelude                 hiding ( cycle
                                                 , foldl1
@@ -45,12 +42,8 @@ import           Prelude                 hiding ( cycle
                                                 , takeWhile
                                                 , (!!)
                                                 )
-import           Spicy.Internal.Accelerate      ( runN
-                                                , runQ
-                                                )
+import           Spicy.Internal.Accelerate
 import qualified Spicy.Math.Internal           as MI
-import qualified Spicy.Math.Internal           as MI
-import           Spicy.Types
 import           Spicy.Types
 
 {-|
