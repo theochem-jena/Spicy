@@ -58,28 +58,28 @@ import           Data.Aeson
 import           Data.Aeson.Encode.Pretty
 import qualified Data.Array.Accelerate         as A
 import qualified Data.ByteString.Lazy.UTF8     as BL
-import           Data.IntMap.Lazy                         ( IntMap )
-import           Data.IntSet                              ( IntSet )
-import           Data.Sequence                            ( Seq )
-import           Data.Text.Lazy                           ( Text )
+import           Data.IntMap.Lazy               ( IntMap )
+import           Data.IntSet                    ( IntSet )
+import           Data.Sequence                  ( Seq )
+import           Data.Text.Lazy                 ( Text )
 
-import           GHC.Generics                             ( Generic )
+import           GHC.Generics                   ( Generic )
 
-import           Lens.Micro.Platform               hiding ( (.=) )
+import           Lens.Micro.Platform     hiding ( (.=) )
 
-import           Prelude                           hiding ( (!!)
-                                                          , cycle
-                                                          , foldl1
-                                                          , foldr1
-                                                          , head
-                                                          , init
-                                                          , last
-                                                          , maximum
-                                                          , minimum
-                                                          , tail
-                                                          , take
-                                                          , takeWhile
-                                                          )
+import           Prelude                 hiding ( (!!)
+                                                , cycle
+                                                , foldl1
+                                                , foldr1
+                                                , head
+                                                , init
+                                                , last
+                                                , maximum
+                                                , minimum
+                                                , tail
+                                                , take
+                                                , takeWhile
+                                                )
 
 {-
 ====================================================================================================
