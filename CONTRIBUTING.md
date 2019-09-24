@@ -2,7 +2,10 @@
 
 ## Source formatting
 ### Documentation and Commenting
-Every top level function and declaration needs to be documented. Use [Haddock](https://www.haskell.org/haddock/) to write visible documentation for every function, where assumptions and behaviour of the function are clearly described. In case there could be any ambiguities what the arguments of a function mean, also document them using Haddock. Top level functions documenting should use Haddock stly block comments with the comment opening and closing braces in extra lines.
+Every top level function and declaration needs to be documented.
+Use [Haddock](https://www.haskell.org/haddock/) to write visible documentation for every function, where assumptions and behaviour of the function are clearly described.
+In case there could be any ambiguities what the arguments of a function mean, also document them using Haddock.
+Top level functions documenting should use Haddock style block comments with the comment opening and closing braces in extra lines.
 
 Local declarations in `let` or `where` should be documented if it is not absolutely clear, what their meaning is. Use normal (non-Haddock) comments for this.
 
@@ -11,76 +14,68 @@ If you use any abbreviations, that are not immediately obvious, put a comment th
 __*Example:*__
 ```haskell
 {-|
-Substitute all indices in the bonding style 'IntMap' by replacements given in a 'IntMap' 'Int'. If
-keys of the old bonding map do not appear in the replacement map, a 'Left' error 'String' will be
-given. Therefore the replacement map must be complete and no holes are allowed.
+Take a group ('Seq') of 'Atom's as formed by 'groupAsSubMols and the bonds of the complete
+'Molecule'. Then form a proper submolecule. This function relies on the group of being a proper
+submolecule and will hapilly accept groups that are not.
 -}
-reIndexBonds ::
-     IntMap Int                    -- ^ Substitution patterns with original as key and new as Value.
-  -> IntMap IntSet                 -- ^ Original '_molecule_Bonds' styled 'IntMap'.
-  -> Either String (IntMap IntSet) -- ^ New bonds after replacements. Results in a 'Left' 'String'
-                                   --   as error, if not all old indices can be mapped to new
-                                   --   indices.
-reIndexBonds repMap bondsMap
-  | IS.null lostKeysIM && IS.null lostKeysIS =
-      Right $ (IM.map (updateIntSet repMap)) . (updateKeys repMap) $ bondsMap
-  | otherwise     =
-      Left "reIndexBonds: The replacement IntMap has holes and cannot map all old indices to new \
-      \ indices."
-  where
-    -- Old keys (origin of bonds Atoms)
-    oldKeys    = IM.keysSet bondsMap
-    -- Old values (target of bonds Atoms)
-    oldSets    = IS.unions $ bondsMap
-    -- Keys to be replaced
-    repKeys    = IM.keysSet repMap
-    -- Keys that are in the old map, but not in the new map.
-    lostKeysIM = oldKeys \\ repKeys
-    lostKeysIS = oldSets \\ repKeys
+makeSubMolFromGroup
+  :: Seq (Int, (Int, TL.Text), Atom) -- ^ A group of annotated atoms in the style of:
+                                     --   @(atomIndex, (subMolID, subMolName), atom)@
+  -> IntMap IntSet                   -- ^ Bond type data structure of the whole molecule.
+  -> Molecule                        -- ^ A newly formed submolecule.
+makeSubMolFromGroup group bonds =
+  let atoms    = IM.fromList . toList . fmap (\(ind, _, atom) -> (ind, atom)) $ group
+      label    = fromMaybe "" . (S.!? 0) . fmap (^. _2 . _2) $ group
+      atomInds = IM.keysSet atoms
+      -- Remove all bonds from the IntMap, that have origin on atoms not in this set and all
+      -- target atoms that are not in the set.
+      bondsCleaned :: IntMap IntSet
+      bondsCleaned = IM.map (IS.filter (`IS.member` atomInds)) $ bonds `IM.restrictKeys` atomInds
+  in  Molecule { _molecule_Label    = label
+               , _molecule_Atoms    = atoms
+               , _molecule_Bonds    = bondsCleaned
+               , _molecule_SubMol   = S.empty
+               , _molecule_Energy   = Nothing
+               , _molecule_Gradient = Nothing
+               , _molecule_Hessian  = Nothing
+               }
+
   ```
 
 ### Function Declaration and Indentation
-Line width maximum is 100 characters, both for comments and for code. Generally functions should not be longer than 30 lines (excluding comments and possibly multiline records). If a function cannot be expressed in 30 lines, split it into atomic functions. Short functions are easier to understand, debug and reuse. Expections might be parsers and writers for text processing or wrapper interactions in a process.
+Line width maximum is 100 characters, both for comments and for code.
+Generally functions should not be longer than 30 lines (excluding comments and possibly multiline records).
+If a function cannot be expressed in 30 lines, split it into atomic functions. Short functions are easier to understand, debug and reuse.
+Exceptions might be parsers and writers for text processing or wrapper interactions in a process.
 
-Indentation width is exactly 2 spaces. `->` in `case` statements and `=` in assignments of the same level (e.g. in the same `where` or `let` blocks should be on the same column. The code in a `let ... in  ...` construct should begin in the same column. Therefore one space after `let` but two after `in`.
+Code needs to be formatted with `brittany` and the supplied `brittany.yaml` files needs to be used.
+Imports and modules should be cleaned with `stylish-haskell`.
+Therefore clean first with `stylish-haskell` if you changed imports or language pragmas, and with `brittany` afterwards.
 
-In case of multiline functions, do not start the function definition in the same line as the `=`.
+If you need local functions, define them in a `where` block, for the function, where you need them.
+`where` blocks must not be nested.
+Use `let`/`let ... in` constructs to assign local variable names.
 
-Imports and modules should be cleaned with stylish-haskell.
+### Other
+Do not use ***any*** [partial functions](https://wiki.haskell.org/Partial_functions) in Spicy, neither from `Prelude` or libraries, nor self-written -- no matter which justification you might think you have.
 
-Avoid *ALL* [partial functions](https://wiki.haskell.org/Partial_functions).
+Non-IO exceptions should be reported by `MonadThrow` with proper error types.
+Exception types might be defined in `Spicy.Types` and made instances of `Exception`.
+If an exception occurs, the corresponding exception type should be thrown with `throwM` from [`Contro.Exception.Safe`](https://hackage.haskell.org/package/safe-exceptions).
+Generally, for error handling follow the [ideas from FPComplete](https://tech.fpcomplete.com/blog/2016/11/exceptions-best-practices-haskell).
 
-__*Example:*__
-```haskell
-{-|
-Checks if a replacement 'IntMap' is complete for replacing both 'IM.Key's and 'IntSet' values of
-an 'IntMap' 'IntSet' and gives 'True' if no holes (no mapping from old to new value) are found.
--}
-isRepMapCompleteIM ::
-     IntMap Int    -- ^ Replacement 'IntMap', mapping from old 'IM.Key's to new 'IM.Key's.
-  -> IntMap IntSet -- ^ Data structure to compare with.
-  -> Bool          -- ^ Result. 'True' if replacement 'IntMap' is complete, 'False' otherwise.
-isRepMapCompleteIM repMap bondsMap =
-  let -- Old keys (origin of bonds Atoms)
-      oldKeys    = IM.keysSet bondsMap
-      -- Old values (target of bonds Atoms)
-      oldSets    = IS.unions $ bondsMap
-      -- Keys to be replaced
-      repKeys    = IM.keysSet repMap
-      -- Keys that are in the old map, but not in the new map.
-      lostKeysIM = oldKeys \\ repKeys
-      lostKeysIS = oldSets \\ repKeys
-  in  if IS.null lostKeysIM && IS.null lostKeysIS
-        then True
-        else False
-```
+To allow for composable parser errors, use `parse'` instead of Attoparsec's `parse`.
 
 ## Testing and Benchmarking
-For all major functions (all that are exported in a module) there must be a unit or golden test. *ALL* tests muss pass. Tests are in written in the [Tasty](http://hackage.haskell.org/package/tasty) framework, both for unit tests and golden tests.
+For all major functions (all that are exported in a module) there must be a unit or golden test. *All* tests muss pass. Tests are in written in the [Tasty](http://hackage.haskell.org/package/tasty) framework, both for unit tests and golden tests.
 Tests should be performed by a simple `stack test`.
 
 Spicy shall be able to handle large molecules up to protein size. Use [Criterion](http://hackage.haskell.org/package/criterion) benchmarks for functions, that need to handle large data structures and test for different input sizes, to check if they scale and parallelise well. Benchmarks can be executed by `stack bench`, but this can cause problems with parallel functions. Better build the executable and run it standalone as `stack exec benchmarks`.
 
 
-## Merging
-Mergin into branches except master might be done at any time by a simple merge commit. Merging into master should be done with pull requests and be reviewed.
+## Git
+Spicy uses the GitFlow model, see [here](https://medium.com/@nuno.caneco/using-git-flow-243581525aee) for an introduction.
+The `develop`, `master` and `release` branches are protected by GitHub, with the former two requiring CI-tests to pass and reviewed pull-requests before merging, while `release` might get non pull request commits from administrators.
+
+Merging is only possible via merge commits, not with squash merge or rebasing.
+On the other hand side, to keep e.g. feature branches up to date, use `rebase` only.

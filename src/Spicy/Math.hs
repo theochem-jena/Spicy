@@ -14,8 +14,8 @@ other operations are implemented using Accelerate, to provide parallel operation
 The operations here accept some insecurities (like not checking if both vectors of a dot product
 have equal lenght) and trust the caller.
 -}
-{-# LANGUAGE CPP             #-}
 {-# LANGUAGE TemplateHaskell #-}
+
 module Spicy.Math
 ( (<.>)
 , vLength
@@ -49,20 +49,7 @@ import qualified Spicy.Molecule.Util               as MU
 
 import           Spicy.Types
 import           Lens.Micro.Platform               as L
-#ifdef CUDA
-import           Data.Array.Accelerate.LLVM.PTX
-#else
-import           Data.Array.Accelerate.LLVM.Native
-#endif
-
-
-{-
-(<!!>) :: (VS.Shape sh, VS.Elt e) => VS.Array sh e -> Int -> e
-arr <!!> ix =
-  let accAtIx = VS.runQ $ VS.unit $ arr VS.!! ix :: VS.Scalar e
-      atIx = head . VS.toList $ accAtIx
-  in  atIx
-  -}
+import Spicy.Internal.Accelerate
 
 
 {-|
@@ -87,7 +74,7 @@ vDistance a b = vLength $ S.zipWith (-) a b
 
 
 {-|
-Angle in radian between 2 'Seq's. 
+Angle in radian between 2 'Seq's.
 -}
 vAngle :: (Floating a) => Seq a -> Seq a -> a
 vAngle a b = acos $ (a <.> b) / (vLength a * vLength b)
@@ -103,28 +90,32 @@ radToDegree = FN.fmap (* ( 180.0 / P.pi ))
 {-|
 3D cross product of 2 'Seq's.
 -}
-vCross :: Seq Double -> Seq Double -> Either String (Seq Double)
-vCross a b = do
-  a1 <- maybeToEither err $ a S.!? 0
-  a2 <- maybeToEither err $ a S.!? 1
-  a3 <- maybeToEither err $ a S.!? 2
-  b1 <- maybeToEither err $ b S.!? 0
-  b2 <- maybeToEither err $ b S.!? 1
-  b3 <- maybeToEither err $ b S.!? 2
-  let c1 = a2 * b3 - a3 * b2
-      c2 = a3 * b1 - a1 * b3
-      c3 = a1 * b2 - a2 * b1
-  return $ S.fromList [c1, c2, c3]
-  where
-    err = "vCross: Could not get an element from input sequence"
+vCross :: MonadThrow m => Seq Double -> Seq Double -> m (Seq Double)
+vCross a b =
+  let crossProduct :: Maybe (Seq Double)
+      crossProduct = do
+        a1 <- a S.!? 0
+        a2 <- a S.!? 1
+        a3 <- a S.!? 2
+        b1 <- b S.!? 0
+        b2 <- b S.!? 1
+        b3 <- b S.!? 2
+        let c1 = a2 * b3 - a3 * b2
+            c2 = a3 * b1 - a1 * b3
+            c3 = a1 * b2 - a2 * b1
+        return $ S.fromList [c1, c2, c3]
+  in  case crossProduct of
+        Nothing ->
+          throwM $ DataStructureException "vCross" "Could not get an element from input sequence"
+        Just cp -> return cp
 
 
 {-|
-Quick checking function for testing purposes. Takes a molecule and two indices 
+Quick checking function for testing purposes. Takes a molecule and two indices
 and gives "Maybe" the bond length
 -}
 getBondLength :: Molecule -> Int -> Int -> Maybe Double
-getBondLength mol idx1 idx2 = 
+getBondLength mol idx1 idx2 =
   do
     let atomIM = _molecule_Atoms mol                            :: IntMap Atom
     atom1   <- (^. atom_Coordinates) <$> IM.lookup idx1 atomIM  :: Maybe (Seq Double)
@@ -136,32 +127,32 @@ getBondLength mol idx1 idx2 =
 
 
 {-|
-Calculate angles between bonded atoms in a Molecule and give a vector of a triple of atom indices 
+Calculate angles between bonded atoms in a Molecule and give a vector of a triple of atom indices
 and the angle between them.
 -}
 calcAnglesBetweenAtoms :: Molecule -> UG.UGraph Int () -> Seq (Double, (Int, Int, Int))
-calcAnglesBetweenAtoms mol bondGraph = 
-  let 
+calcAnglesBetweenAtoms mol bondGraph =
+  let
       -- Build primitive Seq's of triples using the bond graph
       tripleSeq  = F.foldl (\ acc (Edge o t _) ->
         let tts       = S.fromList $ GT.adjacentVertices bondGraph t  :: Seq Int
             oos       = S.fromList $ GT.adjacentVertices bondGraph o  :: Seq Int
             trips     = FN.fmap (\tt -> (o, t, tt)) tts               :: Seq (Int, Int, Int)
             altTrips  = FN.fmap (\oo -> (t, o, oo)) oos               :: Seq (Int, Int, Int)
-        in  (acc S.><) 
+        in  (acc S.><)
           $ S.filter (\(a, b, c) -> a P./= c P.&& b P./= c) (altTrips S.>< trips)
         ) S.empty $ UG.edges bondGraph
       -- As some triples are duplicate, remove them #Housekeeping :)
-      cleanSeq = MU.nubBy (P.==) 
+      cleanSeq = MU.nubBy (P.==)
                   $ FN.fmap (\(a, b, c) -> if a P.< c then (a,b,c) else (c,b,a)) tripleSeq
-      
+
       -- Calculate the inner angle of the atom triples
-      angles = F.foldl (\acc (a1, a2, a3) -> 
+      angles = F.foldl (\acc (a1, a2, a3) ->
         let atoms     = mol ^. molecule_Atoms                                         :: IntMap Atom
-            vec21     = S.zipWith (-) (unsafeCoords atoms a2) (unsafeCoords atoms a1) :: Seq Double 
+            vec21     = S.zipWith (-) (unsafeCoords atoms a2) (unsafeCoords atoms a1) :: Seq Double
             vec23     = S.zipWith (-) (unsafeCoords atoms a2) (unsafeCoords atoms a3) :: Seq Double
         in acc S.|> (vAngle vec21 vec23)) S.empty cleanSeq                            :: Seq Double
-  in  
+  in
       S.zip (radToDegree angles) cleanSeq
 
 
@@ -172,7 +163,6 @@ in the atom indexing (indices are originally drawn from the IntMap, therefore th
 -}
 unsafeCoords :: IntMap Atom -> Int -> Seq Double
 unsafeCoords atoms idx = (atoms IM.! idx) ^. atom_Coordinates
-
 
 {-|
 __PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
@@ -187,6 +177,7 @@ distMat' mol =
 #else
     dM = $(runQ MI.distMat)
 #endif
+
 {-|
 Accelerate fueled bond finding wrapper function. Gives an IntMap of IntSets with
 IntMap indices as bond origins and the IntSet as bond targets for each molecule
@@ -247,15 +238,3 @@ r3VecDihedral (a, b, c, d) = hmVecAngle (p1Normal, p2Normal)
 -- vectorProduct :: Seq Double -> Seq Double -> VS.Scalar Double
 -- vectorProduct = $( VS.runQ vectorProduct' )
 -}
-
-----------------------------------------------------------------------------------------------------
--- Helper functions, not to be exported
-{-|
-Convert a 'Maybe' value to an 'Either' value.
--}
-maybeToEither ::
-     a          -- ^ 'Left' a will be returned if 'Maybe' was 'Nothing'.
-  -> Maybe b    -- ^ 'Right' b will be returned if 'Maybe' was 'Just' b.
-  -> Either a b
-maybeToEither e Nothing  = Left e
-maybeToEither _ (Just a) = Right a

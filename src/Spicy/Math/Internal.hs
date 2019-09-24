@@ -26,7 +26,7 @@ module Spicy.Math.Internal
 , bondPairsToGraph
 ) where
 import           Control.Parallel.Strategies
-import           Data.Array.Accelerate                         as A
+import           Data.Array.Accelerate         as A
 import           Data.Array.Accelerate.Control.Lens
 import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
 import           Data.Array.Accelerate.IO.Data.Vector.Unboxed  as AVU
@@ -58,12 +58,10 @@ therefore basically a concatenation of all cartesian coordinates.
 -}
 getCoordinates :: Strat -> Molecule -> A.Vector Double
 getCoordinates strat mol =
-  let atomCoords  =
-        case strat of
-          Serial   ->
-            IM.map _atom_Coordinates (mol ^. molecule_Atoms)
-          Parallel ->
-            IM.map _atom_Coordinates (mol ^. molecule_Atoms) `using` parTraversable rdeepseq
+  let atomCoords = case strat of
+        Serial -> IM.map _atom_Coordinates (mol ^. molecule_Atoms)
+        Parallel ->
+          IM.map _atom_Coordinates (mol ^. molecule_Atoms) `using` parTraversable rdeepseq
       plainCoords = IM.foldl' (S.><) S.empty atomCoords
       plainVec    = VS.fromList . F.toList $ plainCoords
       vecLength   = VS.length plainVec
@@ -185,24 +183,24 @@ bondPairsToSeq otVector = otSeq
 
 {-|
 Map an Accelerate array to a graphite Graph // EXPERIMENTAL
--- ! TODO 
+-- ! TODO
 -}
 bondPairsToGraph  :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
 bondPairsToGraph mol otVector =
   -- Find missing indices (single-atom fragments)
-  let missingIdxs = checkRawUnBoxVec mol rawVUnboxed 
+  let missingIdxs = checkRawUnBoxVec mol rawVUnboxed
       -- build the unboxed vector used to convert to a graph (+ some cleanup)
       rawVUnboxed = VB.uniq
                     $ VB.map (\(a, b) -> if a Prelude.<= b then (a,b) else (b,a))
                     $ AVU.toUnboxed otVector
 
   -- Convert the unboxed vector to an undirected graph
-  in GT.insertVertices (VB.toList missingIdxs) 
-      $ UG.fromEdgesList 
-      $ Prelude.map (Prelude.uncurry (<->)) 
+  in GT.insertVertices (VB.toList missingIdxs)
+      $ UG.fromEdgesList
+      $ Prelude.map (Prelude.uncurry (<->))
       $ VB.toList rawVUnboxed
   where
-    -- check the raw unboxed vector for missing atoms. 
+    -- check the raw unboxed vector for missing atoms.
     -- Nobody will be left behind!
     -- Returns an unboxed vector of "lonely" vertices
     checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector Int

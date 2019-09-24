@@ -10,7 +10,10 @@
                     -3.06554,
                     -3.22293
                 ],
-                "_atom_FFType": "9",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 9
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": ""
@@ -25,7 +28,10 @@
                     -2.31063,
                     -2.30634
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -40,7 +46,10 @@
                     -1.77459,
                     -1.22085
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -55,7 +64,10 @@
                     -2.04121,
                     -1.11667
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -70,7 +82,10 @@
                     -2.83335,
                     -2.07531
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -85,7 +100,10 @@
                     -3.34858,
                     -3.1368
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -100,7 +118,10 @@
                     -2.09787,
                     -2.53196
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -115,7 +136,10 @@
                     -2.67518,
                     -3.61792
                 ],
-                "_atom_FFType": "9",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 9
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": ""
@@ -130,7 +154,10 @@
                     -2.49068,
                     -3.95141
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -145,7 +172,10 @@
                     -1.66652,
                     -3.17097
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -160,7 +190,10 @@
                     -1.07264,
                     -2.03303
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -175,7 +208,10 @@
                     -1.29667,
                     -1.71377
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -190,7 +226,10 @@
                     -1.15981,
                     -0.45469
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -205,7 +244,10 @@
                     -1.63344,
                     -0.28964
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -220,7 +262,10 @@
                     -3.04223,
                     -1.99498
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -235,7 +280,10 @@
                     -3.95637,
                     -3.88652
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -250,7 +298,10 @@
                     -2.95178,
                     -4.82544
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -265,7 +316,10 @@
                     -1.49831,
                     -3.46304
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -280,7 +334,10 @@
                     -0.4405,
                     -1.41485
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -295,7 +352,10 @@
                     -0.84344,
                     -0.87221
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -310,7 +370,10 @@
                     -3.69541,
                     -4.69141
                 ],
-                "_atom_FFType": "0",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 0
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "Ru",
                 "_atom_Label": ""
@@ -325,7 +388,10 @@
                     -5.59908,
                     -7.39203
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -340,7 +406,10 @@
                     -5.39123,
                     -6.31156
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -355,7 +424,10 @@
                     -6.54201,
                     -7.47609
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -370,7 +442,10 @@
                     -6.16519,
                     -5.56914
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -385,7 +460,10 @@
                     -4.59091,
                     -8.35685
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -400,7 +478,10 @@
                     -4.21056,
                     -6.18942
                 ],
-                "_atom_FFType": "9",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 9
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": ""
@@ -415,7 +496,10 @@
                     -3.38171,
                     -8.20056
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -430,7 +514,10 @@
                     -3.20242,
                     -7.10556
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -445,7 +532,10 @@
                     -4.81465,
                     -9.53086
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -460,7 +550,10 @@
                     -1.96039,
                     -6.87527
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -475,7 +568,10 @@
                     -1.95303,
                     -5.78327
                 ],
-                "_atom_FFType": "9",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 9
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": ""
@@ -490,7 +586,10 @@
                     -0.87684,
                     -5.4347
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -505,7 +604,10 @@
                     -2.59547,
                     -8.9204
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -520,7 +622,10 @@
                     -0.81167,
                     -7.695
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -535,7 +640,10 @@
                     -0.8972,
                     -4.54874
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -550,7 +658,10 @@
                     0.27071,
                     -6.21594
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -565,7 +676,10 @@
                     0.32163,
                     -7.36401
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -580,7 +694,10 @@
                     -0.76965,
                     -8.57298
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -595,7 +712,10 @@
                     1.10252,
                     -5.90112
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -610,7 +730,10 @@
                     1.5561,
                     -8.24785
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -625,7 +748,10 @@
                     -6.99445,
                     -1.95653
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -640,7 +766,10 @@
                     -5.72018,
                     -2.5339
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -655,7 +784,10 @@
                     -7.23116,
                     -1.11353
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -670,7 +802,10 @@
                     -4.9688,
                     -2.1402
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -685,7 +820,10 @@
                     -7.97184,
                     -2.49177
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -700,7 +838,10 @@
                     -5.44265,
                     -3.59646
                 ],
-                "_atom_FFType": "9",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 9
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": ""
@@ -715,7 +856,10 @@
                     -7.65645,
                     -3.57487
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -730,7 +874,10 @@
                     -6.34951,
                     -4.08274
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -745,7 +892,10 @@
                     -8.95667,
                     -2.05259
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -760,7 +910,10 @@
                     -5.94622,
                     -5.17687
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -775,7 +928,10 @@
                     -4.71378,
                     -5.7335
                 ],
-                "_atom_FFType": "9",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 9
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "N",
                 "_atom_Label": ""
@@ -790,7 +946,10 @@
                     -4.31753,
                     -6.81762
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -805,7 +964,10 @@
                     -6.83069,
                     -5.64331
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -820,7 +982,10 @@
                     -3.35223,
                     -7.26754
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -835,7 +1000,10 @@
                     -5.16771,
                     -7.34953
                 ],
-                "_atom_FFType": "2",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 2
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -850,7 +1018,10 @@
                     -6.41065,
                     -6.74233
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -865,7 +1036,10 @@
                     -4.86545,
                     -8.22507
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -880,7 +1054,10 @@
                     -7.03529,
                     -7.17023
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -895,7 +1072,10 @@
                     2.74256,
                     -7.78442
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -910,7 +1090,10 @@
                     1.88289,
                     -8.26396
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -925,7 +1108,10 @@
                     1.2768,
                     -9.28156
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -940,7 +1126,10 @@
                     3.02713,
                     -6.751
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -955,7 +1144,10 @@
                     3.97325,
                     -8.68235
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -970,7 +1162,10 @@
                     2.43527,
                     -7.79053
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -985,7 +1180,10 @@
                     -5.7651,
                     -9.3706
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1000,7 +1198,10 @@
                     -4.9393,
                     -10.92271
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1015,7 +1216,10 @@
                     -4.00715,
                     -9.54698
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1030,7 +1234,10 @@
                     -6.12364,
                     -10.92849
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1045,7 +1252,10 @@
                     -3.62558,
                     -11.39559
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1060,7 +1270,10 @@
                     -5.16486,
                     -11.63958
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1075,7 +1288,10 @@
                     -5.93431,
                     -10.23321
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1090,7 +1306,10 @@
                     -6.30653,
                     -11.94243
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1105,7 +1324,10 @@
                     -7.05247,
                     -10.61084
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1120,7 +1342,10 @@
                     -3.39913,
                     -10.78751
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1135,7 +1360,10 @@
                     -2.79766,
                     -11.29225
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1150,7 +1378,10 @@
                     -3.65449,
                     -12.85971
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1165,7 +1396,10 @@
                     4.29424,
                     -8.67413
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1180,7 +1414,10 @@
                     3.71619,
                     -9.72463
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1195,7 +1432,10 @@
                     5.12201,
                     -8.17262
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1210,7 +1450,10 @@
                     5.37361,
                     -7.12633
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1225,7 +1468,10 @@
                     6.3731,
                     -9.03051
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1240,7 +1486,10 @@
                     4.80703,
                     -8.18682
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1255,7 +1504,10 @@
                     6.72742,
                     -9.00934
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1270,7 +1522,10 @@
                     6.16197,
                     -10.07959
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1285,7 +1540,10 @@
                     7.17784,
                     -8.63082
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1300,7 +1558,10 @@
                     -4.4142,
                     -13.03141
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1315,7 +1576,10 @@
                     -2.66398,
                     -13.13351
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1330,7 +1594,10 @@
                     -3.86316,
                     -13.51893
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1345,7 +1612,10 @@
                     -8.13842,
                     -4.90779
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1360,7 +1630,10 @@
                     -8.6356,
                     -4.27242
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1375,7 +1648,10 @@
                     -7.80309,
                     -4.06
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1390,7 +1666,10 @@
                     -8.91431,
                     -5.11071
                 ],
-                "_atom_FFType": "5",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 5
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1405,7 +1684,10 @@
                     -9.27434,
                     -5.40159
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1420,7 +1702,10 @@
                     -9.95888,
                     -3.71702
                 ],
-                "_atom_FFType": "1",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 1
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "C",
                 "_atom_Label": ""
@@ -1435,7 +1720,10 @@
                     -10.6635,
                     -4.47093
                 ],
-                "_atom_FFType": "25",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 25
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "P",
                 "_atom_Label": ""
@@ -1450,7 +1738,10 @@
                     -10.72893,
                     -3.01626
                 ],
-                "_atom_FFType": "11",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 11
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "F",
                 "_atom_Label": ""
@@ -1465,7 +1756,10 @@
                     -9.18071,
                     -6.40629
                 ],
-                "_atom_FFType": "11",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 11
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "F",
                 "_atom_Label": ""
@@ -1480,7 +1774,10 @@
                     -11.50539,
                     -5.53688
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1495,7 +1792,10 @@
                     -4.69594,
                     -3.68063
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1510,7 +1810,10 @@
                     -4.64276,
                     -3.73011
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1525,7 +1828,10 @@
                     -4.78366,
                     -4.62185
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1540,7 +1846,10 @@
                     -0.93103,
                     -7.71574
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1555,7 +1864,10 @@
                     -0.88807,
                     -7.62525
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1570,7 +1882,10 @@
                     -1.88553,
                     -7.89231
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1585,7 +1900,10 @@
                     2.24597,
                     -6.71445
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1600,7 +1918,10 @@
                     2.24719,
                     -6.67127
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1615,7 +1936,10 @@
                     2.29136,
                     -5.76866
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1630,7 +1954,10 @@
                     3.41956,
                     -2.9005
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1645,7 +1972,10 @@
                     3.42229,
                     -2.85786
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1660,7 +1990,10 @@
                     3.4121,
                     -1.95334
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1675,7 +2008,10 @@
                     -8.76707,
                     -4.45897
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1690,7 +2026,10 @@
                     -8.8075,
                     -4.47381
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1705,7 +2044,10 @@
                     -9.65097,
                     -4.79873
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1720,7 +2062,10 @@
                     -9.23647,
                     -9.31393
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1735,7 +2080,10 @@
                     -9.15766,
                     -9.33205
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1750,7 +2098,10 @@
                     -8.85375,
                     -10.17827
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1765,7 +2116,10 @@
                     -7.29137,
                     -7.76398
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1780,7 +2134,10 @@
                     -7.3418,
                     -8.16445
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1795,7 +2152,10 @@
                     -6.34793,
                     -7.51354
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1810,7 +2170,10 @@
                     -2.01236,
                     -10.03225
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1825,7 +2188,10 @@
                     -1.98457,
                     -10.06666
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1840,7 +2206,10 @@
                     -1.41389,
                     -10.76572
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1855,7 +2224,10 @@
                     -6.51998,
                     -3.57311
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1870,7 +2242,10 @@
                     -6.53229,
                     -3.53175
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1885,7 +2260,10 @@
                     -6.78992,
                     -2.66557
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1900,7 +2278,10 @@
                     -2.54482,
                     -1.48161
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1915,7 +2296,10 @@
                     -2.48601,
                     -1.20691
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1930,7 +2314,10 @@
                     -1.72369,
                     -2.00552
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1945,7 +2332,10 @@
                     -9.80774,
                     -6.61535
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -1960,7 +2350,10 @@
                     -9.83694,
                     -6.5841
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1975,7 +2368,10 @@
                     -10.44536,
                     -5.91513
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -1990,7 +2386,10 @@
                     0.24247,
                     1.2713
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2005,7 +2404,10 @@
                     0.15448,
                     0.98869
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2020,7 +2422,10 @@
                     -1.637e-2,
                     0.48955
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2035,7 +2440,10 @@
                     -1.28169,
                     1.41673
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2050,7 +2458,10 @@
                     -1.30416,
                     1.26429
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2065,7 +2476,10 @@
                     -1.31765,
                     0.51193
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2080,7 +2494,10 @@
                     -2.0474,
                     -9.63624
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2095,7 +2512,10 @@
                     -2.07122,
                     -9.60228
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2110,7 +2530,10 @@
                     -2.59253,
                     -8.86206
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2125,7 +2548,10 @@
                     -2.93959,
                     -14.19722
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2140,7 +2566,10 @@
                     -2.8757,
                     -14.17296
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2155,7 +2584,10 @@
                     -2.47288,
                     -15.01059
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2170,7 +2602,10 @@
                     -2.75902,
                     -11.4503
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2185,7 +2620,10 @@
                     -2.80722,
                     -11.54639
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2200,7 +2638,10 @@
                     -3.25729,
                     -12.22082
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2215,7 +2656,10 @@
                     5.22424,
                     -3.60013
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2230,7 +2674,10 @@
                     5.22424,
                     -3.60013
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2245,7 +2692,10 @@
                     5.69822,
                     -4.38225
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2260,7 +2710,10 @@
                     -4.81223,
                     2.44206
                 ],
-                "_atom_FFType": "6",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 6
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "O",
                 "_atom_Label": ""
@@ -2275,7 +2728,10 @@
                     -4.81223,
                     2.44206
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
@@ -2290,7 +2746,10 @@
                     -3.9869,
                     2.04811
                 ],
-                "_atom_FFType": "21",
+                "_atom_FFType": {
+                    "tag": "TXYZ",
+                    "contents": 21
+                },
                 "_atom_IsPseudo": false,
                 "_atom_Element": "H",
                 "_atom_Label": ""
