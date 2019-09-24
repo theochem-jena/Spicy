@@ -195,23 +195,6 @@ testParserXYZ3 =
         }
   in  peGoldenVsFile testEnv
 
-testParserXYZ3 :: TestTree
-testParserXYZ3 =
-  let testName      = "Molden XYZ (3)"
-      goldenFile    = "goldentests/goldenfiles/H2O__testParserXYZ1.json.golden"
-      inputFile     = "goldentests/input/H2O.xyz"
-      outputFile    = "goldentests/output/H2O__testParserXYZ1.json"
-      parseAndWrite = do
-        raw <- T.readFile inputFile
-        case parse parseXYZ raw of
-          Done _ mol -> T.writeFile outputFile . writeSpicy $ mol
-          Fail _ _ e -> T.writeFile outputFile . T.pack $ e
-  in  goldenVsFile
-        testName
-        goldenFile
-        outputFile
-        parseAndWrite
-
 testParserPDB1 :: TestTree
 testParserPDB1 =
   let testEnv = ParserEnv
