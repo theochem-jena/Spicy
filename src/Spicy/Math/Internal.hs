@@ -12,6 +12,7 @@ Definitions of auxiliary functions to deal with the GHC bug, making it necessary
 wrapped in the 'Spicy.Math' module.
 -}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE CPP #-}
 module Spicy.Math.Internal
   ( getCoordinates
   , distMat

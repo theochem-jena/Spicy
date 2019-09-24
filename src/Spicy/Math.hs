@@ -15,7 +15,7 @@ The operations here accept some insecurities (like not checking if both vectors 
 have equal lenght) and trust the caller.
 -}
 {-# LANGUAGE TemplateHaskell #-}
-
+{-# LANGUAGE CPP #-}
 module Spicy.Math
 ( (<.>)
 , vLength
@@ -50,6 +50,7 @@ import qualified Spicy.Molecule.Util               as MU
 import           Spicy.Types
 import           Lens.Micro.Platform               as L
 import Spicy.Internal.Accelerate
+import Control.Exception.Safe
 
 
 {-|

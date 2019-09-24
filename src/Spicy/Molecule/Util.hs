@@ -12,6 +12,7 @@ This module provides functions to manipulate basic data structures of 'Molecule'
 module Spicy.Molecule.Util
   ( checkMolecule
   , reIndexMolecule
+  , reIndex2BaseMolecule
   , groupTupleSeq
   , groupBy
   , nubBy
@@ -19,6 +20,8 @@ module Spicy.Molecule.Util
   , snd3
   , lst3
   , makeSubMolsFromAnnoAtoms
+  , makeBondsUnidirectorial
+  , findAtomInSubMols
   )
 where
 import           Control.Exception.Safe
