@@ -77,7 +77,7 @@ distMat v =
       -- Transpose the 3D array to swap x- and y-axis and also have the numbers of the atoms on x
       -- again. Strangely the lenses start counting in reverse index order.
       yVec      = transposeOn _2 _3 xVec
-  in   -- Overlay the two 3D arrays. The x-y-plane is a table correlating all atom indices with
+  in  -- Overlay the two 3D arrays. The x-y-plane is a table correlating all atom indices with
       -- each other. The z-axis stores the 3 components of the cartesian coordiantes.
       -- Now the 3D arrays will elementwise be subtracted from each other, all results squared,
       -- the z-components folded and square root will be taken and the distance results.
