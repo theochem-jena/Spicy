@@ -10,16 +10,17 @@ Portability : POSIX, Windows
 This module provides functions to manipulate basic data structures of 'Molecule's, such as indexing.
 -}
 module Spicy.Molecule.Util
-( checkMolecule
-, reIndexMolecule
-, groupTupleSeq
-, groupBy
-, nubBy
-, fst3
-, snd3
-, lst3
-, makeSubMolsFromAnnoAtoms
-) where
+  ( checkMolecule
+  , reIndexMolecule
+  , groupTupleSeq
+  , groupBy
+  , nubBy
+  , fst3
+  , snd3
+  , lst3
+  , makeSubMolsFromAnnoAtoms
+  )
+where
 import           Data.Foldable
 import           Data.IntMap.Lazy               ( IntMap )
 import qualified Data.IntMap.Lazy              as IM
@@ -393,7 +394,7 @@ function for Sequences. This is a fork of the original list
 -}
 nubBy :: (a -> a -> Bool) -> Seq a -> Seq a
 nubBy _  S.Empty    = S.Empty
-nubBy eq (x :<| xs) = x :<| nubBy eq (S.filter (\ y -> not (eq x y)) xs)
+nubBy eq (x :<| xs) = x :<| nubBy eq (S.filter (\y -> not (eq x y)) xs)
 
 
 {-|

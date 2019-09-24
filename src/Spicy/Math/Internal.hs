@@ -13,44 +13,47 @@ wrapped in the 'Spicy.Math' module.
 -}
 {-# LANGUAGE TypeOperators #-}
 module Spicy.Math.Internal
-( getCoordinates
-, distMat
-, covRMat
-, boolBondMatrix
-, getCovalentRadii
-, findBondPairs
-, getElementIdxs
-, bondPairsToSeq
-, prepareCovalentRadii
-, accFindBondsChain
-, bondPairsToGraph
-) where
+  ( getCoordinates
+  , distMat
+  , covRMat
+  , boolBondMatrix
+  , getCovalentRadii
+  , findBondPairs
+  , getElementIdxs
+  , bondPairsToSeq
+  , prepareCovalentRadii
+  , accFindBondsChain
+  , bondPairsToGraph
+  )
+where
 import           Control.Parallel.Strategies
 import           Data.Array.Accelerate         as A
 import           Data.Array.Accelerate.Control.Lens
-import           Data.Array.Accelerate.IO.Data.Vector.Storable as AVS
-import           Data.Array.Accelerate.IO.Data.Vector.Unboxed  as AVU
-import qualified Data.Foldable                                 as F
-import qualified Data.IntMap                                   as IM
-import           Data.Sequence                                 (Seq)
-import qualified Data.Sequence                                 as S
-import qualified Data.Vector.Storable                          as VS
-import qualified Data.Vector.Unboxed                           as VB
+import           Data.Array.Accelerate.IO.Data.Vector.Storable
+                                               as AVS
+import           Data.Array.Accelerate.IO.Data.Vector.Unboxed
+                                               as AVU
+import qualified Data.Foldable                 as F
+import qualified Data.IntMap                   as IM
+import           Data.Sequence                  ( Seq )
+import qualified Data.Sequence                 as S
+import qualified Data.Vector.Storable          as VS
+import qualified Data.Vector.Unboxed           as VB
 import           Prelude
-import           Data.Graph.Types                              as GT
-import qualified Data.Graph.UGraph                             as UG
+import           Data.Graph.Types              as GT
+import qualified Data.Graph.UGraph             as UG
 -- import           Data.Graph.Connectivity                       as GC
-import qualified Lens.Micro.Platform                           as L
-import qualified Spicy.Data                                    as D
+import qualified Lens.Micro.Platform           as L
+import qualified Spicy.Data                    as D
 import           Spicy.Types
-import           Data.List (group)
+import           Data.List                      ( group )
 
 {-|
 Helper function to get the first element of a triple. Taken from utility-ht == 0.0.14:
 https://hackage.haskell.org/package/utility-ht-0.0.14/docs/src/Data-Tuple-HT.html#fst3
 -}
-fst3 :: (a,b,c) -> a
-fst3 (x,_,_) = x
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
 
 {-|
 Get the 'Atom' '_atom_Coordinates' from a 'Molecule' and convert to a plain 'VS.Vector'. This is
@@ -98,24 +101,23 @@ distMat v =
 {-|
 Retrieve the atom indices as an IntMap for use with the covalentRadii map
 -}
-getCovalentRadii ::  Molecule -> Either String (A.Vector Double)
+getCovalentRadii :: Molecule -> Either String (A.Vector Double)
 getCovalentRadii mol = covRadii
-  where
+ where
     -- Get the element numbers in the given molecule
-    elementNums = IM.map ( ( + 1) . fromEnum . _atom_Element) (mol ^. molecule_Atoms )
-    -- Get the number of elemenfBPts in the IntMap
-    nrOfAtoms   = IM.size elementNums
-    -- Lookup the respective covalent radii from the Spicy.Data.covalentRadiiIM (IntMap)
-    -- and assign them to the correspondingbuildExamples atom index
-    covRadiiMB  = traverse (`IM.lookup` D.covalentRadiiIM) elementNums
-    -- Test if there is some Nothing value in the IntMap (Maybe Double)
-    -- If so, give an error message; Else, lift the IntMap out of the Maybe monad -
-    -- --> Either String or (IntMap Double)
-    leftMsg     = "Getting the covalent radii failed. Typo in the elements?"
-    covRadii    =
-      case covRadiiMB of
-        Nothing   -> Left leftMsg
-        Just mat  -> Right $ AVS.fromVectors (Z :. nrOfAtoms) . VS.fromList $ IM.elems mat
+  elementNums = IM.map ((+ 1) . fromEnum . _atom_Element) (mol ^. molecule_Atoms)
+  -- Get the number of elemenfBPts in the IntMap
+  nrOfAtoms   = IM.size elementNums
+  -- Lookup the respective covalent radii from the Spicy.Data.covalentRadiiIM (IntMap)
+  -- and assign them to the correspondingbuildExamples atom index
+  covRadiiMB  = traverse (`IM.lookup` D.covalentRadiiIM) elementNums
+  -- Test if there is some Nothing value in the IntMap (Maybe Double)
+  -- If so, give an error message; Else, lift the IntMap out of the Maybe monad -
+  -- --> Either String or (IntMap Double)
+  leftMsg     = "Getting the covalent radii failed. Typo in the elements?"
+  covRadii    = case covRadiiMB of
+    Nothing  -> Left leftMsg
+    Just mat -> Right $ AVS.fromVectors (Z :. nrOfAtoms) . VS.fromList $ IM.elems mat
 
 
 {-|
@@ -125,23 +127,22 @@ Calculate the matrix of the sum of the covalent radii for the detection of bonds
 covRMat :: A.Acc (A.Scalar Double) -> Acc (A.Vector Double) -> Acc (A.Matrix Double)
 covRMat rFactor covRadii =
   -- Get the number of atoms from the dimension of the cR vector
-  let (Z :. nrOfAtoms)    = unlift . shape $ covRadii    :: Z :. Exp Int
+  let (Z :. nrOfAtoms) = unlift . shape $ covRadii :: Z :. Exp Int
       -- Build the matrices by replication of the vector in the y direction
-      xCovMat             = A.replicate (lift $ Z :. nrOfAtoms :. All) covRadii
+      xCovMat          = A.replicate (lift $ Z :. nrOfAtoms :. All) covRadii
       -- The corresponding "y"-matrix is formed by simple transposition the xy plane
-      yCovMat             = A.transpose xCovMat
-  -- Get the result by zipping the "3D stack of 2D matrices" using the summation operator
-  -- and multiplication by 1.3 (see Literature for the factor)
-  -- https://doi.org/10.1063/1.1515483
-  in  A.map (* A.the rFactor) $ A.zipWith (+) xCovMat yCovMat
+      yCovMat          = A.transpose xCovMat
+  in  -- Get the result by zipping the "3D stack of 2D matrices" using the summation operator
+      -- and multiplication by 1.3 (see Literature for the factor)
+      -- https://doi.org/10.1063/1.1515483
+      A.map (* A.the rFactor) $ A.zipWith (+) xCovMat yCovMat
 
 
 {-|
 Build the boolean bond matrix from the cov
 -}
 boolBondMatrix :: Acc (A.Matrix Double) -> Acc (A.Matrix Double) -> Acc (A.Matrix Bool)
-boolBondMatrix -- distanceMatrix covalentRadiiMatrix
-  = A.zipWith (\a b -> (a A.<= b) A.&& (a A./= 0.0))
+boolBondMatrix = A.zipWith (\a b -> (a A.<= b) A.&& (a A./= 0.0)) -- distanceMatrix covalentRadiiMatrix
 
 
 {-|
@@ -150,91 +151,87 @@ run.
 -}
 findBondPairs :: Acc (A.Vector Int) -> Acc (A.Matrix Bool) -> Acc (A.Vector (Int, Int))
 findBondPairs elemIdxs bbMatrix =
-    let -- Build the index matrix in x-direction
-        xMat :: Acc (A.Matrix Int)
-        xMat        = A.replicate (lift $ Z :. A.size elemIdxs :. All) elemIdxs
+  let -- Build the index matrix in x-direction
+      xMat :: Acc (A.Matrix Int)
+      xMat = A.replicate (lift $ Z :. A.size elemIdxs :. All) elemIdxs
 
-        -- Replicate to get the y-direction
-        yMat :: Acc (A.Matrix Int)
-        yMat        = A.transpose xMat
+      -- Replicate to get the y-direction
+      yMat :: Acc (A.Matrix Int)
+      yMat      = A.transpose xMat
 
-        -- Filter bond pairs using the boolean bond matrix
-        (_, o, t)   = A.unzip3 $ (^. _1) $ A.filter (^. _1) $ A.zip3 bbMatrix xMat yMat
-
-    in  A.zip o t
+      -- Filter bond pairs using the boolean bond matrix
+      (_, o, t) = A.unzip3 $ (^. _1) $ A.filter (^. _1) $ A.zip3 bbMatrix xMat yMat
+  in  A.zip o t
 
 
 getElementIdxs :: Molecule -> A.Vector Int
 getElementIdxs molA =
-  let atoms       = molA ^. molecule_Atoms
+  let atoms   = molA ^. molecule_Atoms
       -- Get the indices from the IntMap of atoms --> [Int]
-      idxList     = VS.fromList (IM.keys atoms :: [Int])
-      -- Convert to an Acc Vector --> Acc (A.Vector Int)
-  in  AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
+      idxList = VS.fromList (IM.keys atoms :: [Int])
+  in   -- Convert to an Acc Vector --> Acc (A.Vector Int)
+      AVS.fromVectors (Z :. IM.size atoms) idxList :: A.Vector Int
 
 {-|
 Map an Accelerate array to a Sequence of tuples of atom indices
 -}
-bondPairsToSeq ::  A.Array DIM1 (Int, Int) -> Seq (Int, Int)
-bondPairsToSeq otVector = otSeq
-  where
-    otSeq = S.fromList . VB.toList $ AVU.toUnboxed otVector
+bondPairsToSeq :: A.Array DIM1 (Int, Int) -> Seq (Int, Int)
+bondPairsToSeq otVector = otSeq where otSeq = S.fromList . VB.toList $ AVU.toUnboxed otVector
 
 
 {-|
 Map an Accelerate array to a graphite Graph // EXPERIMENTAL
 -- ! TODO
 -}
-bondPairsToGraph  :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
+bondPairsToGraph :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
 bondPairsToGraph mol otVector =
   -- Find missing indices (single-atom fragments)
   let missingIdxs = checkRawUnBoxVec mol rawVUnboxed
       -- build the unboxed vector used to convert to a graph (+ some cleanup)
-      rawVUnboxed = VB.uniq
-                    $ VB.map (\(a, b) -> if a Prelude.<= b then (a,b) else (b,a))
-                    $ AVU.toUnboxed otVector
-
-  -- Convert the unboxed vector to an undirected graph
-  in GT.insertVertices (VB.toList missingIdxs)
-      $ UG.fromEdgesList
-      $ Prelude.map (Prelude.uncurry (<->))
-      $ VB.toList rawVUnboxed
-  where
-    -- check the raw unboxed vector for missing atoms.
-    -- Nobody will be left behind!
-    -- Returns an unboxed vector of "lonely" vertices
-    checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector Int
-    checkRawUnBoxVec molA rawVB =
-      let atomIdxs    = AVU.toUnboxed $ getElementIdxs molA
-          bondIdxList = Prelude.map Prelude.head $ group $ rawVB L.^.. L.each . L.each
-      in VB.filter (`Prelude.notElem` bondIdxList) atomIdxs
+      rawVUnboxed =
+          VB.uniq $ VB.map (\(a, b) -> if a Prelude.<= b then (a, b) else (b, a)) $ AVU.toUnboxed
+            otVector
+  in  -- Convert the unboxed vector to an undirected graph
+      GT.insertVertices (VB.toList missingIdxs)
+        $ UG.fromEdgesList
+        $ Prelude.map (Prelude.uncurry (<->))
+        $ VB.toList rawVUnboxed
+ where
+  -- check the raw unboxed vector for missing atoms.
+  -- Nobody will be left behind!
+  -- Returns an unboxed vector of "lonely" vertices
+  checkRawUnBoxVec :: Molecule -> VB.Vector (Int, Int) -> VB.Vector Int
+  checkRawUnBoxVec molA rawVB =
+    let atomIdxs    = AVU.toUnboxed $ getElementIdxs molA
+        bondIdxList = Prelude.map Prelude.head $ group $ rawVB L.^.. L.each . L.each
+    in  VB.filter (`Prelude.notElem` bondIdxList) atomIdxs
 
 
 prepareCovalentRadii :: Molecule -> A.Vector Double
 prepareCovalentRadii mol = covRadVec
-  where
-    msg       = "boolBondMatrix': Something went wrong in looking up covalent radii"
-    covRad    = getCovalentRadii mol :: Either String (A.Vector Double)
-    covRadVec = case covRad of
-                    Left  _ -> error msg
-                    Right c -> c
+ where
+  msg       = "boolBondMatrix': Something went wrong in looking up covalent radii"
+  covRad    = getCovalentRadii mol :: Either String (A.Vector Double)
+  covRadVec = case covRad of
+    Left  _ -> error msg
+    Right c -> c
 
 {-|
 Compiler-friendly Accelerate function chain to calculate
 the bond pairs from molecule-intrinsic properties. Used in Spicy.Math with $(LLVM.runQ)
 -}
-accFindBondsChain ::
-     A.Acc (A.Scalar Double)      -- ^ Scaling factor for the covalent radii sums.
+accFindBondsChain
+  :: A.Acc (A.Scalar Double)      -- ^ Scaling factor for the covalent radii sums.
   -> A.Acc (A.Vector Int)         -- ^ Vector of the element indices
   -> A.Acc (A.Vector Double)      -- ^ Coordinate vector
   -> A.Acc (A.Vector Double)      -- ^ Covalent radii vector
   -> A.Acc (A.Vector (Int, Int))  -- ^ Vector of bond pairs
 accFindBondsChain radScal idx cV rV =
   -- Covalent radii matrix in the Acc context
-  let accCovMat = covRMat radScal rV :: A.Acc (A.Matrix Double)
+  let accCovMat      = covRMat radScal rV :: A.Acc (A.Matrix Double)
       -- Distance matrix in the Acc context
-      accDistMat = distMat cV :: A.Acc (A.Matrix Double)
+      accDistMat     = distMat cV :: A.Acc (A.Matrix Double)
       -- Boolean bond matrix defined in the Acc context
       accBoolBondMat = boolBondMatrix accDistMat accCovMat :: A.Acc (A.Matrix Bool)
-      -- Complete Acc function chain
-  in  findBondPairs idx accBoolBondMat
+  in  -- Complete Acc function chain
+      findBondPairs idx accBoolBondMat
