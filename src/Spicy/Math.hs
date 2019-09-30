@@ -130,8 +130,9 @@ getBondLength mol idx1 idx2 =
 {-|
 Calculate angles between bonded atoms in a Molecule and give a vector of a triple of atom indices
 and the angle between them.
+-- ! Experimental, probably quite inefficient (albeit functional)
 -}
-calcAnglesBetweenAtoms :: Molecule -> UG.UGraph Int () -> Seq (Double, (Int, Int, Int))
+calcAnglesBetweenAtoms :: Molecule -> UG.UGraph Int () -> Seq ((Int, Int, Int), Double)
 calcAnglesBetweenAtoms mol bondGraph =
   let
       -- Build primitive Seq's of triples using the bond graph
@@ -154,30 +155,34 @@ calcAnglesBetweenAtoms mol bondGraph =
             vec23     = S.zipWith (-) (unsafeCoords atoms a2) (unsafeCoords atoms a3) :: Seq Double
         in acc S.|> (vAngle vec21 vec23)) S.empty cleanSeq                            :: Seq Double
   in
-      S.zip (radToDegree angles) cleanSeq
+      S.zip cleanSeq (radToDegree angles) 
+
 
 
 {-|
 Unsafe retrieving of coordinates. I used the unsafe lookup here, as there is no chance of failure
 in the atom indexing (indices are originally drawn from the IntMap, therefore they have to be
 "`elem` IntMap.keys")
+-- ? Can we leave this as unsafe as it is now? Maybe reimplement using MolLogicException? 
 -}
 unsafeCoords :: IntMap Atom -> Int -> Seq Double
 unsafeCoords atoms idx = (atoms IM.! idx) ^. atom_Coordinates
 
 {-|
-__PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
+-- ! PROOF OF CONCEPT FOR ACCELERATE. NOT TO BE TAKEN AS FINAL FUNCION.
 -}
 distMat' :: Molecule -> A.Matrix Double
 distMat' mol =
   let coordVec = MI.getCoordinates Serial mol
   in  dM coordVec
   where
+    -- * Using the dev flag disables ahead-of-time compilation (saves time due to linking)
 #ifdef DEV
     dM = runN MI.distMat
 #else
     dM = $(runQ MI.distMat)
 #endif
+
 
 {-|
 Accelerate fueled bond finding wrapper function. Gives an IntMap of IntSets with
@@ -203,11 +208,13 @@ findBonds covRScaling mol =
 
   where
     -- Accelerate function chain from the Internal module
+    -- * Using the dev flag disables ahead-of-time compilation (saves time due to linking)
 #ifdef DEV
     bondPairs = runN MI.accFindBondsChain
 #else
     bondPairs = $(runQ MI.accFindBondsChain)
 #endif
+
 
 findBondsToGraph :: Maybe Double -> Molecule -> UGraph Int ()
 findBondsToGraph covRScaling mol =
@@ -219,6 +226,7 @@ findBondsToGraph covRScaling mol =
       scalFac = A.fromList A.Z [fromMaybe 1.3 covRScaling]
   in  MI.bondPairsToGraph mol $ bondPairs scalFac indices coordVec covRadVec
   where
+    -- * Using the dev flag disables ahead-of-time compilation (saves time due to linking)
 #ifdef DEV
     bondPairs = runN MI.accFindBondsChain
 #else

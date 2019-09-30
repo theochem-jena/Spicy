@@ -47,6 +47,7 @@ module Spicy.Types
   , molecule_Energy
   , molecule_Gradient
   , molecule_Hessian
+  , dummyMolecule
   , Trajectory
   )
 where

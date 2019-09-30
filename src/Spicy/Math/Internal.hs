@@ -28,6 +28,7 @@ module Spicy.Math.Internal
   )
 where
 import           Control.Parallel.Strategies
+import           Control.Exception.Safe
 import           Data.Array.Accelerate         as A
 import           Data.Array.Accelerate.Control.Lens
 import           Data.Array.Accelerate.IO.Data.Vector.Storable
@@ -102,7 +103,7 @@ distMat v =
 {-|
 Retrieve the atom indices as an IntMap for use with the covalentRadii map
 -}
-getCovalentRadii :: Molecule -> Either String (A.Vector Double)
+getCovalentRadii :: (MonadThrow m) => Molecule -> m (A.Vector Double)
 getCovalentRadii mol = covRadii
  where
     -- Get the element numbers in the given molecule
@@ -115,10 +116,10 @@ getCovalentRadii mol = covRadii
   -- Test if there is some Nothing value in the IntMap (Maybe Double)
   -- If so, give an error message; Else, lift the IntMap out of the Maybe monad -
   -- --> Either String or (IntMap Double)
-  leftMsg     = "Getting the covalent radii failed. Typo in the elements?"
+  -- leftMsg     = "Getting the covalent radii failed. Typo in the elements?"
   covRadii    = case covRadiiMB of
-    Nothing  -> Left leftMsg
-    Just mat -> Right $ AVS.fromVectors (Z :. nrOfAtoms) . VS.fromList $ IM.elems mat
+    Nothing  -> throwM $ MolLogicException "getCovalentRadii" "Could not read covalent radii"
+    Just mat -> return $ AVS.fromVectors (Z :. nrOfAtoms) . VS.fromList $ IM.elems mat
 
 
 {-|
@@ -181,8 +182,8 @@ bondPairsToSeq otVector = otSeq where otSeq = S.fromList . VB.toList $ AVU.toUnb
 
 
 {-|
-Map an Accelerate array to a graphite Graph // EXPERIMENTAL
--- ! TODO
+Map an Accelerate array to a graphite Graph 
+-- !  EXPERIMENTAL
 -}
 bondPairsToGraph :: Molecule -> A.Array DIM1 (Int, Int) -> UG.UGraph Int ()
 bondPairsToGraph mol otVector =
@@ -208,13 +209,21 @@ bondPairsToGraph mol otVector =
     in  VB.filter (`Prelude.notElem` bondIdxList) atomIdxs
 
 
+breadthFirstSearch :: UG.UGraph a () -> Seq a 
+breadthFirstSearch graph = 
+  let 
+{-| 
+Wrapper function to look up the covalent radii from the IntMap for further use in bond detection.
+If the look-up fails (e.g. because there is a typo in the Atom descriptor), a runtime-error will be
+thrown. (which is not too bad IMHO (Fabian) as the atoms in a molecule have to be valid
+for any kind of calculation)
+-}
 prepareCovalentRadii :: Molecule -> A.Vector Double
 prepareCovalentRadii mol = covRadVec
  where
-  msg       = "boolBondMatrix': Something went wrong in looking up covalent radii"
-  covRad    = getCovalentRadii mol :: Either String (A.Vector Double)
+  covRad    = getCovalentRadii mol :: Either SomeException (A.Vector Double)
   covRadVec = case covRad of
-    Left  _ -> error msg
+    Left  ex -> error $ show ex
     Right c -> c
 
 {-|
