@@ -27,6 +27,8 @@ module Spicy.Math
 , findBondsToGraph
 , getBondLength
 , calcAnglesBetweenAtoms
+, bfsVertices
+, findFragmentsFromGraph
 ) where
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Foldable                     as F
@@ -35,7 +37,8 @@ import           Data.IntMap                       (IntMap)
 import qualified Data.IntMap                       as IM
 import           Data.IntSet                       (IntSet)
 import           Data.Maybe
-import           Data.Sequence                     (Seq)
+import           Data.Sequence                   ( Seq(..), (><), (|>) )
+
 import qualified Data.Sequence                     as S
 -- import           Data.Vector.Unboxed               as VB
 import           Data.Graph.Types                  as GT
@@ -49,8 +52,9 @@ import qualified Spicy.Molecule.Util               as MU
 
 import           Spicy.Types
 import           Lens.Micro.Platform               as L
-import Spicy.Internal.Accelerate
-import Control.Exception.Safe
+import           Spicy.Internal.Accelerate
+import           Control.Exception.Safe
+import           Data.Hashable
 
 
 {-|
@@ -141,8 +145,8 @@ calcAnglesBetweenAtoms mol bondGraph =
             oos       = S.fromList $ GT.adjacentVertices bondGraph o  :: Seq Int
             trips     = FN.fmap (\tt -> (o, t, tt)) tts               :: Seq (Int, Int, Int)
             altTrips  = FN.fmap (\oo -> (t, o, oo)) oos               :: Seq (Int, Int, Int)
-        in  (acc S.><)
-          $ S.filter (\(a, b, c) -> a P./= c P.&& b P./= c) (altTrips S.>< trips)
+        in  (acc ><)
+          $ S.filter (\(a, b, c) -> a P./= c P.&& b P./= c) (altTrips >< trips)
         ) S.empty $ UG.edges bondGraph
       -- As some triples are duplicate, remove them #Housekeeping :)
       cleanSeq = MU.nubBy (P.==)
@@ -153,7 +157,7 @@ calcAnglesBetweenAtoms mol bondGraph =
         let atoms     = mol ^. molecule_Atoms                                         :: IntMap Atom
             vec21     = S.zipWith (-) (unsafeCoords atoms a2) (unsafeCoords atoms a1) :: Seq Double
             vec23     = S.zipWith (-) (unsafeCoords atoms a2) (unsafeCoords atoms a3) :: Seq Double
-        in acc S.|> (vAngle vec21 vec23)) S.empty cleanSeq                            :: Seq Double
+        in acc |> (vAngle vec21 vec23)) S.empty cleanSeq                              :: Seq Double
   in
       S.zip cleanSeq (radToDegree angles) 
 
@@ -232,6 +236,52 @@ findBondsToGraph covRScaling mol =
 #else
     bondPairs = $(runQ MI.accFindBondsChain)
 #endif
+
+
+{-|
+Finding fragments from an existing bond graph by means of recursive breadth width search
+-}
+findFragmentsFromGraph :: UG.UGraph Int () -> Seq (Seq Int)  
+findFragmentsFromGraph graph = 
+  let allVertices  = S.sort $ S.fromList $ GT.vertices graph 
+  in  bfsSearch S.empty allVertices 
+  
+  where 
+    bfsSearch :: Seq (Seq Int) -> Seq Int -> Seq (Seq Int)
+    bfsSearch fragAcc S.Empty     = fragAcc
+    bfsSearch fragAcc (v :<| vs)  = 
+      let fragment   = bfsVertices graph v
+          remaining  = S.filter (`F.notElem` fragment) vs
+      in bfsSearch (fragAcc :|> fragment) remaining
+      
+
+{-|
+Module from the graphite package, rewritten to 'Seq'uences of vertices. 
+Gives atoms in one fragment by means of breadth-first search.
+Low level function of the fragment finder 
+-}
+bfsVertices :: (Graph g, Hashable v, Ord v) => g v e -> v -> Seq v
+bfsVertices g fromV = go (S.singleton fromV) S.empty S.empty
+  where
+    go S.Empty _ popped = S.sort popped
+    go (v :<| vs) visited popped =
+      let reachables = nonVisitedReachables g visited v
+      in go
+        (vs >< reachables)
+        (visited >< (v :<| reachables))
+        (popped :|> v)
+
+{-| 
+"Private" helper function for bfsVertices
+-}
+nonVisitedReachables :: (Graph g, Hashable v, Ord v) 
+  => g v e -> Seq v -> v -> Seq v
+nonVisitedReachables g visited v = 
+  S.filter (\v' -> not $ F.elem v' visited) (S.fromList $ reachableAdjacentVertices g v)
+
+
+
+
 {-
 -- | Defines the normal vector of a plane, defined by 3 points
 r3VecNormalVecOfPlane3Points :: (Vector R, Vector R, Vector R) -> Vector R

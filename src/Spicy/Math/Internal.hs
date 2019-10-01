@@ -37,7 +37,7 @@ import           Data.Array.Accelerate.IO.Data.Vector.Unboxed
                                                as AVU
 import qualified Data.Foldable                 as F
 import qualified Data.IntMap                   as IM
-import           Data.Sequence                  ( Seq )
+import           Data.Sequence                  ( Seq(..), (><) )
 import qualified Data.Sequence                 as S
 import qualified Data.Vector.Storable          as VS
 import qualified Data.Vector.Unboxed           as VB
@@ -67,7 +67,7 @@ getCoordinates strat mol =
         Serial -> IM.map _atom_Coordinates (mol ^. molecule_Atoms)
         Parallel ->
           IM.map _atom_Coordinates (mol ^. molecule_Atoms) `using` parTraversable rdeepseq
-      plainCoords = IM.foldl' (S.><) S.empty atomCoords
+      plainCoords = IM.foldl' (><) S.empty atomCoords
       plainVec    = VS.fromList . F.toList $ plainCoords
       vecLength   = VS.length plainVec
   in  AVS.fromVectors (Z :. vecLength) plainVec
@@ -209,9 +209,7 @@ bondPairsToGraph mol otVector =
     in  VB.filter (`Prelude.notElem` bondIdxList) atomIdxs
 
 
-breadthFirstSearch :: UG.UGraph a () -> Seq a 
-breadthFirstSearch graph = 
-  let 
+
 {-| 
 Wrapper function to look up the covalent radii from the IntMap for further use in bond detection.
 If the look-up fails (e.g. because there is a typo in the Atom descriptor), a runtime-error will be
